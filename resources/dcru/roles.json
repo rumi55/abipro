@@ -1,0 +1,64 @@
+{
+    "name":"roles",
+    "title":"Super Admin",
+    "dtables":{
+        "title":"Daftar Grup Pengguna",
+        "columns":[
+            {
+                "data":"display_name",
+                "name":"display_name",
+                "title":"Nama",
+                "type":"text"
+            },
+            {
+                "data":"description",
+                "name":"description",
+                "title":"Keterangan",
+                "type":"text"
+            }
+        ],
+        "actions":["detail", "edit", "duplicate","delete"],
+        "query":{
+            "table":"roles",
+            "select":"*"
+        }
+    },
+    "form":{
+        "title": "Grup Pengguna",
+        "table": "roles",
+        "fields":[
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Nama",
+                "svalidation":"required|min:3|max:128|unique:roles,name", 
+                "uvalidation":"required|min:3|max:128|unique:roles,name"
+            },
+            {
+                "name":"display_name", 
+                "type":"text", 
+                "label":"Label",
+                "svalidation":"required|min:3|max:128", 
+                "uvalidation":"required|min:3|max:128"
+            },
+            {
+                "name":"description", 
+                "type":"ltext", 
+                "label":"Keterangan",
+                "svalidation":"",
+                "uvalidation":""
+            }
+        ]
+    },
+    "view":{
+        "title":"Detail Grup Pengguna",
+        "fields":[
+            {"name":"name", "type":"text", "label":"Nama"},
+            {"name":"display_name", "type":"text", "label":"Label"},
+            {"name":"description", "type":"text", "label":"Keterangan"}
+        ],
+        "query":{
+            "table":"roles"
+        }
+    }
+}

@@ -1,0 +1,87 @@
+{
+    "name":"companies",
+    "title":"Perusahaan",
+    "dtables":{
+        "title":"Perusahaan",
+        "columns":[
+            {
+                "data":"logo",
+                "name":"logo",
+                "title":"Logo",
+                "type":"image"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Nama Perusahaan",
+                "type":"text"
+            },
+            {
+                "data":"is_active",
+                "name":"is_active",
+                "title":"Aktiv",
+                "type":"icon", 
+                "searchable":false,
+                "orderable":false,
+                "values":{
+                    "1":{"icon":"fas fa-check"},
+                    "0":{"icon":"fa fa-minus"}
+                }
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Hapus", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"companies",
+            "select":"*",
+            "where":{
+                "condition":"owner_id=?",
+                "params":["user:id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Perusahaan",
+        "table": "companies",
+        "view": "company.department.create",
+        "fields":[
+            {
+                "name":"custom_id", 
+                "type":"text", 
+                "label":"Kode",
+                "width":4, 
+                "svalidation":"required|min:3|max:8", 
+                "uvalidation":"required|min:3|max:8"
+            },
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Perusahaan",
+                "width":9, 
+                "svalidation":"required|min:3|max:64", 
+                "uvalidation":"required|min:3|max:64"
+            },
+            {
+                "name":"description", 
+                "type":"text", 
+                "label":"Keterangan",
+                "svalidation":"max:255",
+                "uvalidation":"max:255"
+            },
+            {
+                "name":"company_id", 
+                "type":"hidden",
+                "label":"Perusahaan",
+                "value":"session:user|company_id"
+            }
+        ]
+    }
+
+}

@@ -1,0 +1,79 @@
+{
+    "name":"products",
+    "title":"Product",
+    "actions":[{"type":"create","label":"Create Product"}],
+    "dtables":{
+        "title":"Product",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"image", 
+                "name":"image", 
+                "type":"image",
+                "title":"Image"
+            },
+            {
+                "data":"custom_id", 
+                "name":"custom_id", 
+                "type":"detail",
+                "detail_id":"id", 
+                "detail_name":"products", 
+                "title":"Product ID"
+            },
+            {
+                "data":"name", 
+                "name":"products.name", 
+                "type":"text", 
+                "title":"Product Name"
+            },
+            {
+                "data":"description", 
+                "name":"products.description", 
+                "type":"text", 
+                "title":"Description"
+            },
+            {
+                "data":"category", 
+                "name":"product_categories.name", 
+                "type":"text", 
+                "title":"Category"
+            },
+            {
+                "data":"menu", 
+                "type":"menu", 
+                "title":""
+            }
+        ],
+        "bulk_actions":[
+            {
+                "label":"Hapus",
+                "icon":"fas fa-trash",
+                "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
+                "route":{
+                    "name":"dcru.delete.batch",
+                    "params":{
+                        "name":"products"
+                    }
+                }
+            }
+        ],
+        "query":{
+            "table":"products",
+            "select":"products.*, product_categories.name as category",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"product_categories",
+                    "on":"product_categories.id=product_category_id"
+                }
+            ],
+            "where":{
+                "condition": "products.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    }
+}

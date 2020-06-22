@@ -1,0 +1,78 @@
+{
+    "name":"dev-actions",
+    "title":"Fungsi Aplikasi",
+    "actions":[{"type":"create","label":"Tambah Fungsi"}],
+    "dtables":{
+        "title":"Daftar Fungsi",
+        "columns":[
+            {
+                "data":"display_group",
+                "name":"display_group",
+                "title":"Group",
+                "type":"text"
+            },
+            {
+                "data":"display_name",
+                "name":"display_name",
+                "title":"Nama",
+                "type":"text"
+            },
+            {
+                "data":"description",
+                "name":"description",
+                "title":"Keterangan",
+                "type":"text"
+            },
+            {
+                "data":"menu",
+                "type":"menu"
+            }
+        ],
+        "bulk_actions":[],
+        "query":{
+            "table":"actions",
+            "select":"*"
+        }
+    },
+    "form":{
+        "title": "Otorisasi",
+        "table": "actions",
+        "fields":[
+            {
+                "name":"group", 
+                "type":"text", 
+                "label":"Grup",
+                "svalidation":"required|min:3|max:128", 
+                "uvalidation":"required|min:3|max:128"
+            },
+            {
+                "name":"display_group", 
+                "type":"text", 
+                "label":"Label Grup",
+                "svalidation":"required|min:3|max:128", 
+                "uvalidation":"required|min:3|max:128"
+            },
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Nama",
+                "svalidation":"required|min:3|max:128|unique:actions,name,NULL,NULL,group,NULL", 
+                "uvalidation":"required|min:3|max:128|unique:actions,name"
+            },
+            {
+                "name":"display_name", 
+                "type":"text", 
+                "label":"Label",
+                "svalidation":"required|min:3|max:128", 
+                "uvalidation":"required|min:3|max:128"
+            },
+            {
+                "name":"description", 
+                "type":"ltext", 
+                "label":"Keterangan",
+                "svalidation":"",
+                "uvalidation":""
+            }
+        ]
+    }
+}

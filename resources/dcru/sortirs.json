@@ -1,0 +1,81 @@
+{
+    "name":"sortirs",
+    "title":"Sortir",
+    "dtables":{
+        "title":"Sortir",
+        "columns":[
+            {
+                "data":"group",
+                "name":"group",
+                "title":"Jenis Sortir",
+                "type":"text"
+            },
+            {
+                "data":"item_id",
+                "name":"item_id",
+                "title":"Kode Item",
+                "type":"text"
+            },
+            {
+                "data":"item_name",
+                "name":"item_name",
+                "title":"Nama Item",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Hapus", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"tags",
+            "select":"*",
+            "where":{
+                "condition":"company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Kontak",
+        "table": "contacts",
+        "view": "company.department.create",
+        "fields":[
+            {
+                "name":"custom_id", 
+                "type":"text", 
+                "label":"Kode",
+                "width":4, 
+                "svalidation":"required|min:3|max:8", 
+                "uvalidation":"required|min:3|max:8"
+            },
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Kontak",
+                "width":9, 
+                "svalidation":"required|min:3|max:64", 
+                "uvalidation":"required|min:3|max:64"
+            },
+            {
+                "name":"description", 
+                "type":"text", 
+                "label":"Keterangan",
+                "svalidation":"max:255",
+                "uvalidation":"max:255"
+            },
+            {
+                "name":"company_id", 
+                "type":"hidden",
+                "label":"Perusahaan",
+                "value":"session:user|company_id"
+            }
+        ]
+    }
+
+}

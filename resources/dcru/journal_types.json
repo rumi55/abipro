@@ -1,0 +1,71 @@
+{
+    "name":"journal_types",
+    "title":"Jenis Jurnal",
+    "dtables":{
+        "title":"Jenis Jurnal",
+        "columns":[
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Nama",
+                "type":"text"
+            },
+            {
+                "data":"format",
+                "name":"format",
+                "title":"Format",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu"
+            }
+        ],
+        "query":{
+            "table":"numberings",
+            "select":"*",
+            "where":{
+                "condition":"company_id=? AND transaction_type_id='journal'",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Departemen",
+        "table": "numberings",
+        "view": "company.department.create",
+        "fields":[
+            {
+                "name":"custom_id", 
+                "type":"text", 
+                "label":"Kode",
+                "width":4, 
+                "svalidation":"required|min:3|max:8", 
+                "uvalidation":"required|min:3|max:8"
+            },
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Departemen",
+                "width":9, 
+                "svalidation":"required|min:3|max:64", 
+                "uvalidation":"required|min:3|max:64"
+            },
+            {
+                "name":"description", 
+                "type":"text", 
+                "label":"Keterangan",
+                "svalidation":"max:255",
+                "uvalidation":"max:255"
+            },
+            {
+                "name":"company_id", 
+                "type":"hidden",
+                "label":"Perusahaan",
+                "value":"session:user|company_id"
+            }
+        ]
+    }
+
+}

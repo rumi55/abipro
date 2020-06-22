@@ -1,0 +1,71 @@
+{
+    "name":"transactions",
+    "title":"Transasksi",
+    "actions":[
+        {"type":"create","label":"Buat Penerimaan"},
+        {"type":"create","label":"Buat Pengeluaran"}
+    
+    ],
+    "dtables":{
+        "title":"Daftar Transaksi",
+        "columns":[
+            {
+                "data":"trans_date", 
+                "name":"trans_date", 
+                "type":"date", 
+                "title":"Date"
+            },
+            {
+                "data":"trans_no", 
+                "name":"trans_no", 
+                "type":"detail",
+                "detail_id":"journal_id", 
+                "detail_name":"journals", 
+                "title":"Number"
+            },
+            {
+                "data":"account_name", 
+                "name":"account_name", 
+                "type":"detail",
+                "detail_id":"account_id", 
+                "detail_name":"accounts", 
+                "title":"Account Name"
+            },
+            {
+                "data":"description", 
+                "name":"description", 
+                "type":"text", 
+                "title":"Description"
+            },
+            {
+                "data":"debit", 
+                "name":"debit", 
+                "type":"currency", 
+                "title":"Debit"
+            },
+            {
+                "data":"credit", 
+                "name":"credit", 
+                "type":"currency", 
+                "title":"Credit"
+            }
+        ],
+        "query":{
+            "table":"vw_ledger",
+            "select":"journal_detail_id as id, journal_id, trans_date, trans_no, account_id, account_name, account_no, description, debit, credit, department_name",
+            "where":{
+                "condition": "company_id=? AND (account_id=? OR account_parent_id=?)",
+                "params":["user:company_id", "request:id", "request:id"]
+            }
+        },
+        "filter":{
+            "fields":[
+                {
+                    "name":"trans_date",
+                    "type":"daterange",
+                    "label":"Tanggal Transaksi"
+                }
+            ]
+        }
+    }
+}

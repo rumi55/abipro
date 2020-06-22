@@ -1,0 +1,147 @@
+{
+    "name":"vouchers",
+    "title":"Voucher",
+    "actions":[
+        {"type":"create","label":"Buat Voucher"},
+        {
+            "label":"Penerimaan", 
+            "route":{
+                "name":"vouchers.create.single", 
+                "params":{
+                    "type":"in"
+                }
+            }
+        },
+        {"label":"Pengeluaran", "route":{"name":"vouchers.create.single", "params":{"type":"out"}}}
+    ],
+    "dtables":{
+        "title":"Voucher",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"trans_date", 
+                "name":"trans_date", 
+                "type":"date", 
+                "title":"Tanggal"
+            },
+            {
+                "data":"trans_no", 
+                "name":"trans_no", 
+                "type":"detail",
+                "detail_id":"id", 
+                "detail_name":"vouchers", 
+                "title":"Nomor"
+            },
+            {
+                "data":"description", 
+                "name":"description", 
+                "type":"text", 
+                "title":"Keterangan"
+            },
+            {
+                "data":"total", 
+                "name":"total", 
+                "type":"currency", 
+                "title":"Jumlah"
+            },
+            {
+                "data":"created_name", 
+                "name":"created_by", 
+                "title":"Dibuat oleh",
+                "type":"route",
+                "route":{
+                    "name":"users.view",
+                    "params":{
+                        "id":"created_by"
+                    }
+                }
+            },
+            {
+                "data":"", 
+                "name":"", 
+                "type":"menu", 
+                "title":"",
+                "orderable":false,
+                "items":[
+                    {
+                        "label": "Detail",
+                        "type": "view"
+                    },
+                    {
+                        "label": "Cetak",
+                        "icon": "fas fa-print",
+                        "route": {
+                            "name":"vouchers.report"
+                        }
+                    },
+                    {
+                        "label": "Proses ke Jurnal",
+                        "visible":"is_locked==0",
+                        "icon": "fas fa-exchange-alt",
+                        "route": {
+                            "name":"vouchers.tojournal",
+                            "method":"POST"
+                        }
+                    },
+                    {
+                        "label": "Edit",
+                        "type": "edit"
+                    },
+                    {
+                        "label": "Gandakan",
+                        "type": "duplicate"
+                    },
+                    {
+                        "label": "Hapus",
+                        "type": "delete"
+                    }
+                ]
+            }
+        ],
+        "bulk_actions":[
+            {
+                "label": "Proses ke Jurnal",
+                "confirm":"Apakah Anda yakin akan memproses ke jurnal item terpilih?",
+                "icon": "fas fa-exchange-alt",
+                "route": {
+                    "name":"vouchers.tojournal.batch"
+                }
+            },
+            {
+                "label":"Hapus",
+                "icon":"fas fa-trash",
+                "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
+                "route":{
+                    "name":"dcru.delete.batch",
+                    "params":{
+                        "name":"vouchers"
+                    }
+                }
+            }
+        ],
+        "query":{
+            "table":"journals",
+            "select":"journals.*, users.name as created_name",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"users",
+                    "on":"users.id=journals.created_by"
+                }
+            ],
+            "where":{
+                "condition": "journals.is_voucher=1 AND journals.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Jurnal",
+        "table": "journals",
+        "fields":[]
+    }
+
+}

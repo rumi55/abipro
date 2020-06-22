@@ -1,0 +1,175 @@
+{
+    "name":"journals",
+    "title":"Journal",
+    "actions":[{"type":"create","label":"Create Journal"}],
+    "dtables":{
+        "title":"Journal",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"trans_date", 
+                "name":"trans_date", 
+                "type":"date", 
+                "title":"Transaction Date"
+            },
+            {
+                "data":"trans_no", 
+                "name":"trans_no", 
+                "type":"detail",
+                "detail_id":"id", 
+                "detail_name":"journals", 
+                "title":"Number"
+            },
+            {
+                "data":"description", 
+                "name":"description", 
+                "type":"text", 
+                "title":"Description"
+            },
+            {
+                "data":"total", 
+                "name":"total", 
+                "type":"currency", 
+                "title":"Total"
+            },
+            {
+                "data":"created_name", 
+                "name":"created_by", 
+                "title":"Created By",
+                "type":"route",
+                "route":{
+                    "name":"users.view",
+                    "params":{
+                        "id":"created_by"
+                    }
+                }
+            },
+            {
+                "data":"is_locked", 
+                "name":"is_locked", 
+                "type":"icon", 
+                "title":"",
+                "searchable":false,
+                "orderable":false,
+                "values":{
+                    "1":{"icon":"fas fa-lock"},
+                    "0":{"icon":""}
+                }
+            },
+            {
+                "data":"", 
+                "name":"", 
+                "type":"menu", 
+                "title":"",
+                "orderable":false,
+                "items":[
+                    {
+                        "label": "Detail",
+                        "type": "view"
+                    },
+                    {
+                        "label": "Cetak",
+                        "icon": "fas fa-print",
+                        "route": {
+                            "name":"journals.report"
+                        }
+                    },
+                    {
+                        "label": "Buka Kunci",
+                        "visible":"is_locked==1",
+                        "icon": "fas fa-unlock",
+                        "route": {
+                            "name":"journals.lock",
+                            "method":"POST"
+                        }
+                    },
+                    {
+                        "label": "Kunci Jurnal",
+                        "visible":"is_locked==0",
+                        "icon": "fas fa-lock",
+                        "route": {
+                            "name":"journals.lock",
+                            "method":"POST"
+                        }
+                    },
+                    {
+                        "label": "Kembali ke Voucher",
+                        "visible":"is_locked==0",
+                        "icon": "fas fa-exchange-alt",
+                        "route": {
+                            "name":"journals.tovoucher",
+                            "method":"POST"
+                        }
+                    },
+                    {
+                        "label": "Edit",
+                        "type": "edit",
+                        "visible":"is_locked==0"
+                    },
+                    {
+                        "label": "Gandakan",
+                        "type": "duplicate"
+                    },
+                    {
+                        "label": "Hapus",
+                        "type": "delete",
+                        "visible":"is_locked==0"
+                    }
+                ]
+            }
+        ],
+        "bulk_actions":[
+            {
+                "label": "Proses ke Jurnal",
+                "confirm":"Apakah Anda yakin akan memproses ke jurnal item terpilih?",
+                "icon": "fas fa-exchange-alt",
+                "route": {
+                    "name":"journals.tovoucher.batch"
+                }
+            },
+            {
+                "label":"Hapus",
+                "icon":"fas fa-trash",
+                "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
+                "route":{
+                    "name":"dcru.delete.batch",
+                    "params":{
+                        "name":"journals"
+                    }
+                }
+            }
+        ],
+        "filter":{
+            "fields":[
+                {
+                    "name":"trans_date",
+                    "type":"daterange",
+                    "label":"Tanggal Transaksi"
+                }
+            ]
+        },
+        "query":{
+            "table":"journals",
+            "select":"journals.*, users.name as created_name",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"users",
+                    "on":"users.id=journals.created_by"
+                }
+            ],
+            "where":{
+                "condition": "journals.is_voucher=0 AND journals.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Jurnal",
+        "table": "journals",
+        "fields":[]
+    }
+}

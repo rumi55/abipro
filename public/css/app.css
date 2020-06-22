@@ -1,0 +1,39 @@
+.table thead th {
+  vertical-align: bottom;
+  /* background: #605ca8; */
+  /* background: #007bff;
+  color: #FFF;
+  border: none; */
+}
+.table .thead-light th {
+    background-color: #f6f9fc;
+    color: #8898aa;
+    word-wrap:break-word;
+}
+.table td {
+  border: none;
+  word-wrap:break-word;
+}
+
+.page-link{
+  border:none;
+}
+.content-header {
+  background-color: #fff;
+}
+
+.form-control{
+  min-width: 128px;
+}
+
+.login-page{
+  background-color: #605ca8;
+}
+
+label:not(.form-check-label):not(.custom-file-label) {
+  font-weight: 500;
+}
+label {
+  display: inline-block;
+  margin-bottom: 0;
+}

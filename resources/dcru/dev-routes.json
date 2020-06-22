@@ -1,0 +1,66 @@
+{
+    "name":"dev-routes",
+    "title":"Route",
+    "dtables":{
+        "title":"Daftar Route",
+        "columns":[
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Route Name",
+                "type":"text"
+            },
+            {
+                "data":"paramater_names",
+                "name":"paramater_names",
+                "title":"Parameter Name",
+                "type":"text"
+            },
+            {
+                "data":"parameters",
+                "name":"parameters",
+                "title":"Parameters",
+                "type":"text"
+            }
+        ],
+        "actions":["detail", "edit", "duplicate","delete"],
+        "query":{
+            "table":"routes",
+            "select":"*"
+        }
+    },
+    "form":{
+        "title": "Route",
+        "table": "routes",
+        "fields":[
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Route Name",
+                "svalidation":"required|min:3|max:128", 
+                "uvalidation":"required|min:3|max:128"
+            },
+            {
+                "name":"parameter_names", 
+                "type":"ltext", 
+                "label":"Parameter Name"
+            },
+            {
+                "name":"parameters", 
+                "type":"ltext", 
+                "label":"Parameters"
+            }
+        ]
+    },
+    "view":{
+        "title":"Detail Route",
+        "fields":[
+            {"name":"name", "type":"text", "label":"Route Name"},
+            {"name":"parameter_names", "type":"text", "label":"Parameter Name"},
+            {"name":"parameters", "type":"text", "label":"Parameter"}
+        ],
+        "query":{
+            "table":"routes"
+        }
+    }
+}

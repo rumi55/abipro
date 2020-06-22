@@ -1,0 +1,197 @@
+{
+    "name":"contacts",
+    "title":"Kontak",
+    "dtcustomer":{
+        "dtname":"dtcustomer",
+        "title":"Customers",
+        "columns":[
+            {
+                "data":"custom_id",
+                "name":"custom_id",
+                "title":"Custom ID",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Name",
+                "type":"text"
+            },
+            {
+                "data":"email",
+                "name":"email",
+                "title":"Email",
+                "type":"text"
+            },
+            {
+                "data":"mobile",
+                "name":"mobile",
+                "title":"Mobile Phone",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Delete", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"contacts",
+            "select":"*",
+            "where":{
+                "condition":"is_customer=1 AND company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "dtsupplier":{
+        "dtname":"dtsupplier",
+        "title":"Suppliers",
+        "columns":[
+            {
+                "data":"custom_id",
+                "name":"custom_id",
+                "title":"Custom ID",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Name",
+                "type":"text"
+            },
+            {
+                "data":"email",
+                "name":"email",
+                "title":"Email",
+                "type":"text"
+            },
+            {
+                "data":"mobile",
+                "name":"mobile",
+                "title":"Mobile Phone",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Delete", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"contacts",
+            "select":"*",
+            "where":{
+                "condition":"is_supplier=1 AND company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "dtemployee":{
+        "dtname":"dtemployee",
+        "title":"Employee",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"custom_id",
+                "name":"custom_id",
+                "title":"Custom ID",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Name",
+                "type":"text"
+            },
+            {
+                "data":"email",
+                "name":"email",
+                "title":"Email",
+                "type":"text"
+            },
+            {
+                "data":"mobile",
+                "name":"mobile",
+                "title":"Mobile Phone",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Delete", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"contacts",
+            "select":"*",
+            "where":{
+                "condition":"is_employee=1 AND company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "dtothers":{
+        "dtname":"dtothers",
+        "title":"Others",
+        "columns":[
+            {
+                "data":"custom_id",
+                "name":"custom_id",
+                "title":"Custom ID",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Name",
+                "type":"text"
+            },
+            {
+                "data":"email",
+                "name":"email",
+                "title":"Email",
+                "type":"text"
+            },
+            {
+                "data":"mobile",
+                "name":"mobile",
+                "title":"Mobile Phone",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Delete", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"contacts",
+            "select":"*",
+            "where":{
+                "condition":"is_others=1 AND company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    }
+
+}

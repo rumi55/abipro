@@ -1,0 +1,161 @@
+{
+    "name":"user",
+    "title":"Pengguna",
+    "dtables":{
+        "title":"Daftar Pengguna",
+        "columns":[
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Nama",
+                "type":"route",
+                "route":{
+                    "name":"users.view",
+                    "params":{
+                        "id":"id"
+                    }
+                }
+            },
+            {
+                "data":"email",
+                "name":"email",
+                "title":"Email",
+                "type":"text"
+            },
+            {
+                "data":"phone",
+                "name":"phone",
+                "title":"No. HP",
+                "type":"text"
+            },
+            {
+                "data":"group_name",
+                "name":"user_group_id",
+                "title":"Grup",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Detail", "type":"view"},
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Hapus", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"company_users",
+            "select":"users.id, users.name,email,phone, photo, user_group_id, user_groups.display_name as group_name",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"users",
+                    "on":"users.id=company_users.user_id"
+                },
+                {
+                    "join":"left",
+                    "table":"user_groups",
+                    "on":"user_groups.id=company_users.user_group_id"
+                }
+            ],
+            "where":{
+                "condition":"company_users.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Pengguna",
+        "table": "users",
+        "fields":[
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Nama",
+                "width":9, 
+                "svalidation":"required|min:3|max:64", 
+                "uvalidation":"required|min:3|max:64"
+            },
+            {
+                "name":"phone", 
+                "type":"text", 
+                "label":"Nomor HP",
+                "svalidation":"required|unique:users,phone",
+                "uvalidation":"required|unique:users,phone"
+            },
+            {
+                "name":"email", 
+                "type":"email", 
+                "label":"Email",
+                "svalidation":"required|email|unique:users,email",
+                "uvalidation":"required|email|unique:users,email"
+            },
+            {
+                "name":"pegawai_id", 
+                "type":"select", 
+                "label":"Pegawai",
+                "width":4,
+                "options":{
+                    "type":"query",
+                    "query":{
+                        "table":"pegawai",
+                        "select":["pegawai.id as val", "pegawai.nama as txt"]
+                    }
+                }
+            },
+            {
+                "name":"role_id", 
+                "type":"multiselect", 
+                "label":"Grup Pengguna",
+                "width":4,
+                "options":{
+                    "type":"query",
+                    "query":{
+                        "table":"roles",
+                        "select":["roles.id as val", "roles.display_name as txt"],
+                        "where":{
+                            "condition":"roles.is_super>=0"
+                        }
+                    }
+                }
+            },
+            {
+                "name":"photo", 
+                "type":"image", 
+                "label":"Foto", 
+                "svalidation":"image|dimensions:min_width=200,min_height=200, ratio=1|mimes:jpeg, jpg,bmp,png",
+                "uvalidation":"image|dimensions:min_width=200,min_height=200, ratio=1|mimes:jpeg, jpg, bmp,png",
+                "helper":"Format foto yang dibolehkan adalah <b>jpg, png, dan bmp</b> dengan ukuran minimal 200px x 200px dan rasio 1:1."
+            },
+            {
+                "name":"password", 
+                "type":"password", 
+                "label":"Kata Sandi",
+                "edit":false, 
+                "svalidation":"required|min:8|same:password_confirmation"
+            },
+            {
+                "name":"password_confirmation", 
+                "type":"password", 
+                "label":"Konfirmasi Kata Sandi", 
+                "edit":false,
+                "svalidation":"required"
+            }
+        ]
+    },
+    "view":{
+        "title":"Detail Pengguna",
+        "fields":[
+            {"name":"name", "type":"text", "label":"Name"},
+            {"name":"email", "type":"text", "label":"Email"},
+            {"name":"phone", "type":"text", "label":"No. HP"},
+            {"name":"photo", "type":"image", "label":"Foto"}
+        ],
+        "query":{
+            "table":"users"
+        }
+    }
+
+}

@@ -1,0 +1,145 @@
+{
+    "name":"logs",
+    "title":"Aktivitas Pengguna",
+    "dtables":{
+        "title":"Aktivitas Pengguna",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"name",
+                "name":"users.name",
+                "title":"Pengguna",
+                "type":"route",
+                "route":{
+                    "name":"users.view",
+                    "params":{
+                        "id":"user_id"
+                    }
+                }
+            },
+            {
+                "data":"group_action",
+                "name":"actions.display_group",
+                "title":"Modul",
+                "type":"text"
+            },
+            {
+                "data":"action",
+                "name":"actions.display_name",
+                "title":"Aktivitas",
+                "type":"text"
+            },
+            {
+                "data":"created_at",
+                "name":"logs.created_at",
+                "title":"Waktu",
+                "type":"datetime"
+            },
+            {
+                "data":"menu",
+                "type":"menu",
+                "title":"",
+                "orderable":false,
+                "items":[
+                    {
+                        "label": "Detail",
+                        "type": "view"
+                    },
+                    {
+                        "label": "Hapus",
+                        "type": "delete"
+                    }
+                ]
+            }
+        ],
+        "bulk_actions":[
+            {
+                "label":"Hapus", 
+                "icon":"fas fa-trash",
+                "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
+                "route":{
+                    "name":"dcru.delete.batch",
+                    "params":{
+                        "name":"logs"
+                    }
+                }
+            }
+        ],
+        "query":{
+            "table":"logs",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"users",
+                    "on":"users.id=logs.created_by"
+                },
+                {
+                    "join":"left",
+                    "table":"actions",
+                    "on":"actions.id=logs.action_id"
+                }
+            ],
+            "select":["logs.id as id", "users.id as user_id", "users.name as name", "logs.description", "logs.created_at", "actions.display_name as action", "actions.display_group as group_action"],
+            "order":"created_at desc",
+            "where":{
+                "condition":"logs.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title":"Detail Aktivitas Pengguna",
+        "table":"logs",
+        "fields":[]
+    },
+    "view":{
+        "title":"Detail Aktivitas Pengguna",
+        "fields":[
+            {
+                "name":"name",
+                "label":"Pengguna",
+                "type":"text"
+            },
+            {
+                "name":"description",
+                "label":"Aktivitas",
+                "type":"text"
+            },
+            {
+                "name":"created_at",
+                "label":"Waktu",
+                "type":"hdate"
+            },
+            {
+                "name":"ip_address",
+                "label":"IP Address",
+                "type":"text"
+            },
+            {
+                "name":"user_agent",
+                "label":"User Agent",
+                "type":"text"
+            },
+            {
+                "name":"url",
+                "label":"URL",
+                "type":"text"
+            }
+        ],
+        "actions":["detail", "delete"],
+        "query":{
+            "table":"logs",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"users",
+                    "on":"users.id=logs.created_by"
+                }
+            ],
+            "select":["logs.id as id", "users.name as name", "description", "logs.created_at", "ip_address", "user_agent", "url"]
+        }
+    }
+}

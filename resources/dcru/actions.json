@@ -1,0 +1,68 @@
+{
+    "name":"actions",
+    "title":"Fungsi Aplikasi",
+    "actions":[{"type":"create","label":"Tambah Fungsi"}],
+    "dtables":{
+        "title":"Fungsi Aplikasi",
+        "columns":[
+            {
+                "data":"group",
+                "name":"group",
+                "title":"Group",
+                "type":"text"
+            },
+            {
+                "data":"display_group",
+                "name":"display_group",
+                "title":"Display Group",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Name",
+                "type":"text"
+            },
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Display Name",
+                "type":"text"
+            },
+            {
+                "data":"menu",
+                "type":"menu"
+            }
+        ],
+        "query":{
+            "table":"actions",
+            "select":"*",
+            "order":"created_at desc"
+        }
+    },
+    "form":{
+        "title":"Detail Aktivitas Pengguna",
+        "table":"actions",
+        "fields":[
+            {
+                "name":"name",
+                "label":"Name",
+                "type":"text"
+            },
+            {
+                "name":"display_name",
+                "label":"Display Name",
+                "type":"text"
+            },{
+                "name":"group_name",
+                "label":"Group",
+                "type":"text"
+            },
+            {
+                "name":"display_group",
+                "label":"Display Grooup",
+                "type":"text"
+            }
+        ]
+    }
+}

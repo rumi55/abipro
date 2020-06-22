@@ -1,0 +1,73 @@
+{
+    "name":"sales_invoices",
+    "title":"Sales Invoice",
+    "actions":[{"type":"create","label":"Create Sales"}],
+    "dtables":{
+        "title":"Sales Invoice",
+        "columns":[
+            {
+                "data":"checkbox",
+                "type":"checkbox"
+            },
+            {
+                "data":"invoice_date", 
+                "name":"invoice_date", 
+                "type":"text", 
+                "title":"Tanggal"
+            },
+            {
+                "data":"invoice_no", 
+                "name":"invoice_no", 
+                "type":"detail",
+                "detail_id":"id", 
+                "detail_name":"sales", 
+                "title":"Invoice No."
+            },
+            {
+                "data":"customer", 
+                "name":"contacts.name", 
+                "type":"text", 
+                "title":"Customer"
+            },
+            {
+                "data":"invoice_total_disc", 
+                "name":"invoice_total_disc", 
+                "type":"currency", 
+                "title":"Total"
+            },
+            {
+                "data":"menu", 
+                "type":"menu", 
+                "title":""
+            }
+        ],
+        "bulk_actions":[
+            {
+                "label":"Hapus",
+                "icon":"fas fa-trash",
+                "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
+                "route":{
+                    "name":"dcru.delete.batch",
+                    "params":{
+                        "name":"sales"
+                    }
+                }
+            }
+        ],
+        "query":{
+            "table":"sales",
+            "select":"sales.*, contacts.name as customer",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"contacts",
+                    "on":"contacts.id=customer_id"
+                }
+            ],
+            "where":{
+                "condition": "sales.company_id=? AND is_invoice=1",
+                "params":["user:company_id"]
+            }
+        }
+    }
+}

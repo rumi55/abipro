@@ -1,0 +1,130 @@
+{
+    "name":"",
+    "table":{
+        "title":"",
+        "columns":[
+            {
+                "name":"user_name",
+                "label":"Nama",
+                "type":"text"
+            },
+            {
+                "name":"role_name",
+                "label":"Role",
+                "type":"text"
+            },
+            {
+                "name":"action_name",
+                "label":"Action",
+                "type":"text"
+            }
+        ],
+        "query":{
+            "table":"users",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"roles",
+                    "on":"users.role_id=roles.id"
+                },
+                {
+                    "join":"left",
+                    "table":"roles_actions",
+                    "on":"roles.id=roles_actions.role_id"
+                },
+                {
+                    "join":"left",
+                    "table":"actions",
+                    "on":"actions.id=roles_actions.action_id"
+                }
+            ],
+            "select":"users.name AS user_name, roles.name AS role_name, actions.label AS action_label"
+        }
+    },
+    "form":{
+        "title": "Pengguna",
+        "table": "users",
+        "fields":[
+            {
+                "name":"name", 
+                "type":"text", 
+                "label":"Nama",
+                "width":3, 
+                "svalidation":"required|min:3|max:64", 
+                "uvalidation":"required|min:3|max:64", 
+                "helper":"Masukkan nama anda dengan benar"
+            },
+            {
+                "name":"phone", 
+                "type":"text", 
+                "label":"Nomor HP",
+                "svalidation":"required|unique:users,phone",
+                "uvalidation":"required|unique:users,phone"
+            },
+            {
+                "name":"email", 
+                "type":"text", 
+                "label":"Email",
+                "svalidation":"required|email|unique:users,email",
+                "uvalidation":"required|email|unique:users,email"
+            },
+            {
+                "name":"unitorg_id", 
+                "type":"select", 
+                "label":"Unit Organisasi",
+                "width":4,
+                "options":{
+                    "type":"query",
+                    "query":{
+                        "table":"unitorg",
+                        "select":["unitorg.id as val", "unitorg.nama as txt"]
+                    }
+                }
+            },
+            {
+                "name":"testing", 
+                "type":"select", 
+                "label":"Jenis Kelamin",
+                "options":{
+                    "type":"array",
+                    "items":"Laki-Laki,1|Perempuan,2"
+                },
+                "svalidation":"required|date",
+                "uvalidation":"required|date"
+            },
+            {
+                "name":"photo", 
+                "type":"image", 
+                "label":"Foto", 
+                "svalidation":"required|image|dimensions:min_width=200,min_height=200, ratio=1|mimes:jpeg, jpg,bmp,png",
+                "uvalidation":"required|image|dimensions:min_width=200,min_height=200, ratio=1|mimes:jpeg, jpg, bmp,png",
+                "helper":"Format foto yang dibolehkan adalah <b>jpg, png, dan bmp</b> dengan ukuran minimal 200px x 200px dan rasio 1:1."
+            },
+            {
+                "name":"password", 
+                "type":"password", 
+                "label":"Kata Sandi",
+                "edit":false, 
+                "svalidation":"required|min:8|same:password_confirmation"
+            },
+            {
+                "name":"password_confirmation", 
+                "type":"password", 
+                "label":"Konfirmasi Kata Sandi", 
+                "edit":false,
+                "svalidation":"required"
+            }
+        ]
+    },
+    "view":{
+        "fields":[
+            {"name":"mail_date", "type":"text", "label":"ID"},
+            {"name":"name", "type":"text", "label":"Name"},
+            {"name":"email", "type":"text", "label":"Email"}
+        ],
+        "query":{
+            "table":"users",
+            "select":"users.id, users.name, users.email"
+        }
+    }
+}

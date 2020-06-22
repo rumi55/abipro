@@ -1,0 +1,43 @@
+{
+    "name":"user_groups",
+    "title":"Pengguna",
+    "dtables":{
+        "title":"Grup Pengguna",
+        "columns":[
+            {
+                "data":"display_name",
+                "name":"display_name",
+                "title":"Grup Pengguna",
+                "type":"text"
+            },
+            {
+                "data":"description",
+                "name":"description",
+                "title":"Keterangan",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu",
+                "items":[
+                    {"label":"Edit", "type":"edit"},
+                    {"label":"Hapus", "type":"delete"}
+                ]
+            }
+        ],
+        "query":{
+            "table":"user_groups",
+            "select":"*",
+            "where":{
+                "condition": "user_groups.company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Grup Pengguna",
+        "table": "user_groups"
+    }
+
+}

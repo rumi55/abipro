@@ -1,0 +1,66 @@
+{
+    "name":"numberings",
+    "title":"Penomoran",
+    "dtables":{
+        "title":"Penomoran",
+        "columns":[
+            {
+                "data":"name",
+                "name":"name",
+                "title":"Numbering Name",
+                "type":"text"
+            },
+            {
+                "data":"display_name",
+                "name":"transaction_type_id",
+                "title":"Transaction Type",
+                "type":"text"
+            },
+            {
+                "data":"format",
+                "name":"format",
+                "title":"Numbering Format",
+                "type":"text"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu"
+            }
+        ],
+        "filter":{
+            "fields":[
+                {
+                    "name":"transaction_type_id",
+                    "type":"select",
+                    "label":"Numbering Type",
+                    "options":{
+                        "type":"query",
+                        "query":{
+                            "table":"transaction_types",
+                            "select":["id as val", "display_name as txt"],
+                            "where":{
+                                "condition":"id<>'journal'"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        "query":{
+            "table":"numberings",
+            "select":"numberings.id, numberings.name, numberings.format, transaction_types.display_name",
+            "joins":[
+                {
+                    "join":"left",
+                    "table":"transaction_types",
+                    "on":"numberings.transaction_type_id=transaction_types.id"
+                }
+            ],
+            "where":{
+                "condition":"company_id=? AND transaction_type_id<>'journal'",
+                "params":["user:company_id"]
+            }
+        }
+    }
+}
