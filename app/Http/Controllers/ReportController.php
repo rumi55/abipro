@@ -21,7 +21,7 @@ class ReportController extends Controller
                     ['title'=>'Profit & Loss', 'description'=>'Menampilkan laporan laba - rugi', 'route'=>route('reports.profit')],
                     ['title'=>'Balance Sheet', 'description'=>'Menampilkan laporan neraca', 'route'=>route('reports.balance')],
                     ['title'=>'Cashflow', 'description'=>'Menampilkan arus kas', 'route'=>route('reports.cashflow')],
-                    ['title'=>'Harga Pokok Produksi', 'description'=>'Menampilkan laporan harga pokok produksi', 'route'=>route('reports.balance')],
+                    ['title'=>'Harga Pokok Produksi', 'description'=>'Menampilkan laporan harga pokok produksi', 'route'=>route('reports.hpp')],
                 ]
             ],
             [

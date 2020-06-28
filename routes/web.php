@@ -58,10 +58,12 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/reports/trial_balance', 'TrialBalanceReportController@index')->name('reports.trial_balance');
     Route::get('/reports/balance', 'BalanceReportController@index')->name('reports.balance');
     Route::get('/reports/profit', 'ProfitReportController@index')->name('reports.profit');
+    Route::get('/reports/hpp', 'HPPReportController@index')->name('reports.hpp');
     Route::get('/reports/cashflow', 'CashflowReportController@index')->name('reports.cashflow');
     Route::get('/reports/sortir', 'SortirReportController@index')->name('reports.sortirs');
     
     //voucher    
+    Route::get('/vouchers', 'TransactionController@index')->name('vouchers.index');
     Route::get('/vouchers/create', 'JournalController@createVoucher')->name('vouchers.create');
     Route::get('/vouchers/create/{type}', 'TransactionController@create')->name('vouchers.create.single');
     Route::post('/vouchers/create/{type}', 'TransactionController@save')->name('vouchers.create.single.save');
@@ -90,9 +92,39 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     // Route::post('/transactions/{id}/voucher', 'TransactionController@toVoucher')->name('transactions.tovoucher');
     // Route::post('/transactions/vouchers', 'TransactionController@toVoucherBatch')->name('transactions.tovoucher.batch');
     
+    //sales invoices   
+    Route::get('/sales_invoices/create', 'SalesInvoiceController@create')->name('sales_invoices.create');
+    Route::post('/sales_invoices', 'SalesInvoiceController@save')->name('sales_invoices.create.save');
+    Route::get('/sales_invoices/{id}/edit', 'SalesInvoiceController@edit')->name('sales_invoices.edit');
+    Route::put('/sales_invoices/{id}', 'SalesInvoiceController@update')->name('sales_invoices.edit.update');
+    Route::get('/sales_invoices/{id}/duplicate', 'SalesInvoiceController@duplicate')->name('sales_invoices.create.duplicate');
+    Route::get('/sales_invoices/{order_id}/orders', 'SalesInvoiceController@createFromOrder')->name('sales_invoices.create.orders');
+    Route::get('/sales_invoices/{quote_id}/quotes', 'SalesInvoiceController@createFromQuote')->name('sales_invoices.create.quotes');
+    Route::get('/sales_invoices/{id}', 'SalesInvoiceController@view')->name('sales_invoices.view');
+    Route::delete('/sales_invoices/{id}', 'SalesInvoiceController@delete')->name('sales_invoices.delete');
+    //sales orders   
+    Route::get('/sales_orders/create', 'SalesOrderController@create')->name('sales_orders.create');
+    Route::post('/sales_orders', 'SalesOrderController@save')->name('sales_orders.create.save');
+    Route::get('/sales_orders/{id}/edit', 'SalesOrderController@edit')->name('sales_orders.edit');
+    Route::put('/sales_orders/{id}', 'SalesOrderController@update')->name('sales_orders.edit.update');
+    Route::get('/sales_orders/{id}/duplicate', 'SalesOrderController@duplicate')->name('sales_orders.create.duplicate');
+    Route::get('/sales_orders/{quote_id}/quotes', 'SalesOrderController@createFromQuote')->name('sales_orders.create.quotes');
+    Route::get('/sales_orders/{id}', 'SalesOrderController@view')->name('sales_orders.view');
+    Route::delete('/sales_orders/{id}', 'SalesOrderController@delete')->name('sales_orders.delete');
+    //sales quotes   
+    Route::get('/sales_quotes/create', 'SalesQuoteController@create')->name('sales_quotes.create');
+    Route::post('/sales_quotes', 'SalesQuoteController@save')->name('sales_quotes.create.save');
+    Route::get('/sales_quotes/{id}/edit', 'SalesQuoteController@edit')->name('sales_quotes.edit');
+    Route::put('/sales_quotes/{id}', 'SalesQuoteController@update')->name('sales_quotes.edit.update');
+    Route::get('/sales_quotes/{id}/duplicate', 'SalesQuoteController@duplicate')->name('sales_quotes.create.duplicate');
+    Route::get('/sales_quotes/{id}', 'SalesQuoteController@view')->name('sales_quotes.view');
+    Route::delete('/sales_quotes/{id}', 'SalesQuoteController@delete')->name('sales_quotes.delete');
+    
     //journals    
     Route::get('/journals/create', 'JournalController@createJournal')->name('journals.create');
     Route::post('/journals', 'JournalController@save')->name('journals.create.save');
+    Route::get('/journals/import', 'JournalController@import')->name('journals.import');
+    Route::post('/journals/import', 'JournalController@importSave')->name('journals.import.save');
     Route::get('/journals/{id}/edit', 'JournalController@edit')->name('journals.edit');
     Route::put('/journals/{id}', 'JournalController@update')->name('journals.edit.update');
     Route::get('/journals/{id}/duplicate', 'JournalController@duplicate')->name('journals.create.duplicate');
@@ -118,7 +150,9 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::delete('/accounts/{id}', 'AccountController@delete')->name('accounts.delete');
     
     //settings
-    Route::get('/settings', 'NumberingController@index')->name('settings.index');
+    Route::get('/settings', 'SettingController@index')->name('settings.index');
+    Route::get('/settings/account_mapping', 'SettingController@accountMapping')->name('settings.account_mapping');
+    Route::post('/settings/account_mapping', 'SettingController@accountMappingSave')->name('settings.account_mapping.save');
     
     //numberings
     Route::get('/numberings', 'NumberingController@index')->name('numberings.index');
@@ -173,6 +207,9 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
 
     //select2
     Route::get('/select2/{name}', 'Select2OutputController@get')->name('select2');
+    //JSON Output
+    Route::get('/json/{name}', 'JsonOutputController@index')->name('json.output');
+
     //CRUD
     Route::get('/dt/{name}', 'DcruController@dt')->name('dcru.index.dt');
     Route::get('/{name}', 'DcruController@index')->name('dcru.index');
@@ -187,5 +224,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::post('/{name}/delete/all', 'DcruController@deleteAll')->name('dcru.delete.batch');
     Route::delete('/{name}/delete/file', 'DcruController@deleteFile')->name('dcru.delete.file');
     Route::delete('/{name}/delete/{id}', 'DcruController@deletePermanent')->name('dcru.delete.permanent');
+
+    
 });    
 

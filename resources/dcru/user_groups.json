@@ -1,19 +1,19 @@
 {
     "name":"user_groups",
-    "title":"Pengguna",
+    "title":"User Group",
     "dtables":{
-        "title":"Grup Pengguna",
+        "title":"Grup Users",
         "columns":[
             {
                 "data":"display_name",
                 "name":"display_name",
-                "title":"Grup Pengguna",
+                "title":"User Group",
                 "type":"text"
             },
             {
                 "data":"description",
                 "name":"description",
-                "title":"Keterangan",
+                "title":"Description",
                 "type":"text"
             },
             {
@@ -36,7 +36,7 @@
         }
     },
     "form":{
-        "title": "Grup Pengguna",
+        "title": "User Group",
         "table": "user_groups"
     }
 

@@ -152,8 +152,12 @@ class AccountController extends Controller
         }catch(Exception $e){
             \DB::rollback();
         }
-
-        add_log('accounts', 'create', '');
+        $reference =[
+            'id'=>$account->id,
+            'Account No.'=>$account->account_no,
+            'Account Name'=>$account->account_name,
+        ];
+        add_log('accounts', 'create', json_encode($reference));
         return redirect()->route('accounts.index')->with('success', 'Akun  baru berhasil ditambahkan');
     }
     public function saveImport(Request $request){
@@ -175,9 +179,7 @@ class AccountController extends Controller
         $filename = Str::slug('import_data_'.$request->target.'_'.date('Y m d H i s').' '.time(),'_');
         $filename = upload_file('file', $filename, 'public/files/import');
         $excel = Excel::import(new AccountsImport($company->id, $user->id), storage_path("/app/".$filename));
-        
-
-        add_log('accounts', 'create', '');
+        add_log('accounts', 'import', json_encode(['name'=>'Chart of Account File', 'url'=>url_file($filename)]));
         return redirect()->route('accounts.index')->with('success', 'Akun  baru berhasil ditambahkan');
     }
     public function update(Request $request, $id){
@@ -202,13 +204,41 @@ class AccountController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
+        $old_account_name = $account->account_name;
+        $old_account_no = $account->account_no;
+        $old_account_type = $account->accountType->name;
+        
         $account->account_name = $request->account_name;
         $account->account_no = $request->account_no;
-        // $account->account_type_id = $request->account_type_id;
-        // $account->account_parent_id = $request->account_parent_id;
+        
+        if($account->tree_level==0 && $account->account_type_id!=$request->account_type_id){
+            $account->account_type_id = $request->account_type_id;
+            //ubah semua tipe akun childrennya
+            $this->changeAccountType($account);
+        }
         $account->save();
-        add_log('accounts', 'update', '');
+        $reference =[
+            'before'=>[
+                'id'=>$account->id,
+                'Account No.'=>$old_account_no,
+                'Account Name'=>$old_account_name,
+            ],
+            'after'=>[
+                'id'=>$account->id,
+                'Account No.'=>$account->account_no,
+                'Account Name'=>$account->account_name
+            ]
+        ];
+        add_log('accounts', 'edit', json_encode($reference));
         return redirect()->route('accounts.index')->with('success', 'Perubahan akun telah disimpan');
+    }
+    private function changeAccountType($parent){
+        $accounts = Account::where('account_parent_id', $parent->id)->get();
+        foreach($accounts as $account){
+            $account->account_type_id = $parent->account_type_id;
+            $account->save();
+            $this->changeAccountType($account);
+        }
     }
     public function updateLevelChildren($account){
         $children = $account->children();

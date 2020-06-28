@@ -30,7 +30,13 @@
                 "data":"action",
                 "name":"actions.display_name",
                 "title":"Aktivitas",
-                "type":"text"
+                "type":"route",
+                "route":{
+                    "name":"logs.view",
+                    "params":{
+                        "id":"id"
+                    }
+                }
             },
             {
                 "data":"created_at",

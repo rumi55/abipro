@@ -1,17 +1,17 @@
 @php 
 $active_menu='users'; 
 $breadcrumbs = array(
-    ['label'=>'Pengguna', 'url'=>route('users.profile')],
-    ['label'=>'Daftar Pengguna']
+    ['label'=>trans('Users'), 'url'=>route('users.profile')],
+    ['label'=>trans('User List')]
 );
 @endphp
 @extends('layouts.app')
 @section('content-header-right')
   @if(has_action('users', 'create'))
-  <a href="{{route('users.create')}}" class="btn btn-primary" ><i class="fas fa-plus"></i> Tambah Pengguna</a>
+  <a href="{{route('users.create')}}" class="btn btn-primary" ><i class="fas fa-user-plus"></i> {{__('Add User')}}</a>
   @endif
 @endsection
-@section('title', 'Daftar Pengguna')
+@section('title', trans('User List'))
 @section('content')
 <div class="row">
     <div class="col-md-3">

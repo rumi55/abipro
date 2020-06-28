@@ -37,3 +37,10 @@ label {
   display: inline-block;
   margin-bottom: 0;
 }
+
+.number{
+  text-align: right;
+}
+.select2{
+  width: 100%;
+}

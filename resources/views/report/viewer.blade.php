@@ -5,7 +5,7 @@ if($report=='print_journal') {
     $breadcrumbs = array(
         ['label'=>trans($title), 'url'=>route('dcru.index', $active_menu)],
         ['label'=>'Detail '.trans($data->is_voucher==0?'Jurnal':'Voucher'), 'url'=>route($active_menu.'.view', $data->id)],
-        ['label'=>'Cetak '.($data->is_voucher==0?'Jurnal':'Voucher')],
+        ['label'=>trans('Cetak') .' '.trans($data->is_voucher==0?'Journal':'Voucher')],
     );
 }else{
     $active_menu='reports'; 

@@ -10,17 +10,17 @@
                 "type":"checkbox"
             },
             {
-                "data":"quote_date", 
-                "name":"quote_date", 
+                "data":"trans_date", 
+                "name":"trans_date", 
                 "type":"text", 
                 "title":"Tanggal"
             },
             {
-                "data":"quote_no", 
-                "name":"quote_no", 
+                "data":"trans_no", 
+                "name":"trans_no", 
                 "type":"detail",
                 "detail_id":"id", 
-                "detail_name":"sales", 
+                "detail_name":"sales_quotes", 
                 "title":"Quote No."
             },
             {
@@ -30,8 +30,8 @@
                 "title":"Customer"
             },
             {
-                "data":"invoice_total_disc", 
-                "name":"invoice_total_disc", 
+                "data":"total", 
+                "name":"total", 
                 "type":"currency", 
                 "title":"Total"
             },
@@ -55,8 +55,8 @@
             }
         ],
         "query":{
-            "table":"sales",
-            "select":"sales.*, contacts.name as customer",
+            "table":"sales_quotes",
+            "select":"sales_quotes.*, contacts.name as customer",
             "joins":[
                 {
                     "join":"left",
@@ -65,7 +65,7 @@
                 }
             ],
             "where":{
-                "condition": "sales.company_id=? AND is_quote=1",
+                "condition": "sales_quotes.company_id=?",
                 "params":["user:company_id"]
             }
         }

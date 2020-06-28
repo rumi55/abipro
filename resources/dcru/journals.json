@@ -1,7 +1,16 @@
 {
     "name":"journals",
     "title":"Journal",
-    "actions":[{"type":"create","label":"Create Journal"}],
+    "actions":[{"type":"create","label":"Create Journal"},
+        {
+            "label":"Import Journal", 
+            "route":{
+                "name":"journals.import", 
+                "params":{
+                }
+            }
+        }
+    ],
     "dtables":{
         "title":"Journal",
         "columns":[

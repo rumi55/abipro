@@ -33,10 +33,10 @@ $breadcrumbs = array(
         <div class="form-group row">
         <label for="account_type_id" class="col-sm-2 col-form-label">{{__('Account Type')}}</label>
             <div class="col-md-10 col-sm-10">
-            @if($mode=='create')
+            @if($mode=='create' || ($mode=='edit' && $account->tree_level==0))
             <select class="form-control select2 @error('account_type_id') is-invalid @enderror" id="account_type_id" name="account_type_id" value="{{old('account_type_id', $account->account_type_id)}}">
                 @foreach($account_types as $type)
-                <option {{$type->id==old('account_type_id', $account->account_type_id)?'selected':''}} value="{{$type->id}}">{{$type->name}}</option>
+                <option {{$type->id==old('account_type_id', $account->account_type_id)?'selected':''}} value="{{$type->id}}">{{tt($type,'name')}}</option>
                 @endforeach
             </select>            
             @error('account_type_id') <small class="text-danger">{!! $message !!}</small> @enderror

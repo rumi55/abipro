@@ -66,13 +66,13 @@
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{asset(route('dcru.index', ['name'=>'sales_orders'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='accounts'?'active':''}}">
+                <a href="{{asset(route('dcru.index', ['name'=>'sales_orders'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='sales_orders'?'active':''}}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>{{__('Sales Order')}} </p>
                 </a>
               </li>
               <li class="nav-item">
-                <a href="{{asset(route('dcru.index', ['name'=>'sales_quotes'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='accounts'?'active':''}}">
+                <a href="{{asset(route('dcru.index', ['name'=>'sales_quotes'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='sales_quotes'?'active':''}}">
                   <i class="far fa-circle nav-icon"></i>
                   <p>{{__('Sales Quote')}} </p>
                 </a>

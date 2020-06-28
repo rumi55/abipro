@@ -50,6 +50,15 @@ $breadcrumbs = array(
                     </tr>
                 </thead>
                 <tbody>
+                @if(count($accounts)==0)
+                    <tr><td class="text-center" colspan="5">
+                    {{__('No account available.')}}
+                    <div class="mt-5">
+                    <a href="{{route('accounts.create')}}" class="btn btn-primary" ><i class="fas fa-plus"></i> {{__('New Account')}}</a>
+                    <a href="{{route('accounts.import')}}" class="btn btn-primary" ><i class="fas fa-upload"></i> {{__('Import Account')}}</a>
+                    </div>
+                    </td></tr>
+                @endif
                 @foreach($accounts as $account)
                     <tr id="row-{{$account->id}}" class="tr-row" data-id="{{$account->id}}" data-tree-level="{{$account->tree_level}}" data-has-children="{{$account->has_children}}" data-parent="{{$account->account_parent_id}}">
                         <td>
@@ -66,18 +75,18 @@ $breadcrumbs = array(
                         @else
                         <td>{{$account->account_no}}</td>
                         @endif
-                        <td><a href="{{route('accounts.view', $account->id)}}">{{$account->account_name}}</a></td>
+                        <td><a href="{{route('accounts.view', $account->id)}}">{{tt($account,'account_name')}}</a></td>
                         <td>{{tt($account->accountType,'name')}}</td>
                         <td>
                             <button type="button" class="btn btn-tool" data-toggle="dropdown">
                             <i class="fas fa-ellipsis-v"></i></button>
                             <div class="dropdown-menu dropdown-menu-right" role="menu">
-                                <a href="{{route('accounts.view', $account->id)}}" class="dropdown-item"><i class="fas fa-xsearch"></i> Detail</a>
-                                <a href="{{route('accounts.edit', $account->id)}}" class="dropdown-item"><i class="fas fa-edit"></i> Edit</a>
+                                <a href="{{route('accounts.view', $account->id)}}" class="dropdown-item"><i class="fas fa-search"></i> {{__('Detail')}}</a>
+                                <a href="{{route('accounts.edit', $account->id)}}" class="dropdown-item"><i class="fas fa-edit"></i> {{__('Edit')}}</a>
                                 @if($account->isLocked()!=1 && $account->has_children==0)
                                 <form method="POST" action="{{route('accounts.delete',$account->id)}}" style="display:inline">
                                     @method('DELETE') @csrf
-                                    <button type="button" class="dropdown-item btn-delete"><i class="fas fa-trash"></i> Hapus</button>
+                                    <button type="button" class="dropdown-item btn-delete"><i class="fas fa-trash"></i> {{__('Delete')}}</button>
                                 </form>
                                 @endif
                             </div>

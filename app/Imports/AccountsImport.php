@@ -36,9 +36,10 @@ class AccountsImport implements ToCollection, WithHeadingRow
                 }
                 $account_no = $row['account_no'];
                 $account_name = $row['account_name'];
+                $account_name_en = isset($row['account_name_en'])?$row['account_name_en']:null;
                 $account_type = $row['account_type'];
-                $parent_no = $row['account_parent_no'];
-                $balance = $row['opening_balance'];
+                $parent_no = isset($row['account_parent_no'])?$row['account_parent_no']:null;
+                $balance = isset($row['opening_balance'])?$row['opening_balance']:null;
                 $balance_date = $this->company->accounting_start_date;
                 $sequence = '';
                 if(empty($parent_no)){
@@ -56,11 +57,12 @@ class AccountsImport implements ToCollection, WithHeadingRow
                 }else{
                     //cari parent
                     $parent = Account::where('company_id', $this->company_id)->where('account_no', $parent_no)->first();
-                    if($parent!=null){
-                        $parent_id = $parent->id;
+                    if($parent!=null){//jika parent ada
                         $parent->has_children = true;
                         $parent->save();
+                        $parent_id = $parent->id;
                         $tree_level = $parent->tree_level+1;
+                        $account_type = $parent->account_type_id;//tipe akun sama dengan parent
                         $seq = Account::where('company_id', $this->company_id)
                         ->where('account_parent_id', $parent->id)
                         ->orderBy('sequence', 'desc')->first();
@@ -87,6 +89,7 @@ class AccountsImport implements ToCollection, WithHeadingRow
                     'sequence'=>$sequence,
                     'account_no'=>$account_no.'',
                     'account_name'=>trim($account_name),
+                    'account_name_en'=>trim($account_name_en),
                     'account_type_id'=>$account_type,
                     'account_parent_id'=>$parent_id,
                     'tree_level'=>$tree_level,

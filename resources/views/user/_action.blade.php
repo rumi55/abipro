@@ -1,7 +1,7 @@
       
       <table class="table table-sm">
         <thead>
-          <th colspan="2">Fungsi</th>
+          <th colspan="2">{{__('Actions')}}</th>
           @foreach($roles as $role)
             @if($role->name!='super-admin')
             <th class="text-center">{{$role->display_name}}<i class="fas fa-help"></i></th>
@@ -13,7 +13,7 @@
             @foreach($action as $i => $p)
               @if($i==0)
               <tr>
-                <td colspan="2" class="font-weight-bold">{{$p->display_group}}</td>
+                <td colspan="2" class="font-weight-bold">{{tt($p,'display_group')}}</td>
                 @foreach($roles as $role)
                   @if($role->name!='super-admin')
                   <td class="text-center"></td>
@@ -23,7 +23,7 @@
               @endif
               <tr>
                 <td style="width:10px;">{{$i+1}}.</td>
-                <td  title="{{$p->description}}">{{$p->display_name}}</td>
+                <td  title="{{$p->description}}">{{tt($p,'display_name')}}</td>
                 @foreach($roles as $role)
                   <td class="text-center">
                   @if($user->is_owner)

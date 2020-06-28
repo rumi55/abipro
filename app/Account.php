@@ -9,7 +9,7 @@ class Account extends Model
 {
     // use SoftDeletes;
     protected $fillable = [
-        'account_no','account_name', 'account_parent_id',
+        'account_no','account_name', 'account_name_en', 'account_parent_id',
         'company_id', 'account_type_id','has_children',
         'created_by', 'updated_by', 'deleted_by', 'tree_level',
         'op_debit', 'op_credit', 'op_date', 'sequence'

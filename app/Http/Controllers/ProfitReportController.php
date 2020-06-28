@@ -25,7 +25,7 @@ class ProfitReportController extends Controller
             $accounts = $this->query($params, $company);
         }
         
-        $title = 'Laporan Laba-Rugi';
+        $title = trans('Profit & Loss');
         $view = 'report.profit.default';
         $period = fdate($params['end_date'], 'd M Y');
         $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');

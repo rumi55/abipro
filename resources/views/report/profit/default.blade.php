@@ -9,7 +9,7 @@
         <td></td>
         <td class="text-right">
             @if(count($departments)>0)
-                <b>Departemen: </b>
+                <b>{{__('Departemen')}}: </b>
                 @foreach($departments as $i=>$d)
                 {{$d->name.($i < count($departments)-1? ', ':' ')}}
                 @endforeach
@@ -109,7 +109,7 @@
                 @endif
                 @if($i+1==$cdata)
                     <tr>
-                        <td colspan="2" class="bt-2 bb-1">{{$type==12?'Total Pendapatan':($type==14?'Total Harga Pokok Penjualan':($type==15?'Total Biaya':($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
+                        <td colspan="2" class="bt-2 bb-1">{{$type==12?trans('Total Primary Income'):($type==14?trans('Total Cost of Sales'):($type==15?trans('Total Expenses'):($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
                         @foreach($columns as $j=> $p)
                             <td class="bt-2 bb-1 text-right">
                                 {{format_number($type==12?$sum_1[$j]:($type==14?$sum_2[$j]:$sum_3[$j]))}}
@@ -119,7 +119,7 @@
                 @else
                     @if($type!=($income[$i+1])->account_type_id)
                     <tr>
-                    <td colspan="2" class="bt-2 bb-1">{{$type==12?'Total Pendapatan':($type==14?'Total Harga Pokok Penjualan':($type==15?'Total Biaya':($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
+                    <td colspan="2" class="bt-2 bb-1">{{$type==12?trans('Total Income'):($type==14?trans('Total Cost of Sales'):($type==15?trans('Total Expenses'):($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
                         @foreach($columns as $j=> $p)
                         <td class="bt-2 bb-1 text-right">{{format_number($type==12?$sum_1[$j]:($type==14?$sum_2[$j]:$sum_3[$j]))}}</td>
                         @endforeach

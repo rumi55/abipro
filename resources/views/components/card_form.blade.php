@@ -20,7 +20,7 @@
         {{$slot}}
         </div>
         <div class="card-footer">
-            <button id="{{$btn_id??$id.'-btn'}}" type="submit" class="btn btn-primary">{{ $btn_label ?? 'Simpan'}}</button>
+            <button id="{{$btn_id??$id.'-btn'}}" type="submit" class="btn btn-primary">{{ $btn_label ?? trans('Save')}}</button>
         </div>
     </form>    
 </div>

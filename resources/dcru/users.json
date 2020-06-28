@@ -1,13 +1,13 @@
 {
     "name":"user",
-    "title":"Pengguna",
+    "title":"Users",
     "dtables":{
-        "title":"Daftar Pengguna",
+        "title":"User List",
         "columns":[
             {
                 "data":"name",
                 "name":"name",
-                "title":"Nama",
+                "title":"Name",
                 "type":"route",
                 "route":{
                     "name":"users.view",
@@ -25,13 +25,13 @@
             {
                 "data":"phone",
                 "name":"phone",
-                "title":"No. HP",
+                "title":"Mobile Phone",
                 "type":"text"
             },
             {
                 "data":"group_name",
                 "name":"user_group_id",
-                "title":"Grup",
+                "title":"Group",
                 "type":"text"
             },
             {

@@ -19,12 +19,12 @@ use PDF;
 
 class TransactionController extends Controller
 {
-    public function getAll(Request $request){
-        return $this->query($request);
+    public function index(){
+        $data = dcru_dt('vouchers', 'dtables');
+        return view('transaction.index', $data);
     }
-    public function getAllTransaction(Request $request){
-        return $this->query($request, 1);
-    }
+    
+    
     
     public function reportTransaction(Request $request){
         $data = $this->query($request, 1);
@@ -298,7 +298,7 @@ class TransactionController extends Controller
         }catch(Exception $e){
             \DB::rollback();
         }
-
+        
         return redirect()->route('dcru.index', 'vouchers')->with('success', 'Transaksi berhasil dibuat.');
     }
     public function update(Request $request, $type, $id){
@@ -692,6 +692,12 @@ class TransactionController extends Controller
                 'created_by'=>$journal->created_by
             ]);
         }
+        $reference =[
+            'id'=>$journal->id,
+            'Transaction No.'=>$journal->trans_no,
+            'Total'=>$journal->total
+        ];
+        add_log('journals', 'create', json_encode($reference));
         return $journal;
     }
 }

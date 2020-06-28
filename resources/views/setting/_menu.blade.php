@@ -2,8 +2,13 @@
   <div class="card-body p-0">
     <ul class="nav nav-pills flex-column">
       <li class="nav-item">
-        <a href="{{route('company.profile')}}" class="nav-link {{$active=='profile'?'active':''}}">
+        <a href="{{route('settings.index')}}" class="nav-link {{$active=='general'?'active':''}}">
           {{__('General')}} 
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{route('settings.account_mapping')}}" class="nav-link {{$active=='account_mappings'?'active':''}}">
+          {{__('Account Mapping')}} 
         </a>
       </li>
       <li class="nav-item">

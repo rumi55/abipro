@@ -36,6 +36,7 @@ class LedgerImport implements ToCollection, WithHeadingRow
         
         try{
             \DB::beginTransaction();
+            $prev_no = null;
         foreach($rows as $i => $row){
             $trans_date = fdate($row['transaction_date'], 'Y-m-d');
             $trans_no = $row['transaction_no'];
@@ -46,15 +47,28 @@ class LedgerImport implements ToCollection, WithHeadingRow
             $debit = abs($row['debit']);
             $credit = abs($row['credit']);
             $total = abs($row['total']);
+            $department_ci = $row['department'];
+            $tags = $row['tags'];
             //account
             $account = Account::where('company_id', $company_id)->where('account_no', $account_no)->first();
+            //depart
+            $department_id = null;
+            $tag_id = null;
+            if(!empty($department)){
+                $department = \App\Department::where('company_id', $company_id)->where('custom_id', $department_ci)->first();
+                $department_id =$department!=null?$department->id:null;
+            }
+            if(!empty($tags)){
+                $tag = \App\Tag::where('company_id', $company_id)->where('item_id', $tags)->first();
+                $tag_id =$tag!=null?$tag->id:null;
+            }
             if($account==null){
                 continue;
             }
             $journal = Journal::where('company_id', $company_id)->where('trans_no', $trans_no)->first();
 
             if($journal==null){
-                $numbering = Numbering::findOrFail(1);
+                $numbering = Numbering::where('company_id', $company_id)->where('transaction_type_id', TransactionType::JOURNAL)->first();
                 if($numbering->counter_reset=='y'){
                     $period = date('Y');
                 }else if($numbering->counter_reset=='m'){
@@ -93,12 +107,18 @@ class LedgerImport implements ToCollection, WithHeadingRow
                     }
                 }while($check);                
             }
-            
+            if($prev_no!=$trans_no){
+                $sequence=0;
+                $prev_no = $trans_no;
+            }else{
+                $sequence++;
+            }
             JournalDetail::create([
                 'sequence'=>$sequence,
                 'account_id'=>$account->id,
                 'description'=>$description,
-                'department_id'=>null,
+                'department_id'=>$department_id,
+                'tags'=>$tag_id,
                 'debit'=>$debit,
                 'credit'=>$credit,
                 'journal_id'=>$journal->id,

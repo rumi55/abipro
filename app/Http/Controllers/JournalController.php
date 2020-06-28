@@ -317,7 +317,13 @@ class JournalController extends Controller
         }catch(Exception $e){
             \DB::rollback();
         }
-
+        $reference =[
+            'id'=>$journal->id,
+            'Transaction No.'=>$journal->trans_no,
+            'Total'=>$journal->total
+        ];
+        
+        add_log($is_voucher?'vouchers':'journals', 'create', json_encode($reference));
         return redirect()->route('journals.view', $journal->id)->with('success', 'Jurnal berhasil dibuat');
     }
 
@@ -365,7 +371,7 @@ class JournalController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         $journal = Journal::findOrFail($id);
-        
+        $old_total = $journal->total;
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
         $trans_date = fdate($request->trans_date, 'Y-m-d');
@@ -462,7 +468,20 @@ class JournalController extends Controller
             \DB::commit();        
         }catch(Exception $e){
             \DB::rollback();
-        }        
+        }
+        $reference =[
+            'before'=>[
+                'id'=>$journal->id,
+                'Transaction No.'=>$journal->trans_no,
+                'Total'=>$old_total
+            ],
+            'after'=>[
+                'id'=>$journal->id,
+                'Transaction No.'=>$journal->trans_no,
+                'Total'=>$journal->total
+            ]
+        ];
+        add_log($journal->is_voucher?'vouchers':'journals', 'edit', json_encode($reference));
         return redirect()->route('journals.view', $journal->id)->with('success', 'Jurnal berhasil dibuat');
     }
     public function patch(Request $request){
@@ -649,6 +668,34 @@ class JournalController extends Controller
         $model->delete();
         add_log('journal_types', 'delete', json_encode(['name'=>$name]));
         return redirect()->route('journal_types.index')->with('success', 'Jenis jurnal '.$name.' telah dihapus');
+    }
+    public function import()
+    {
+        return view('journal.import');
+    }
+    public function importSave(Request $request)
+    {
+        
+        $data = $request->all();
+        
+        $user = Auth::user();
+        $company = $user->activeCompany();
+        $rules = [
+            'file'=>'required',
+        ];
+        $attr = [
+            'file'=>'File',
+        ];
+        
+        $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+        $filename = \Str::slug('import_journals_'.$request->target.'_'.date('Y m d H i s').' '.time(),'_');
+        $filename = upload_file('file', $filename, 'public/files/import');
+        $excel = \Excel::import(new \App\Imports\LedgerImport($company->id, $user->id), storage_path("/app/".$filename));
+        add_log('journals', 'import', json_encode(['name'=>'Journal File', 'url'=>url_file($filename)]));
+        return redirect()->route('dcru.index', 'journals')->with('success', 'Jurnla berhasil ditambahkan');        
     }
     
 }

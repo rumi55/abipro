@@ -18,7 +18,8 @@ class Company extends Model
         'tax_no',
         'accounting_period',
         'accounting_start_date',
-        'owner_id'
+        'owner_id',
+        'company_type_id'
     ];
 
     public function owner(){

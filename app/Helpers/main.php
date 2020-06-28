@@ -190,12 +190,16 @@ if (!function_exists('fmonth')) {
 if (!function_exists('fcurrency')) {
     function fcurrency($value){
         if(empty($value))return 0;
-        return number_format($value, 0, ',', '.');
+        return number_format($value, 2, ',', '.');
     }
 }
 if (!function_exists('parse_number')) {
     function parse_number($value){
-        return str_replace('.','', $value);
+        if($value==null){
+            return null;
+        }
+        $value = str_replace('.','', $value);
+        return str_replace(',','.', $value);
     }
 }
 
@@ -332,9 +336,9 @@ if (!function_exists('param')) {
 if (!function_exists('tt')) {
     function tt($model, $field)
     {
-        $field_id = $field.'_id';
+        $field_en = $field.'_en';
         $locale = \App::getLocale();
-        return $locale=='id'?$model->$field_id:$model->$field;
+        return $locale=='en'?$model->$field_en:$model->$field;
     }
 }
 

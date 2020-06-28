@@ -19,4 +19,5 @@ class TransactionType extends Model
     const CASHOUT = 'cashout';
     const PRODUCT = 'product';
     const CONTACT = 'contact';
+    const SALES = 'sales';
 }

@@ -1,11 +1,13 @@
 @php 
 $active_menu='users'; 
+$title = trans('User Activities');
 $breadcrumbs = array(
-    ['label'=>'Pengguna']
+    ['label'=>trans('Users'), 'url'=>route('users.profile')],
+    ['label'=>$title]
 );
 @endphp
 @extends('layouts.app')
-@section('title', 'Aktivitas Pengguna')
+@section('title', $title)
 @section('content')
 <div class="row">
     <div class="col-md-3">

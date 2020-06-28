@@ -1,12 +1,13 @@
 @php 
 $active_menu='users'; 
+$title = trans('Authorization');
 $breadcrumbs = array(
-  ['label'=>'Pengguna', 'url'=>route('users.profile')],
-    ['label'=>'Hak Akses Pengguna']
+  ['label'=>trans('Users'), 'url'=>route('users.profile')],
+    ['label'=>$title]
 );
 @endphp
 @extends('layouts.app')
-@section('title', 'Hak Akses Pengguna')
+@section('title', $title)
 @section('content')
 <div class="row">
     <div class="col-md-3">
@@ -20,10 +21,10 @@ $breadcrumbs = array(
       <div class="col-md-12">
         <div class="input-group mb-2">
           <div class="input-group-prepend">
-            <div class="input-group-text">Modul</div>
+            <div class="input-group-text">{{__('Module')}}</div>
           </div>
           <select id="group" class="form-control select2" name="group">
-            <option value="">Semua Modul</option>
+            <option value="">{{__('All Module')}}</option>
             @foreach($action_groups as $pgroup)
             <option {{$group==$pgroup->group?'selected':''}} value="{{$pgroup->group}}">{{$pgroup->display_group}}</option>
             @endforeach

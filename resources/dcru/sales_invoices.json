@@ -1,7 +1,7 @@
 {
     "name":"sales_invoices",
     "title":"Sales Invoice",
-    "actions":[{"type":"create","label":"Create Sales"}],
+    "actions":[{"type":"create","label":"Create Sale"}],
     "dtables":{
         "title":"Sales Invoice",
         "columns":[
@@ -10,18 +10,18 @@
                 "type":"checkbox"
             },
             {
-                "data":"invoice_date", 
-                "name":"invoice_date", 
+                "data":"trans_date", 
+                "name":"trans_date", 
                 "type":"text", 
                 "title":"Tanggal"
             },
             {
-                "data":"invoice_no", 
-                "name":"invoice_no", 
+                "data":"trans_no", 
+                "name":"trans_no", 
                 "type":"detail",
                 "detail_id":"id", 
-                "detail_name":"sales", 
-                "title":"Invoice No."
+                "detail_name":"sales_invoices", 
+                "title":"Quote No."
             },
             {
                 "data":"customer", 
@@ -30,8 +30,8 @@
                 "title":"Customer"
             },
             {
-                "data":"invoice_total_disc", 
-                "name":"invoice_total_disc", 
+                "data":"total", 
+                "name":"total", 
                 "type":"currency", 
                 "title":"Total"
             },
@@ -55,8 +55,8 @@
             }
         ],
         "query":{
-            "table":"sales",
-            "select":"sales.*, contacts.name as customer",
+            "table":"sales_invoices",
+            "select":"sales_invoices.*, contacts.name as customer",
             "joins":[
                 {
                     "join":"left",
@@ -65,7 +65,7 @@
                 }
             ],
             "where":{
-                "condition": "sales.company_id=? AND is_invoice=1",
+                "condition": "sales_invoices.company_id=?",
                 "params":["user:company_id"]
             }
         }

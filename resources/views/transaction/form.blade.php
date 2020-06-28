@@ -1,14 +1,14 @@
 @php 
 $active_menu="vouchers";
-$type = $transaction->trans_type=='in'?'Penerimaan':'Pengeluaran';
+$type = $transaction->trans_type=='in'?'Cash Receipt':'Cash Payment';
 $title_type = 'Voucher '.$type;
 $breadcrumbs = array(
-    ['label'=>'Voucher', 'url'=>route('dcru.index','vouchers')],
-    ['label'=>($mode=='edit'?'Edit ':'Buat ').$title_type],
+    ['label'=>__('Voucher'), 'url'=>route('dcru.index','vouchers')],
+    ['label'=>($mode=='edit'?__('Edit '.$type):__('New '.$type))],
 );
 @endphp
 @extends('layouts.app')
-@section('title', ($mode=='edit'?'Edit ':'Buat ').$title_type)
+@section('title', ($mode=='edit'?__('Edit '.$type):__('New '.$type)))
 @section('content')
 <form method="POST" action="{{$mode=='edit'?route('vouchers.edit.single.update', ['type'=>$transaction->trans_type, 'id'=>$transaction->id]):route('vouchers.create.single.save', ['type'=>$transaction->trans_type])}}">
 @csrf
@@ -17,13 +17,13 @@ $breadcrumbs = array(
 @endif
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">{{$title_type}} {{$mode=='create'?'Baru':'#'.$transaction->trans_no}}</h5>
+        <h5 class="card-title">{{$mode=='create'?trans('New Voucher'):trans('Voucher ').'#'.$transaction->trans_no}}</h5>
     </div>
     <div class="card-body pb-1">    
         <div class="row">    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label for="trans_no" >Group Transaksi</label>
+                    <label for="trans_no" >{{__('Transaction Group')}}</label>
                     <input name="auto" value="1" type="hidden">
                     <select name="numbering_id" class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
                         @foreach($numberings as $numbering)
@@ -35,22 +35,22 @@ $breadcrumbs = array(
             </div>    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label for="trans_no" >Nomor</label>
+                    <label for="trans_no" >{{__('Transaction No.')}}</label>
                     <input id="trans_no" readonly name="trans_no" type="text" class="form-control" value="@if($mode=='edit') {{old('trans_no',$transaction->trans_no)}} @else [Automatic] @endif" >
                 </div>
             </div>    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label for="trans_date">Tanggal</label>
+                    <label for="trans_date">{{__('Transaction Date')}}</label>
                     <input id="trans_date" name="trans_date" type="text" class="form-control date @error('trans_date') is-invalid @enderror" value="{{fdate(old('trans_date',$transaction->trans_date))}}" >
                     @error('trans_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label>Penerima</label>
+                    <label>{{$transaction->trans_type=='in'?__('Payer'):__('Beneficiary')}}</label>
                     <select name="contact_id" class="form-control select2">
-                        <option value="">--Pilih Kontak--</option>
+                        <option value="">--{{__('Select')}} {{__('Contact')}}--</option>
                         @foreach($contacts as $contact)
                         <option {{old('contact_id', $transaction->contact_id)==$contact->id?'selected':''}} value="{{$contact->id}}">{{$contact->name}}</option>
                         @endforeach
@@ -62,9 +62,9 @@ $breadcrumbs = array(
         <div class="row">    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label>Akun</label>
+                    <label>{{__('Account')}}</label>
                     <select name="account_id" class="form-control select2">
-                    <option value="">--Pilih Akun--</option>
+                    <option value="">--{{__('Select')}} {{__('Account')}}--</option>
                         @foreach($accounts as $account)
                         @if($account->account_type_id==1)
                         <option {{old('account_id', $transaction->account_id)==$account->id?'selected':''}} value="{{$account->id}}">{{$account->account_name}}</option>
@@ -76,9 +76,9 @@ $breadcrumbs = array(
             </div>    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label>Departemen</label>
+                    <label>{{__('Department')}}</label>
                     <select name="department_id" class="form-control select2">
-                    <option value="">--Pilih Departemen--</option>
+                    <option value="">--{{__('Select')}} {{__('Department')}}--</option>
                         @foreach($departments as $department)
                         <option {{old('department_id', $transaction->department_id)==$department->id?'selected':''}} value="{{$department->id}}">{{$department->name}}</option>
                         @endforeach
@@ -88,13 +88,13 @@ $breadcrumbs = array(
             </div>  
             <div class="col-md-6">
                 <div class="form-group">
-                    <label>Keterangan</label>
+                    <label>{{__('Description')}}</label>
                     <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"  rows="1" cols="100">{{old('description',$transaction->description)}}</textarea >
                     @error('description')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>      
         </div>
-        <h4 class="mt-3">Rincian Transaksi</h4>
+        <h4 class="mt-3">{{__('Transaction Detail')}}</h4>
         <div class="container mt-3 mb-3">
             <ul id="detail" class="list-group">
                 @php 
@@ -118,16 +118,16 @@ $breadcrumbs = array(
                         <div class="row">
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="detail_description_{{$i}}" >Keterangan:</label>
+                                    <label for="detail_description_{{$i}}" >{{__('Description')}}:</label>
                                     <textarea id="detail_description_{{$i}}" name="detail_description_{{$i}}" data-index="{{$i}}" class="form-control" rows="1" cols="100" style="width:200px">{{$detail->description}}</textarea>
                                     @error('detail_description_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
                             </div>
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="detail_department_id_{{$i}}" >Departemen:</label>
+                                    <label for="detail_department_id_{{$i}}" >{{__('Department')}}:</label>
                                     <select id="detail_department_id_{{$i}}" name="detail_department_id_{{$i}}" class="form-control select2" style="width:200px">
-                                        <option {{empty(old('detail_department_id_'.$i, $detail->department_id))?'selected':''}} value="">--Pilih Departemen--</option>
+                                        <option {{empty(old('detail_department_id_'.$i, $detail->department_id))?'selected':''}} value="">--{{__('Select')}} {{__('Department')}}--</option>
                                         @foreach($departments as $department)
                                         <option {{old('detail_department_id_'.$i, $detail->department_id)==$department->id?'selected':''}} value="{{$department->id}}">{{$department->name}}</option>
                                         @endforeach
@@ -137,9 +137,9 @@ $breadcrumbs = array(
                             </div>
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="detail_account_id_{{$i}}" >Akun:</label>
+                                    <label for="detail_account_id_{{$i}}" >{{__('Account')}}:</label>
                                     <select id="detail_account_id_{{$i}}" name="detail_account_id_{{$i}}" class="form-control select2" style="width:300px">
-                                    <option value="">--Pilih Akun--</option>
+                                    <option value="">--{{__('Select')}} {{__('Account')}}--</option>
                                         @foreach($accounts as $account)
                                         <option {{old('detail_account_id_'.$i, $detail->account_id)==$account->id?'selected':''}} value="{{$account->id}}">{{$account->account_name}}</option>
                                         @endforeach
@@ -152,7 +152,7 @@ $breadcrumbs = array(
                             </div>
                             <div class="col">
                                 <div class="form-group">
-                                    <label for="detail_amount_{{$i}}" >Jumlah:</label>
+                                    <label for="detail_amount_{{$i}}" >{{__('Total')}}:</label>
                                     <input name="detail_amount_{{$i}}" data-index="{{$i}}" required type="text" id="detail_amount_{{$i}}" class="form-control amount @error('detail_amount_'.$i) is-invalid @enderror" value="{{old('detail_amount_'.$i, $detail!=null?$detail->amount:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail_amount_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
@@ -193,7 +193,7 @@ $breadcrumbs = array(
             </ul>
             <div class="row pr-4 pl-4 mt-2">
                 <div class="col">
-                    <button id="add-btn" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> Tambah Transaksi</button>
+                    <button id="add-btn" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> {{__('Add Transaction')}}</button>
                 </div>
                 <div class="col text-right">
                     <small class="text-muted">Total</small><br>
@@ -207,10 +207,10 @@ $breadcrumbs = array(
     <div class="card-footer">
         <div class="row">
             <div class="col-sm-6">
-                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?'Simpan':'Buat '.$title_type}}</button>
+                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?trans('Save'):trans('Create Voucher')}}</button>
             </div>
             <div class="col-sm-6 text-right">
-                <a href="{{route('dcru.index', 'journals')}}" class="btn btn-default" >Batal</a>
+                <a href="{{route('vouchers.index')}}" class="btn btn-default" >{{__('Cancel')}}</a>
             </div>
         </div>
     </div>
@@ -259,15 +259,15 @@ $(function () {
             <div class="row">
                 <div class="col">
                     <div class="form-group">
-                        <label for="detail_description_${idx}" >Keterangan:</label>
+                        <label for="detail_description_${idx}" >{{__('Description')}}:</label>
                         <textarea id="detail_description_${idx}" name="detail_description_${idx}" data-index="${idx}" class="form-control" rows="1" cols="100" style="width:200px">{{$detail->description}}</textarea>
                     </div>
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="detail_department_id_${idx}" >Departemen:</label>
+                        <label for="detail_department_id_${idx}" >{{__('Department')}}:</label>
                         <select id="detail_department_id_${idx}" name="detail_department_id_${idx}" class="form-control select2" style="width:200px">
-                            <option value="">--Pilih Departemen--</option>
+                            <option value="">--{{__('Select')}} {{__('Department')}}--</option>
                             @foreach($departments as $department)
                             <option value="{{$department->id}}">{{$department->name}}</option>
                             @endforeach
@@ -276,9 +276,9 @@ $(function () {
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="detail_account_id_${idx}" >Akun:</label>
+                        <label for="detail_account_id_${idx}" >{{__('Account')}}:</label>
                         <select id="detail_account_id_${idx}" name="detail_account_id_${idx}" class="form-control select2" style="width:300px">
-                        <option value="">--Pilih Akun--</option>
+                        <option value="">--{{__('Select')}} {{__('Account')}}--</option>
                             @foreach($accounts as $account)
                             <option value="{{$account->id}}">{{$account->account_name}}</option>
                             @endforeach
@@ -287,7 +287,7 @@ $(function () {
                 </div>
                 <div class="col">
                     <div class="form-group">
-                        <label for="detail_amount_${idx}" >Jumlah:</label>
+                        <label for="detail_amount_${idx}" >{{__('Total')}}:</label>
                         <input name="detail_amount_${idx}" data-index="${idx}" required type="text" id="detail_amount_${idx}" class="form-control amount @error('detail_amount_'.$i) is-invalid @enderror" value="{{old('detail_amount_'.$i, $detail!=null?$detail->amount:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                     </div>
                 </div>
