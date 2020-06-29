@@ -208,7 +208,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     //select2
     Route::get('/select2/{name}', 'Select2OutputController@get')->name('select2');
     //JSON Output
-    Route::get('/json/{name}', 'JsonOutputController@index')->name('json.output');
+    Route::get('/json/{name}', 'JSONOutputController@index')->name('json.output');
 
     //CRUD
     Route::get('/dt/{name}', 'DcruController@dt')->name('dcru.index.dt');
