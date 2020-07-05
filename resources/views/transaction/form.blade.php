@@ -1,6 +1,6 @@
 @php 
 $active_menu="vouchers";
-$type = $transaction->trans_type=='in'?'Cash Receipt':'Cash Payment';
+$type = $transaction->trans_type=='receipt'?'Cash Receipt':'Cash Payment';
 $title_type = 'Voucher '.$type;
 $breadcrumbs = array(
     ['label'=>__('Voucher'), 'url'=>route('dcru.index','vouchers')],
@@ -25,7 +25,7 @@ $breadcrumbs = array(
                 <div class="form-group">
                     <label for="trans_no" >{{__('Transaction Group')}}</label>
                     <input name="auto" value="1" type="hidden">
-                    <select name="numbering_id" class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
+                    <select name="numbering_id" @if($mode=='edit') readonly @endif class="form-control @if($mode=='create') select2 @endif @error('numbering_id') is-invalid @enderror" style="width:100%">
                         @foreach($numberings as $numbering)
                         <option {{$numbering->id==old('numbering_id', $transaction->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
                         @endforeach
@@ -48,7 +48,7 @@ $breadcrumbs = array(
             </div>    
             <div class="col-md-3">
                 <div class="form-group">
-                    <label>{{$transaction->trans_type=='in'?__('Payer'):__('Beneficiary')}}</label>
+                    <label>{{$transaction->trans_type=='receipt'?__('Payer'):__('Beneficiary')}}</label>
                     <select name="contact_id" class="form-control select2">
                         <option value="">--{{__('Select')}} {{__('Contact')}}--</option>
                         @foreach($contacts as $contact)
@@ -93,7 +93,7 @@ $breadcrumbs = array(
                     @error('description')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>      
-        </div>
+        </div> 
         <h4 class="mt-3">{{__('Transaction Detail')}}</h4>
         <div class="container mt-3 mb-3">
             <ul id="detail" class="list-group">
@@ -207,7 +207,12 @@ $breadcrumbs = array(
     <div class="card-footer">
         <div class="row">
             <div class="col-sm-6">
-                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?trans('Save'):trans('Create Voucher')}}</button>
+            @if($mode=='edit')
+                <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Save')}}</button>
+            @else
+                <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Submit Voucher')}}</button>
+                <button id="btn-save" type="submit" name="status" value="draft" class="btn btn-primary" >{{trans('Save as Draft')}}</button>
+            @endif
             </div>
             <div class="col-sm-6 text-right">
                 <a href="{{route('vouchers.index')}}" class="btn btn-default" >{{__('Cancel')}}</a>

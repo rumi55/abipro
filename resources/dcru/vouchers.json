@@ -25,7 +25,7 @@
                 "data":"trans_date", 
                 "name":"trans_date", 
                 "type":"date", 
-                "title":"Tanggal"
+                "title":"Transaction Date"
             },
             {
                 "data":"trans_no", 
@@ -33,24 +33,40 @@
                 "type":"detail",
                 "detail_id":"id", 
                 "detail_name":"vouchers", 
-                "title":"Nomor"
+                "title":"Transaction No."
             },
             {
-                "data":"description", 
-                "name":"description", 
-                "type":"text", 
-                "title":"Keterangan"
+                "data":"trans_type", 
+                "name":"trans_type", 
+                "type":"badge", 
+                "badge":{
+                    "receipt":{"color":"success", "text":"receipt"},
+                    "payment":{"color":"primary", "text":"payment"}
+                },
+                "title":"Transaction Type"
             },
             {
-                "data":"total", 
-                "name":"total", 
+                "data":"amount", 
+                "name":"amount", 
                 "type":"currency", 
-                "title":"Jumlah"
+                "title":"Amount"
+            },
+            {
+                "data":"status", 
+                "name":"status", 
+                "type":"badge", 
+                "badge":{
+                    "draft":{"color":"secondary", "text":"draft"},
+                    "submitted":{"color":"warning", "text":"submitted"},
+                    "approved":{"color":"success", "text":"approved"},
+                    "rejected":{"color":"danger", "text":"rejected"}
+                },
+                "title":"Status"
             },
             {
                 "data":"created_name", 
-                "name":"created_by", 
-                "title":"Dibuat oleh",
+                "name":"users.name", 
+                "title":"Created By",
                 "type":"route",
                 "route":{
                     "name":"users.view",
@@ -73,17 +89,9 @@
                     {
                         "label": "Cetak",
                         "icon": "fas fa-print",
+                        "visible":"status==approved",
                         "route": {
                             "name":"vouchers.report"
-                        }
-                    },
-                    {
-                        "label": "Proses ke Jurnal",
-                        "visible":"is_locked==0",
-                        "icon": "fas fa-exchange-alt",
-                        "route": {
-                            "name":"vouchers.tojournal",
-                            "method":"POST"
                         }
                     },
                     {
@@ -103,14 +111,6 @@
         ],
         "bulk_actions":[
             {
-                "label": "Proses ke Jurnal",
-                "confirm":"Apakah Anda yakin akan memproses ke jurnal item terpilih?",
-                "icon": "fas fa-exchange-alt",
-                "route": {
-                    "name":"vouchers.tojournal.batch"
-                }
-            },
-            {
                 "label":"Hapus",
                 "icon":"fas fa-trash",
                 "confirm":"Apakah Anda yakin akan menghapus item terpilih?",
@@ -123,24 +123,24 @@
             }
         ],
         "query":{
-            "table":"journals",
-            "select":"journals.*, users.name as created_name",
+            "table":"transactions",
+            "select":"transactions.*, users.name as created_name",
             "joins":[
                 {
                     "join":"left",
                     "table":"users",
-                    "on":"users.id=journals.created_by"
+                    "on":"users.id=transactions.created_by"
                 }
             ],
             "where":{
-                "condition": "journals.is_voucher=1 AND journals.company_id=?",
+                "condition": "transactions.company_id=?",
                 "params":["user:company_id"]
             }
         }
     },
     "form":{
         "title": "Jurnal",
-        "table": "journals",
+        "table": "transactions",
         "fields":[]
     }
 

@@ -1,112 +1,156 @@
 @php 
-$type = $journal->is_voucher==1?'vouchers':'journals';
-$title_type = $journal->is_voucher==1?'Vouchers':'Jurnal';
-$active_menu=$type; 
+$active_menu='vouchers'; 
 $breadcrumbs = array(
-    ['label'=>$title_type, 'url'=>route('dcru.index',$type)],
-    ['label'=>'Detail '.$title_type],
+    ['label'=>trans('Vouchers'), 'url'=>route('dcru.index','vouchers')],
+    ['label'=>trans('Voucher Detail')],
 );
 @endphp
 @extends('layouts.app')
-@section('title', 'Detil '.$title_type)
+@section('title', trans('Voucher Detail'))
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">{{$title_type}} #{{$journal->trans_no}}</h5>
+        <h5 class="card-title">
+        {{__('Voucher')}} #{{$transaction->trans_no}}
+        @php $status =['draft'=>'secondary', 'submitted'=>'warning', 'approved'=>'success', 'rejected'=>'danger']; @endphp
+        <span class="badge badge-{{$status[$transaction->status]}}">{{$transaction->status}}</span>
+        </h5>
         <div class="card-tools">
         <button type="button" class="btn btn-tool" data-toggle="dropdown">
           <i class="fas fa-th"></i>
         </button>
         <div class="dropdown-menu dropdown-menu-right" role="menu">
-            <a href="{{route($type.'.report', $journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> Cetak</a>
-            <a class="dropdown-divider"></a>
-            <a href="{{route($type.'.edit', $journal->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> Edit</a>
-            <a href="{{route($type.'.create.duplicate', $journal->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> Gandakan</a>
-            <form action="{{route('dcru.delete', ['name'=>'journals', 'id'=>$journal->id])}}" method="POST">
+            @if(has_action('vouchers', 'print') && $transaction->status=='approved')
+            <a href="{{route('vouchers.report', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print')}}</a>
+            <form action="{{route('vouchers.tojournal', ['id'=>$transaction->id])}}" method="POST">
+            @csrf
+            <button class="dropdown-item" ><i class="fas fa-exchange-alt"></i> {{__('Transfer to Journal')}}</button>
+            </form>
+            @endif
+            @if(has_action('vouchers', 'edit'))
+            <a href="{{route('vouchers.edit', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
+            @endif
+            @if(has_action('vouchers', 'create'))
+            <a href="{{route('vouchers.create.duplicate', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
+            @endif
+            @if(has_action('vouchers', 'delete'))
+            <form action="{{route('dcru.delete', ['name'=>'journals', 'id'=>$transaction->id])}}" method="POST">
                 @csrf
                 @method('DELETE')
-            <a href="#" class="dropdown-item btn-delete" ><i class="fas fa-trash"></i> Hapus</a>
+            <a href="#" class="dropdown-item btn-delete text-danger" ><i class="fas fa-trash"></i> {{__('Delete')}}</a>
             </form>
+            @endif
         </div>
         </div>
     </div>
     <div class="card-body pb-1">    
         <div class="row">    
             <dl class="col-md-4">
-                <dt>Nomor</dt>
-                <dd>{{$journal->trans_no}}</dd>
+                <dt>{{__('Transaction No.')}}</dt>
+                <dd>{{$transaction->trans_no}}</dd>
             </dl>    
             <dl class="col-md-4">
-                <dt>Tanggal</dt>
-                <dd>{{fdate($journal->trans_date)}}</dd>
+                <dt>{{__('Transaction Date')}}</dt>
+                <dd>{{fdate($transaction->trans_date)}}</dd>
             </dl>    
             <dl class="col-md-4">
-                <dt>Keterangan</dt>
-                <dd>{{$journal->description}}</dd>
+                <dt>{{$transaction->trans_type=='in'?__('Payer'):__('Beneficiary')}}</dt>
+                <dd><a href="{{route('contacts.view',$transaction->contact_id)}}">{{$transaction->contact!=null?$transaction->contact->name:'-'}}</a></dd>
+            </dl>    
+            <dl class="col-md-4">
+                <dt>{{__('Department')}}</dt>
+                <dd>{{$transaction->department!=null?$transaction->department->name:'-'}}</dd>
+            </dl>    
+            <dl class="col-md-4">
+                <dt>{{__('Account')}}</dt>
+                <dd><a href="{{route('accounts.view',$transaction->account_id)}}">{{$transaction->account!=null?'('.$transaction->account->account_no.') '.$transaction->account->account_name:'-'}}</a></dd>
+            </dl>    
+            <dl class="col-md-4">
+                <dt>{{__('Description')}}</dt>
+                <dd>{{$transaction->description??'-'}}</dd>
             </dl>    
         </div>
         <div class="table-responsive mt-4">
             <table class="table table-hover">
                 <thead>
                     <tr>
-                        <th>Kode</th>
-                        <th>Akun</th>
-                        <th>Keterangan</th>
-                        <th>Departemen</th>
-                        <th class="text-right">Debet</th>
-                        <th class="text-right">Kredit</th>
+                        <th>{{__('Account')}}</th>
+                        <th>{{__('Description')}}</th>
+                        <th>{{__('Department')}}</th>
+                        <th class="text-right">{{__('Amount')}}</th>
                     </tr>
                 </thead>
                 <tbody>
-                @foreach($journal->details as $detail)
+                @foreach($transaction->details as $detail)
                     <tr>
-                        <td>{{$detail->account->account_no}}</td>
-                        <td>{{$detail->account->account_name}}</td>
+                        <td><a href="{{route('accounts.view',$detail->account_id)}}">({{$detail->account->account_no}}) {{$detail->account->account_name}}</a></td>
                         <td>{{$detail->description}}</td>
                         <td>{{$detail->department!=null?$detail->department->name:'-'}}</td>
-                        <td class="text-right">{{fcurrency($detail->debit)}}</td>
-                        <td class="text-right">{{fcurrency($detail->credit)}}</td>
+                        <td class="text-right">{{fcurrency($detail->amount)}}</td>
                     </tr>
                 @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <th colspan="4"></th>
+                        <th colspan="3"></th>
                         <th class="text-right">
-                            <small class="text-muted">Total Debet</small><br>
-                            <span class="text-success">{{fcurrency($journal->total)}}</span>
-                        </th>
-                        <th class="text-right">
-                            <small class="text-muted">Total Kredit</small><br>
-                            <span class="text-success">{{fcurrency($journal->total)}}</span>
+                            <small class="text-muted">{{__('Total')}}</small><br>
+                            <span class="text-success">{{fcurrency($transaction->amount)}}</span>
                         </th>
                     </tr>
                 </tfoot>
             </table>
         </div>
         <div class="row mt-5">
-            <div class="col-sm-6">
-                @if($journal->createdBy!=null)
-                <small>Dibuat oleh <a href="#">{{$journal->createdBy->name}}</a> pada {{fdatetime($journal->created_at)}}</small>
+            <div class="col-sm-4">
+                @if($transaction->createdBy!=null)
+                <small><b>{{__('Created by')}}</b> <a href="{{route('users.view',$transaction->created_by)}}">{{$transaction->createdBy->name}}</a> {{__('at')}} {{fdatetime($transaction->created_at)}}</small>
                 @endif
             </div>
-            <div class="col-sm-6 text-right">
-                @if($journal->updatedBy!=null)
-                <small>Terakhir diperbarui oleh {{$journal->updatedBy->name}} pada {{fdatetime($journal->updated_at)}}</small>
+            <div class="col-sm-4 text-center">
+                @if($transaction->status=='rejected')
+                <small><b>{{__('Rejected by')}}</b> <a href="{{route('users.view',$transaction->approved_by)}}">{{$transaction->approvedBy->name}}</a> {{__('at')}} {{fdatetime($transaction->approved_at)}}</small><br>
+                <small><b>{{__('Rejection Note')}}:</b> {{$transaction->rejection_note}}}}</small>
+                @endif
+                @if($transaction->status=='approved')
+                <small><b>{{__('Approved by')}}</b> <a href="{{route('users.view',$transaction->approved_by)}}">{{$transaction->approvedBy->name}}</a> {{__('at')}} {{fdatetime($transaction->updated_at)}}</small>
+                @endif
+            </div>
+            <div class="col-sm-4 text-right">
+                @if($transaction->updatedBy!=null)
+                <small><b>{{__('Last updated by')}}</b> <a href="{{route('users.view',$transaction->updated_by)}}">{{$transaction->updatedBy->name}}</a> {{__('at')}} {{fdatetime($transaction->updated_at)}}</small>
                 @endif
             </div>
         </div>
     </div>
     <div class="card-footer">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-2">
             @if(!empty($prev_id))
-            <a title="{{$title_type}} Sebelumnya" href="{{route($type.'.view', $prev_id)}}"><i class="fas fa-chevron-left"></i></a>
+            <a title="{{__('Previous')}}" href="{{route('vouchers.view', $prev_id)}}"><i class="fas fa-chevron-left"></i></a>
             @endif
             </div>
-            <div class="col-sm-6 text-right">
+            <div class="col-sm-8 text-center">
+            @if($transaction->status=='submitted' && has_action('vouchers', 'approve'))
+            <form action="{{route('vouchers.approve', $transaction->id)}}" method="POST">
+            @csrf
+            <input id="rejection-note" type="hidden" name="rejection_note" />
+            <input id="status" type="hidden" name="status" />
+            <button type="submit" class="btn btn-success btn-approve">{{__('Approve')}}</button>
+            <button type="submit" class="btn btn-danger btn-reject">{{__('Reject')}}</button>
+            </form>
+            @endif
+            @if($transaction->status=='draft' && has_action('vouchers', 'create') && user('id')==$transaction->created_by)
+            <form action="{{route('vouchers.create.submit', $transaction->id)}}" method="POST">
+            @csrf
+            <input id="status" type="hidden" name="status" value="submitted" />
+            <button type="submit" class="btn btn-success">{{__('Submit')}}</button>
+            </form>
+            @endif
+            </div>
+            <div class="col-sm-2 text-right">
             @if(!empty($next_id))
-            <a title="{{$title_type}} Selanjutnya" href="{{route($type.'.view', $next_id)}}"><i class="fas fa-chevron-right"></i></a>
+            <a title="{{__('Next')}}" href="{{route('vouchers.view', $next_id)}}"><i class="fas fa-chevron-right"></i></a>
             @endif
             </div>
         </div>
@@ -127,6 +171,42 @@ $(function(){
           focusConfirm: false
         }).then(function(result){
           if(result.value){
+            form.submit();
+          }
+        })
+      });
+    $('.btn-approve').click(function(e){
+        e.preventDefault();
+        var form = $(this).parent();
+        Swal.fire({
+          title: '{{__("Warning")}}',
+          icon: 'warning',
+          html:'{{__("Are you sure want to approve this voucher?")}}',
+          showCloseButton: false,
+          showCancelButton: true,
+          focusConfirm: false
+        }).then(function(result){
+          if(result.value){
+              $('#status').val('approved');
+            form.submit();
+          }
+        })
+      });
+    $('.btn-reject').click(function(e){
+        e.preventDefault();
+        var form = $(this).parent();
+        Swal.fire({
+            title: '{{__("Warning")}}',
+          icon: 'warning',
+          html:'{{__("Are you sure want to reject this voucher?")}} {{__("Write your rejection note below!")}}',
+          input: 'textarea',
+          showCloseButton: false,
+          showCancelButton: true,
+          focusConfirm: false
+        }).then(function(result){
+          if(result.value){
+              $('#status').val('rejected');
+              $('#rejection-note').val(result.value);
             form.submit();
           }
         })

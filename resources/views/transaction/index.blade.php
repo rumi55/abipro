@@ -11,8 +11,8 @@ $breadcrumbs = array(
     <i class="fas fa-plus"></i>{{__('Create Voucher')}}
   </button>
   <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-    <a class="dropdown-item" href="{{route('vouchers.create.single', 'in')}}">{{__('Cash Receipt')}}</a>
-    <a class="dropdown-item" href="{{route('vouchers.create.single', 'out')}}">{{__('Cash Payment')}}</a>
+    <a class="dropdown-item" href="{{route('vouchers.create.single', 'receipt')}}">{{__('Cash Receipt')}}</a>
+    <a class="dropdown-item" href="{{route('vouchers.create.single', 'payment')}}">{{__('Cash Payment')}}</a>
   </div>
 </div>
 @endsection

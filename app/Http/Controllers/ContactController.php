@@ -35,6 +35,20 @@ class ContactController extends Controller
         ->where('transaction_type_id', \App\TransactionType::CONTACT)->get();
         return view('company.contact.form', compact('model', 'mode', 'numberings'));
     }
+    public function view($id){
+        $company_id = company('id');
+        $contact = Contact::findOrFail($id);
+        if($contact->company_id!=$company_id){
+            abort(404);
+        }
+        $prev=Contact::where('company_id', $contact->company_id)
+        ->where('id','<', $contact->id)->orderBy('id', 'desc')->first();
+        $next=Contact::where('company_id', $contact->company_id)
+        ->where('id','>', $contact->id)->orderBy('id', 'asc')->first();
+        $prev_id = $prev!=null?$prev->id:'';
+        $next_id = $next!=null?$next->id:'';
+        return view('company.contact.view', compact('contact', 'next_id', 'prev_id'));
+    }
     public function edit($id){
         $model = Contact::findOrFail($id);
         $mode = 'edit';
@@ -50,9 +64,9 @@ class ContactController extends Controller
         $rules = [
             'custom_id' => 'nullable|max:16|unique:contacts,custom_id,NULL,id,company_id,'.$company->id,
             'name' => 'required|max:128',
-            'email' => 'required|max:64|unique:contacts,email,NULL,id,company_id,'.$company->id,
-            'phone' => 'required|max:16|unique:contacts,phone,NULL,id,company_id,'.$company->id,
-            'mobile' => 'required|max:16|unique:contacts,mobile,NULL,id,company_id,'.$company->id,
+            'email' => 'nullable|max:64|unique:contacts,email,NULL,id,company_id,'.$company->id,
+            'phone' => 'nullable|max:16|unique:contacts,phone,NULL,id,company_id,'.$company->id,
+            'mobile' => 'nullable|max:16|unique:contacts,mobile,NULL,id,company_id,'.$company->id,
             'address' => 'max:128'
         ];
         if(empty($data['numbering_id'])){
@@ -114,9 +128,9 @@ class ContactController extends Controller
         $rules = [
             'custom_id' => 'nullable|max:16|unique:contacts,custom_id,'.$id.',id,company_id,'.$company->id,
             'name' => 'required|max:128',
-            'email' => 'required|max:64|unique:contacts,email,'.$id.',id,company_id,'.$company->id,
-            'phone' => 'required|max:64|unique:contacts,phone,'.$id.',id,company_id,'.$company->id,
-            'mobile' => 'required|max:16|unique:contacts,mobile,'.$id.',id,company_id,'.$company->id,
+            'email' => 'nullable|max:64|unique:contacts,email,'.$id.',id,company_id,'.$company->id,
+            'phone' => 'nullable|max:64|unique:contacts,phone,'.$id.',id,company_id,'.$company->id,
+            'mobile' => 'nullable|max:16|unique:contacts,mobile,'.$id.',id,company_id,'.$company->id,
             'address' => 'max:128'
         ];
         $attr = [

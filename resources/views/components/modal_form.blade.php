@@ -1,7 +1,7 @@
 <div class="modal fade {{$class ?? ''}}" id="{{$id ?? ''}}">
   <div class="modal-dialog">
     <div class="modal-content {{$bg ?? ''}}">
-    <form id="{{ $form_id ?? '' }}" action="{{$action}}" method="POST">
+    <form id="{{ $form_id ?? '' }}" action="{{$action}}" method="POST"  enctype="multipart/form-data" autocomplete="off">
     @csrf
     @isset($method)
       @method($method)
@@ -16,8 +16,8 @@
         {{$slot}}
       </div>
       <div class="modal-footer justify-content-between">
-        <button type="button" class="btn {{empty($bg)?'btn-default':'btn-outline-light'}}" data-dismiss="modal">Tutup</button>
         <button type="submit" class="btn {{empty($bg)?'btn-primary':'btn-outline-light'}}">{{$btn_label}}</button>
+        <button type="button" class="btn {{empty($bg)?'btn-default':'btn-outline-light'}}" data-dismiss="modal">Tutup</button>
       </div>
     </form>
     </div>

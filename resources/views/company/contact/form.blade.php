@@ -29,15 +29,17 @@ $breadcrumbs = array(
             <div class="col-md-10 col-sm-10">
             @if($mode=='create')
             <div class="input-group">
+            <div class="input-group-prepend">
             <select id="numbering_id" name="numbering_id" class="form-control select2 @error('numbering_id') is-invalid @enderror">
                 @foreach($numberings as $numbering)
                 <option {{$numbering->id==old('numbering_id', $model->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
                 @endforeach
                 <option {{empty(old('numbering_id', $model->numbering_id))?'selected':''}} value="">{{__('Manual')}}</option>
             </select>
-            @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
+            </div>
             <input type="text" required class="form-control @error('custom_id') is-invalid @enderror  @error('display_name') is-invalid @enderror" name="custom_id" id="custom_id" value="{{old('custom_id', $model->custom_id)}}" placeholder="{{__('Enter ID')}}">
             </div>
+            @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
             @error('custom_id') <small class="text-danger">{!! $message !!}</small> @enderror
             <small class="text-muted">{{__('Choose numbering format.')}}</small>
             @else
@@ -77,21 +79,21 @@ $breadcrumbs = array(
         <div class="form-group row">
             <label for="email" class="col-sm-2 col-form-label">{{__('Email')}}</label>
             <div class="col-md-10 col-sm-10">
-            <input type="email" required class="form-control @error('email') is-invalid @enderror " name="email" id="email" value="{{old('email', $model->email)}}">
+            <input type="email" class="form-control @error('email') is-invalid @enderror " name="email" id="email" value="{{old('email', $model->email)}}">
             @error('email') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>
         <div class="form-group row">
             <label for="phone" class="col-sm-2 col-form-label">{{__('Phone')}}</label>
             <div class="col-md-10 col-sm-10">
-            <input type="text" required class="form-control @error('phone') is-invalid @enderror " name="phone" id="phone" value="{{old('phone', $model->phone)}}">
+            <input type="text" class="form-control @error('phone') is-invalid @enderror " name="phone" id="phone" value="{{old('phone', $model->phone)}}">
             @error('phone') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>
         <div class="form-group row">
             <label for="mobile" class="col-sm-2 col-form-label">{{__('Mobile Phone')}}</label>
             <div class="col-md-10 col-sm-10">
-            <input type="text" required class="form-control @error('mobile') is-invalid @enderror " name="mobile" id="mobile" value="{{old('mobile', $model->mobile)}}">
+            <input type="text" class="form-control @error('mobile') is-invalid @enderror " name="mobile" id="mobile" value="{{old('mobile', $model->mobile)}}">
             @error('mobile') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>

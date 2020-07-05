@@ -230,13 +230,13 @@ class DcruController extends Controller
                     if(array_key_exists('items', $column)){
                         $items = $column['items'];
                         foreach($items as $item){
+                            $visible = true;
                             if(isset($item['visible'])){
                                 $vis = explode('==', $item['visible']);
                                 if(count($vis)==2){
                                     $o = $vis[0];
                                     $p = $vis[1];
-                                    $visible = $dat->$o==intVal($p);
-                                    
+                                    $visible = $dat->$o==$p;
                                 }
                             }
                             if(array_key_exists('type', $item)){

@@ -32,11 +32,7 @@
             {
                 "data":"",
                 "name":"",
-                "type":"menu",
-                "items":[
-                    {"label":"Edit", "type":"edit"},
-                    {"label":"Delete", "type":"delete"}
-                ]
+                "type":"menu"
             }
         ],
         "query":{

@@ -19,6 +19,7 @@ $breadcrumbs = array(
         </button>
         <div class="dropdown-menu dropdown-menu-right" role="menu">
             <a href="{{route('sales_invoices.edit', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
+            <a href="{{route('sales_invoices.edit', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
             <a href="{{route('sales_invoices.create.duplicate', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
             <form action="{{route('sales_invoices.delete', ['id'=>$transaction->id])}}" method="POST">
                 @csrf

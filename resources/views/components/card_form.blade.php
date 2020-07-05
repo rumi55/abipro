@@ -4,7 +4,7 @@
         @if($method!='GET')
         @csrf
         @endif
-        @if($method=='PUT')
+        @if($method=='PUT' || $method=='DELETE')
             @method($method)
         @endif
     @endisset    
@@ -20,7 +20,7 @@
         {{$slot}}
         </div>
         <div class="card-footer">
-            <button id="{{$btn_id??$id.'-btn'}}" type="submit" class="btn btn-primary">{{ $btn_label ?? trans('Save')}}</button>
+            <button id="{{$btn_id??$id.'-btn'}}" type="submit" class="btn {{ $btn_color ?? 'btn-primary'}}">{{ $btn_label ?? trans('Save')}}</button>
         </div>
     </form>    
 </div>

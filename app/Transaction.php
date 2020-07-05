@@ -7,12 +7,12 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Transaction extends Model
 {
-    use SoftDeletes;
+    // use SoftDeletes;
 
     protected $fillable = [
         'trans_type','trans_no', 'trans_date', 'contact_id', 'amount', 
         'transaction_type_id', 'company_id', 'account_id', 'department_id', 'tags',
-        'created_by', 'updated_by'
+        'created_by', 'updated_by', 'status', 'description'
     ];
 
     public function details(){
@@ -48,6 +48,9 @@ class Transaction extends Model
     }
     public function updatedBy(){
         return $this->belongsTo('App\User', 'updated_by', 'id');
+    }
+    public function approvedBy(){
+        return $this->belongsTo('App\User', 'approved_by', 'id');
     }
 
 }

@@ -1,12 +1,19 @@
 {
     "Department":"Departemen",
+    "Departments":"Departemen",
     "Company":"Perusahaan",
+    "Companies":"Perusahaan",
     "Company Profile":"Profil Perusahaan",
 
     "Chart of Accounts":"Daftar Akun",
     "Account":"Akun",
     "Voucher":"Voucher",
+    "Vouchers":"Voucher",
+    "Voucher submitted!":"Vouhcer telah diajukan!",
+    "Voucher approved!":"Vouhcer telah disetujui!",
+    "Voucher rejected!":"Vouhcer ditolak!",
     "Journal":"Jurnal",
+    "Journals":"Jurnal",
     "Ledger":"Buku Besar",
     "Journal Type":"Jenis Jurnal",
     "Journal Transactions":"Transaksi Jurnal",
@@ -58,12 +65,20 @@
     
     "Sales":"Penjualan",
     "Sales Quote":"Penawaran Penjualan",
+    "Create Sales Quote":"Buat Penawaran Penjualan",
     "Sales Order":"Pesanan Penjualan",
     "Sales Invoice":"Penagihan Penjualan",
     "Purchase":"Pembelian",
     "Purchases":"Pembelian",
     "Order":"Pemesanan",
     "Invoice No.":"No. Faktur",
+
+    "Created by":"Dibuat oleh",
+    "Updated by":"Diperbarui oleh",
+    "Last updated by":"Terakhir diperbarui oleh",
+    "Approved by":"Disetujui oleh",
+    "Rejected by":"Ditolak oleh",
+    "at":"pada",
     
     "Product":"Produk",
     "Product ID":"Kode Produk",
@@ -196,6 +211,12 @@
     "Columns":"Kolom",
     "Print":"Cetak",
     "Activate":"Aktifkan",
+    "Submit Voucher":"Ajukan Voucher",
+    "Submit":"Kirim",
+    "Save as Draft":"Simpan sebagai Konsep",
+    
+    "Data Reference":"Data Referensi",
+    "Data Transaction":"Data Transaksi",
 
     "Select":"Pilih",
     "Please Choose":"Silakan Pilih",
@@ -212,6 +233,10 @@
     "New :attr has been created.":":attr baru berhasil ditambahkan.",
     "Changes have been saved.":"Perubahan telah disimpan.",
     "Item has been deleted.":"Item telah dihapus.",
+    ":attr has been deleted.":":attr telah dihapus.",
     "Are you sure want to delete the selected item?":"Apakah Anda yakin ingin menghapus item terpilih?",
-    "Are you sure want to delete the selected items?":"Apakah Anda yakin ingin menghapus item terpilih?"
+    "Are you sure want to delete the selected items?":"Apakah Anda yakin ingin menghapus item terpilih?",
+    "Are you sure want to approve this voucher?":"Apakah Anda yakin ingin menyetujui voucher ini?",
+    "Are you sure want to reject this voucher?":"Apakah Anda yakin ingin menolak voucher ini?",
+    "Write your rejection note below!":"Tulis catatan penolakan Anda di bawah ini!"
 }

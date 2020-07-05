@@ -23,8 +23,9 @@ class HomeController extends Controller
      */
     public function index()
     {
-        
-        return view('home.index');
+        $company_id = company('id');
+        $vouchers= \App\Transaction::where('company_id',$company_id)->where('status', 'submitted')->limit(5)->get();
+        return view('home.index', compact('vouchers'));
     }
     
 }

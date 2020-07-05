@@ -34,6 +34,8 @@ class AccountExport implements FromCollection, ShouldAutoSize, WithHeadings
         ->leftJoin(DB::raw('accounts b'), DB::raw('b.id'), '=', DB::raw('a.account_parent_id'))
         ->where('a.company_id', $this->company_id)
         ->selectRaw("a.account_no, a.account_name, a.account_type_id as account_type, b.account_no as account_parent_no, null as opening_balance, null as opening_balance_date")
-        ->orderBy('a.id', 'asc')->get();
+        ->orderBy('a.account_type_id', 'asc')
+        ->orderBy('a.sequence', 'asc')
+        ->get();
     }
 }

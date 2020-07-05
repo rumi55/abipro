@@ -23,8 +23,21 @@ class TransactionController extends Controller
         $data = dcru_dt('vouchers', 'dtables');
         return view('transaction.index', $data);
     }
-    
-    
+
+    public function view($id){
+        $company_id = company('id');
+        $transaction = Transaction::findOrFail($id);
+        if($transaction->company_id!=$company_id){
+            abort(404);
+        }
+        $prev=Transaction::where('company_id', $transaction->company_id)
+        ->where('id','<', $transaction->id)->orderBy('id', 'desc')->first();
+        $next=Transaction::where('company_id', $transaction->company_id)
+        ->where('id','>', $transaction->id)->orderBy('id', 'asc')->first();
+        $prev_id = $prev!=null?$prev->id:'';
+        $next_id = $next!=null?$next->id:'';
+        return view('transaction.view', compact('transaction', 'next_id', 'prev_id'));
+    }
     
     public function reportTransaction(Request $request){
         $data = $this->query($request, 1);
@@ -33,6 +46,7 @@ class TransactionController extends Controller
         return $pdf->download('Transaction.pdf');
         // return $pdf->stream('Transaction.pdf');
     }
+
     public function report(Request $request){
         $data = $this->query($request);
         // $period_start = $request->query('period_end');
@@ -41,76 +55,6 @@ class TransactionController extends Controller
         $pdf = PDF::loadView('pdf.Transaction.report', array('Transactions'=>$data, 'title'=>'Laporan Transaction'));
         return $pdf->download('Transactions.pdf');
         // return $pdf->stream('Transaction.pdf');
-    }
-    
-    public function query(Request $request, $is_Transaction=0){
-        $company_id = Auth::user()->activeCompany()->id;
-        $transaction = Transaction::where('company_id', '=', $company_id);
-        $page_size = $request->query('page_size', $transaction->count());
-        $sort_key = $request->query('sort_key');
-        $sort_order = $request->query('sort_order', 'asc');
-        $search = $request->query('search');
-        $filter = $request->query('filter');
-        if(isset($filter)){
-            foreach($filter as $column => $value){
-                if($column=='type'){
-                    $values = explode(',',$value);
-                    $transaction = $transaction->where(function ($query) use($values){
-                        foreach($values as $i=> $val){
-                            if($i==0){
-                                $query->where('transaction_type_id','=', $val);
-                            }else{
-                                $query->orWhere('transaction_type_id','=', $val);
-                            }
-                        }
-                    });
-                    // $transaction = $transaction->where('transaction_type_id','=', "$value");
-                }else{
-                    $transaction = $transaction->where($column,'=', "$value");
-                }
-            }
-        }
-        if(!empty($search)){
-            $transaction = $transaction->where(function ($query) use($search){
-                $query->where('trans_no','like', "%$search%")
-                ->orWhere('trans_date','like', "%$search%")
-                ->orWhere('description','like', "%$search%");
-            });
-        }
-
-        $sort = $request->query('sort');
-        if(!empty($sort)){
-            $sort = explode('-',$sort);
-            $sort_key=$sort[0];
-            $sort_order=count($sort)==2?(substr($sort[1], 0, 3)=='asc'?'asc':'desc'):'asc';
-            $transaction = $transaction->orderBy($sort_key, $sort_order);
-        }    
-        
-        if(!empty($sort_key)){
-            $transaction = $transaction->orderBy($sort_key, $sort_order);
-        }
-        if(empty($sort_key) && empty($sort)){
-            $transaction = $transaction->orderBy('trans_date', 'desc');
-            $transaction = $transaction->orderBy('trans_no', 'desc');
-        }
-        $transaction = $transaction->paginate($page_size)->appends($request->query());
-        return TransactionResource::collection($transaction);
-    }
-    public function get($id){
-        $id = decode($id);
-        $trans = Transaction::findOrFail($id);
-        $prev=Transaction::where('company_id', $trans->company_id)
-        ->where('transaction_type_id',$trans->transaction_type_id)
-        ->where('id','<', $trans->id)
-        ->orderBy('id', 'desc')->first();
-        $next=Transaction::where('company_id', $trans->company_id)
-        ->where('transaction_type_id',$trans->transaction_type_id)
-        ->where('id','>', $trans->id)->orderBy('id', 'asc')->first();
-        return (new TransactionResource($trans))
-        ->additional(['meta' => [
-            'previous' => $prev!=null?encode($prev->id):'',
-            'next' => $next!=null?encode($next->id):'',
-        ]]);
     }
     
     public function create(Request $request, $type){
@@ -128,10 +72,10 @@ class TransactionController extends Controller
         $mode = 'create';
         return view('transaction.form', compact('transaction', 'mode', 'accounts', 'contacts','departments', 'numberings', 'tags'));
     }
-    public function duplicate(Request $request, $type, $id){
+    public function duplicate(Request $request, $id){
         $company_id = \Auth::user()->activeCompany()->id;
         $transaction = Transaction::findOrFail($id);
-        if($transaction->trans_type != $type){
+        if($transaction->company_id != $company_id){
             abort(404);
         }
         $accounts = \App\Account::where('company_id', $company_id)
@@ -144,10 +88,10 @@ class TransactionController extends Controller
         $mode = 'create';
         return view('transaction.form', compact('transaction', 'mode', 'accounts', 'contacts','departments', 'numberings', 'tags'));
     }
-    public function edit(Request $request, $type, $id){
-        $company_id = \Auth::user()->activeCompany()->id;
+    public function edit(Request $request, $id){
+        $company_id = company('id');
         $transaction = Transaction::findOrFail($id);
-        if($transaction->trans_type != $type){
+        if($transaction->company_id != $company_id){
             abort(404);
         }
         $accounts = \App\Account::where('company_id', $company_id)
@@ -249,6 +193,7 @@ class TransactionController extends Controller
                             'trans_date'=>$trans_date,
                             'trans_type'=>$type,
                             'contact_id'=>$data['contact_id'],
+                            'status'=>$data['status'],
                             'department_id'=>$data['department_id'],
                             // 'tags'=>$request->tags,
                             'description'=>$data['description'],
@@ -293,7 +238,7 @@ class TransactionController extends Controller
                 ]);    
             }
             //
-            $this->addToJournal($transaction);
+            // $this->addToJournal($transaction);
             \DB::commit();        
         }catch(Exception $e){
             \DB::rollback();
@@ -446,12 +391,33 @@ class TransactionController extends Controller
             foreach($old_details as $detail){
                 $detail->delete();
             }
-            $this->updateJournal($transaction, $transaction_details);    
+            // $this->updateJournal($transaction, $transaction_details);    
             \DB::commit();        
         }catch(Exception $e){
             \DB::rollback();
         }        
-        return redirect()->route('dcru.index', 'vouchers')->with('success', 'Transaksi berhasil diperbarui.');
+        return redirect()->route('vouchers.view', $transaction->id)->with('success', trans('Changes have been saved.'));
+    }
+    public function approve(Request $request, $id){
+        $company_id = company('id');
+        $transaction = Transaction::findOrFail($id);
+        if($transaction->company_id!=$company_id || !(in_array($request->status, ['approved', 'rejected', 'submitted'])) ){
+            abort(401);
+        }
+        if($request->status=='submitted' && user('id')!=$transaction->created_by){
+            abort(401);
+        }
+        $transaction->status = $request->status;
+        $transaction->approved_at = date('Y-m-d H:i:s');
+        $transaction->approved_by = user('id');
+        $transaction->rejection_note = $request->rejection_note;
+        $transaction->update();
+        if($transaction->status=='approved'){
+            $this->addToJournal($transaction);
+        }
+        
+        $msg = $transaction->status=='submitted'?trans('Voucher submitted!'):($transaction->status=='approved'?trans('Voucher approved!'):trans('Voucher rejected!'));
+        return redirect()->route('vouchers.view', $transaction->id)->with('success', $msg);
     }
     public function patch(Request $request, $id){
         $decoid = decode($id);
@@ -470,16 +436,17 @@ class TransactionController extends Controller
     }
     public function delete($id)
     {
-        $id = decode($id);
+        $company_id = company('id');
         $transaction = Transaction::findOrFail($id);
+        if($transaction->company_id!=$company_id){
+            abort(401);
+        }
         $type = $transaction->transaction_type_id;
-        $journal = Journal::where('transaction_id', $id)->where('transaction_type_id', $type)->first();
         $transaction->delete();
-        $journal->delete();
-        return response()->json(null, 204);
+        return redirect()->route('vouchers.index')->with('success', trans(':attr has been deleted.', ['attr'=>trans('Voucher')]));
     }
     
-
+    
     public function batchDelete(Request $request){
         $id = $request->id;
         $ids = array();
@@ -493,15 +460,14 @@ class TransactionController extends Controller
             ->delete();
         }
         Transaction::destroy($ids);
-
-        return response()->json(null, 204);
+        return redirect()->route('vouchers.index')->with('success', trans(':attr has been deleted.', ['attr'=>trans('Voucher')]));
     }
     
 
     private function updateJournal($transaction, $transaction_details){
-        if($transaction->trans_type=='in'){
+        if($transaction->trans_type=='receipt'){
             $description = 'Penerimaan dari '.$transaction->contact->name;
-        }else if($transaction->trans_type=='out'){
+        }else if($transaction->trans_type=='payment'){
             $description = 'Pengeluaran untuk '.$transaction->contact->name;
         }
         $journal = Journal::where('is_single_entry', 1)
@@ -521,10 +487,10 @@ class TransactionController extends Controller
         
         $debit = 0;
         $credit = 0;
-        if($transaction->trans_type=='in'){
+        if($transaction->trans_type=='receipt'){
             $debit = $transaction->amount;
             $credit = 0;
-        }else if($transaction->trans_type=='out'){
+        }else if($transaction->trans_type=='payment'){
             $credit = $transaction->amount;
             $debit = 0;
         }
@@ -550,10 +516,10 @@ class TransactionController extends Controller
         foreach($transaction_details as $i =>$detail){
             $debit = 0;
             $credit = 0;
-            if($transaction->trans_type=='in'){
+            if($transaction->trans_type=='receipt'){
                 $credit = $detail->amount;
                 $debit = 0;
-            }else if($transaction->trans_type=='out'){
+            }else if($transaction->trans_type=='payment'){
                 $debit = $detail->amount;
                 $credit = 0;
             }
@@ -604,9 +570,9 @@ class TransactionController extends Controller
     }
 
     private function addToJournal($transaction){
-        if($transaction->trans_type=='in'){
+        if($transaction->trans_type=='receipt'){
             $description = 'Penerimaan dari '.$transaction->contact->name;
-        }else if($transaction->trans_type=='out'){
+        }else if($transaction->trans_type=='payment'){
             $description = 'Pengeluaran untuk '.$transaction->contact->name;
         }
         
@@ -636,7 +602,7 @@ class TransactionController extends Controller
                     'trans_no'=>$transaction->trans_no,
                     'trans_date'=>$transaction->trans_date,
                     'description'=>$description,
-                    'is_voucher'=>true,
+                    'is_voucher'=>false,
                     'is_single_entry'=>true,
                     'company_id'=>$transaction->company_id,
                     // 'department_id'=>$transaction->department_id,
@@ -644,7 +610,7 @@ class TransactionController extends Controller
                     'total'=>$transaction->amount,
                     'transaction_type_id'=>$transaction->transaction_type_id,
                     'transaction_id'=>$transaction->id,
-                    'created_by'=>Auth::user()->id
+                    'created_by'=>$transaction->created_by
                 ]);
                 $jcounter->save();
                 $check = false;
@@ -652,10 +618,10 @@ class TransactionController extends Controller
         }while($check);
         $debit = 0;
         $credit = 0;
-        if($transaction->trans_type=='in'){
+        if($transaction->trans_type=='receipt'){
             $debit = $transaction->amount;
             $credit = 0;
-        }else if($transaction->trans_type=='out'){
+        }else if($transaction->trans_type=='payment'){
             $credit = $transaction->amount;
             $debit = 0;
         }
@@ -664,6 +630,7 @@ class TransactionController extends Controller
             'account_id'=>$transaction->account_id,
             'description'=>$description,
             'department_id'=>$transaction->department_id,
+            'is_locked'=>true,
             // 'tags'=>$transaction->tags,
             'debit'=>$debit,
             'credit'=>$credit,
@@ -673,10 +640,10 @@ class TransactionController extends Controller
         foreach($transaction->details as $i =>$detail){
             $debit = 0;
             $credit = 0;
-            if($transaction->trans_type=='in'){
+            if($transaction->trans_type=='receipt'){
                 $credit = $detail->amount;
                 $debit = 0;
-            }else if($transaction->trans_type=='out'){
+            }else if($transaction->trans_type=='payment'){
                 $debit = $detail->amount;
                 $credit = 0;
             }

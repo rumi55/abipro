@@ -5,17 +5,26 @@ Auth::routes();
 Route::group(['middleware'=>['auth', 'owner']],function(){
     Route::get('/company/register', 'CompanyController@register')->name('company.register');
     Route::post('/company', 'CompanyController@create')->name('company.create');
-    Route::get('/companies', 'CompanyController@index')->name('companies.index');
-    Route::put('/companies/{id}', 'CompanyController@setActive')->name('companies.active');
 });
 
 Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/', 'HomeController@index')->name('home');
     //
-
+    
     Route::get('/company/profile', 'CompanyController@profile')->name('company.profile');
     Route::get('/company/profile/edit', 'CompanyController@profileEdit')->name('company.profile.edit');
     Route::put('/company/profile', 'CompanyController@profileUpdate')->name('company.profile.update');
+    
+    Route::get('/companies', 'CompanyController@index')->name('companies.index');
+    Route::put('/companies/{id}', 'CompanyController@setActive')->name('companies.active');
+    Route::delete('/companies/{id}/delete', 'CompanyController@delete')->name('companies.delete');
+    Route::get('/companies/{id}/delete', 'CompanyController@confirmDelete')->name('companies.delete.confirm');
+    Route::get('/companies/transfer', 'CompanyController@transfer')->name('companies.transfer');
+    Route::post('/companies/transfer', 'ImportDataController@transfer')->name('companies.transfer.save');
+    Route::get('/companies/import', 'CompanyController@import')->name('companies.import');
+    Route::post('/companies/import', 'ImportDataController@import')->name('companies.import.save');
+    Route::get('/companies/export', 'CompanyController@export')->name('companies.export');
+    Route::get('/companies/{name}/export', 'ExportDataController@excel')->name('companies.export.excel');
 
     //departments
     Route::get('/departments', 'DepartmentController@index')->name('departments.index');
@@ -30,6 +39,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/contacts/create', 'ContactController@create')->name('contacts.create');
     Route::post('/contacts', 'ContactController@save')->name('contacts.create.save');
     Route::get('/contacts/{id}/edit', 'ContactController@edit')->name('contacts.edit');
+    Route::get('/contacts/{id}', 'ContactController@view')->name('contacts.view');
     Route::put('/contacts/{id}/update', 'ContactController@update')->name('contacts.edit.update');
     Route::delete('/contacts/{id}', 'ContactController@delete')->name('contacts.delete');
     
@@ -45,6 +55,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/sortirs', 'TagController@index')->name('tags.index');
     Route::get('/sortirs/create', 'TagController@create')->name('tags.create');
     Route::post('/sortirs', 'TagController@save')->name('tags.create.save');
+    Route::get('/sortirs/{id}/duplicate', 'TagController@duplicate')->name('tags.create.duplicate');
     Route::get('/sortirs/{id}/edit', 'TagController@edit')->name('tags.edit');
     Route::put('/sortirs/{id}/update', 'TagController@update')->name('tags.edit.update');
     Route::delete('/sortirs/{id}', 'TagController@delete')->name('tags.delete');
@@ -68,13 +79,16 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/vouchers/create/{type}', 'TransactionController@create')->name('vouchers.create.single');
     Route::post('/vouchers/create/{type}', 'TransactionController@save')->name('vouchers.create.single.save');
     Route::post('/vouchers', 'JournalController@save')->name('vouchers.create.save');
-    Route::get('/vouchers/{id}/edit', 'JournalController@edit')->name('vouchers.edit');
-    Route::get('/vouchers/{type}/{id}/duplicate', 'TransactionController@duplicate')->name('vouchers.create.single.duplicate');
+    Route::post('/vouchers/{id}/approve', 'TransactionController@approve')->name('vouchers.approve');
+    Route::post('/vouchers/{id}/submit', 'TransactionController@approve')->name('vouchers.create.submit');
+    Route::get('/vouchers/{id}/edit', 'TransactionController@edit')->name('vouchers.edit');
+    Route::get('/vouchers/{id}/duplicate', 'TransactionController@duplicate')->name('vouchers.create.duplicate');
     Route::get('/vouchers/{type}/{id}/edit', 'TransactionController@edit')->name('vouchers.edit.single');
     Route::put('/vouchers/{type}/{id}/edit', 'TransactionController@update')->name('vouchers.edit.single.update');
+    Route::delete('/vouchers/{id}', 'TransactionController@delete')->name('vouchers.delete');
     Route::put('/vouchers/{id}', 'JournalController@update')->name('vouchers.edit.update');
-    Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicate')->name('vouchers.create.duplicate');
-    Route::get('/vouchers/{id}', 'JournalController@view')->name('vouchers.view');
+    // Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicate')->name('vouchers.create.duplicate');
+    Route::get('/vouchers/{id}', 'TransactionController@view')->name('vouchers.view');
     Route::get('/vouchers/{id}/report', 'JournalController@report')->name('vouchers.report');
     Route::get('/vouchers/{id}/receipt', 'JournalController@receipt')->name('vouchers.receipt');
     Route::post('/vouchers/{id}/journal', 'JournalController@toJournal')->name('vouchers.tojournal');

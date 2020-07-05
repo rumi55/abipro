@@ -59,7 +59,7 @@ foreach($parameters as $key=>$param){
         url: "{!! asset(route('dcru.index.dt', ['name'=>$name], false)) !!}",
         data: { {!! $str_data !!} dtname:"{{$dtname}}"}
       },
-      lengthMenu: [[10, 25, 50, 100,-1], [10, 25, 50, 100,"Semua"]],
+      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
       columns:[
         @foreach($dtcolumns as $dt)
           @if(!($dt['type']=='checkbox' && $cb_actions==0))

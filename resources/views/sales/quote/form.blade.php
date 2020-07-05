@@ -140,14 +140,14 @@ $breadcrumbs = array(
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_unit_price_{{$i}}" >{{__('Unit Price')}}:</label>
-                                    <input name="transaction[detail][{{$i}}][unit_price]" data-index="{{$i}}" required type="text" id="detail_unit_price_{{$i}}" class="form-control unit_price calc number @error('detail_unit_price_'.$i) is-invalid @enderror" value="{{fcurrency(old('transaction.detail.'.$i.'.unit_price', empty($detail->unit_price)?'0,00':$detail->unit_price))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input name="transaction[detail][{{$i}}][unit_price]" data-index="{{$i}}" required type="text" id="detail_unit_price_{{$i}}" class="form-control unit_price calc number @error('detail_unit_price_'.$i) is-invalid @enderror" value="{{fcurrency(old('transaction.detail.'.$i.'.unit_price', empty($detail->unit_price)?'0':$detail->unit_price))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('transaction.detail.'.$i.'.unit_price')<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
                             </div>
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="discount_{{$i}}"><input id="discount_{{$i}}" type="checkbox" class="switch_discount" data-index="{{$i}}" /> {{__('Discount')}} <span id="discount_type_{{$i}}"> (%) </span>:</label>
-                                    <input style="min-width:80px;display:none" name="transaction[detail][{{$i}}][discount]" data-index="{{$i}}" type="text" id="detail_discount_{{$i}}" class="form-control @error('transaction.detail.'.$i.'.discount') is-invalid @enderror number discount calc" value="{{fcurrency(old('transaction.detail.'.$i.'.discount', empty($detail->discount)?'0,00':$detail->discount))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input style="min-width:80px;display:none" name="transaction[detail][{{$i}}][discount]" data-index="{{$i}}" type="text" id="detail_discount_{{$i}}" class="form-control @error('transaction.detail.'.$i.'.discount') is-invalid @enderror number discount calc" value="{{fcurrency(old('transaction.detail.'.$i.'.discount', empty($detail->discount)?'0':$detail->discount))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     <input style="min-width:80px" name="transaction[detail][{{$i}}][discount_percent]" data-index="{{$i}}" type="text" id="detail_discount_percent_{{$i}}" class="form-control @error('transaction.detail.'.$i.'.discount_percent') is-invalid @enderror number discount_percent calc" value="{{fcurrency(old('transaction.detail.'.$i.'.discount_percent', empty($detail->discount_percent)?'0':$detail->discount_percent))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('transaction.detail.'.$i.'.discount')<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
@@ -163,7 +163,7 @@ $breadcrumbs = array(
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_amount_{{$i}}" >{{__('Amount')}}:</label>
-                                    <input name="transaction[detail][{{$i}}][amount]" readonly data-index="{{$i}}" required type="text" id="detail_amount_{{$i}}" class="form-control amount number @error('transaction.detail.'.$i.'.amount') is-invalid @enderror" value="{{fcurrency(old('transaction.detail.'.$i.'.amount', empty($detail->amount)?'0,00':$detail->amount))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input name="transaction[detail][{{$i}}][amount]" data-index="{{$i}}" required type="text" id="detail_amount_{{$i}}" class="form-control amount number @error('transaction.detail.'.$i.'.amount') is-invalid @enderror" value="{{fcurrency(old('transaction.detail.'.$i.'.amount', empty($detail->amount)?'0':$detail->amount))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('transaction.detail.'.$i.'.amount')<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
                             </div>
@@ -232,7 +232,46 @@ $breadcrumbs = array(
 $(function () {
     load();
     init()
-    
+    $('.products').select2({
+        theme: 'bootstrap4',
+        ajax:{
+            url: "{{route('json.output', 'products')}}",
+            dataType: 'json',
+            data: function(params){
+                return {
+                    search: params.term
+                }
+            },
+            // data: function (params) {
+            //     var query = {
+            //         search: params.term
+            //     }
+            //     return query;
+            //     }
+            // },
+            processResults: function (res) {
+                // Transforms the top-level key of the response object from 'items' to 'results'
+                var results = $.map(res.data, function (item) {
+                return {
+                    id: item.id,
+                    text: '('+item.custom_id+') '+item.name,
+                    unit_price: item.sale_price,
+                    unit_id: item.unit.id,
+                    unit_name: item.unit.name,
+                    main_desc: item.name,
+                    left_desc: item.custom_id,
+                    right_desc: item.category.name
+                 }
+                })
+                return {
+                    results: results
+                }
+            }
+        },
+        placeholder: 'Select Product',
+        allowClear: true,
+        templateResult: formatResults
+    })
     $('.date').daterangepicker({
       timePicker: false,
       singleDatePicker:true,
@@ -395,7 +434,7 @@ function  setup(){
         var percent = parseDec($(this).val());
         if(percent>100){
             percent = 100;
-            $(this).val('100,00');
+            $(this).val('100');
         }
         var qty = parseNumber($('#detail_quantity_'+index).val());
         var unitPrice = parseNumber($('#detail_unit_price_'+index).val());
@@ -497,14 +536,14 @@ function addRow(){
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_unit_price_${idx}" >{{__('Unit Price')}}:</label>
-                                    <input name="transaction[detail][${idx}][unit_price]" value="0,00" data-index="${idx}" required type="text" id="detail_unit_price_${idx}" class="form-control unit_price calc " data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input name="transaction[detail][${idx}][unit_price]" value="0" data-index="${idx}" required type="text" id="detail_unit_price_${idx}" class="form-control unit_price calc " data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                 </div>
                             </div>
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="discount_${idx}"><input id="discount_${idx}" type="checkbox" class="switch_discount" data-index="${idx}" /> {{__('Discount')}} <span id="discount_type_${idx}"> (%) </span>:</label>
-                                    <input style="min-width:80px;display:none" name="transaction[detail][${idx}][discount]" data-index="${idx}" type="text" id="detail_discount_${idx}" class="form-control  number discount calc" value="0,00"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
-                                    <input style="min-width:80px" name="transaction[detail][${idx}][discount_percent]" data-index="${idx}" type="text" id="detail_discount_percent_${idx}" class="form-control  number discount_percent calc" value="0,00"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input style="min-width:80px;display:none" name="transaction[detail][${idx}][discount]" data-index="${idx}" type="text" id="detail_discount_${idx}" class="form-control  number discount calc" value="0"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input style="min-width:80px" name="transaction[detail][${idx}][discount_percent]" data-index="${idx}" type="text" id="detail_discount_percent_${idx}" class="form-control  number discount_percent calc" value="0"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                 </div>
                             </div>
                             <div class="col-md-2 col-sm-6">
@@ -517,7 +556,7 @@ function addRow(){
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_amount_${idx}" >{{__('Amount')}}:</label>
-                                    <input name="transaction[detail][${idx}][amount]" value="0,00" readonly data-index="${idx}" required type="text" id="detail_amount_${idx}" class="form-control amount " data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input name="transaction[detail][${idx}][amount]" value="0" readonly data-index="${idx}" required type="text" id="detail_amount_${idx}" class="form-control amount " data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                 </div>
                             </div>
                         </div>
@@ -553,27 +592,28 @@ var products = [];
 var taxes = [];
 var units = [];
 function load(){
-    $.ajax({
-        url: "{{route('json.output', 'products')}}",
-        dataType: 'json',
-        success: function(res){
-            products = $.map(res.data, function (item) {
-                return {
-                    id: item.id,
-                    text: '('+item.custom_id+') '+item.name,
-                    unit_price: item.sale_price,
-                    unit_id: item.unit.id,
-                    unit_name: item.unit.name,
-                    main_desc: item.name,
-                    left_desc: item.custom_id,
-                    right_desc: item.category.name
-                }
-            })
-            $('.products').each(function(index){
-                setSelect2('#detail_product_id_'+index,products)
-            })
-        }
-    });
+    
+    // $.ajax({
+    //     url: "{{route('json.output', 'products')}}",
+    //     dataType: 'json',
+    //     success: function(res){
+    //         products = $.map(res.data, function (item) {
+    //             return {
+    //                 id: item.id,
+    //                 text: '('+item.custom_id+') '+item.name,
+    //                 unit_price: item.sale_price,
+    //                 unit_id: item.unit.id,
+    //                 unit_name: item.unit.name,
+    //                 main_desc: item.name,
+    //                 left_desc: item.custom_id,
+    //                 right_desc: item.category.name
+    //             }
+    //         })
+    //         $('.products').each(function(index){
+    //             setSelect2('#detail_product_id_'+index,products)
+    //         })
+    //     }
+    // });
     $.ajax({
         url: "{{route('json.output', 'taxes')}}",
         dataType: 'json',

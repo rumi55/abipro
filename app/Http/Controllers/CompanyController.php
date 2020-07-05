@@ -19,7 +19,8 @@ class CompanyController extends Controller
 {
     public function index(Request $request){
         $user = Auth::user();
-        $companies = Company::where('owner_id', $user->id)
+        $company = $user->activeCompany();
+        $companies = Company::where('owner_id', $company->owner_id)
         ->orderBy('is_active', 'desc')
         ->orderBy('name')
         ->get();
@@ -170,13 +171,7 @@ class CompanyController extends Controller
         return new CompanyResource($company);
     }
 
-    public function delete($id)
-    {
-        $id = decode($id);
-        $company = Company::findOrFail($id);
-        $company->delete();
-        return response()->json(null, 204);
-    }
+    
 
     public function upload(Request $request){
         $user = Auth::user();
@@ -192,5 +187,56 @@ class CompanyController extends Controller
     public function getCompanyTypes(){
         $types = CompanyType::all();
         return CompanyTypeResource::collection($types);
+    }
+
+    public function delete(Request $request, $id)
+    {
+        $company = Company::findOrFail($id);
+        $password = Auth::user()->password;
+        if(!(\Hash::check($request->password, $password))) {
+            return redirect()->back()->with('error', 'Wrong password');
+        }
+        $company->delete();
+        return redirect()->route('companies.index', company('id'))->with('success', 'Company has been deleted.');
+    }
+    public function confirmDelete($id)
+    {
+        $user = Auth::user();
+        $companies = Company::where('owner_id', $user->id)
+        ->orderBy('is_active', 'desc')
+        ->orderBy('name')
+        ->get();
+        $company = Company::findOrFail($id);
+        return view('company.form_delete', compact('company', 'companies'));
+    }
+    public function import()
+    {
+        $user = Auth::user();
+        $companies = Company::where('owner_id', $user->id)
+        ->orderBy('is_active', 'desc')
+        ->orderBy('name')
+        ->get();
+        $company = $user->activeCompany();
+        return view('company.import', compact('company', 'companies'));
+    }
+    public function export()
+    {
+        $user = Auth::user();
+        $companies = Company::where('owner_id', $user->id)
+        ->orderBy('is_active', 'desc')
+        ->orderBy('name')
+        ->get();
+        $company = $user->activeCompany();
+        return view('company.export', compact('company', 'companies'));
+    }
+    public function transfer()
+    {
+        $user = Auth::user();
+        $companies = Company::where('owner_id', $user->id)
+        ->orderBy('is_active', 'desc')
+        ->orderBy('name')
+        ->get();
+        $company = $user->activeCompany();
+        return view('company.transfer', compact('company', 'companies'));
     }
 }

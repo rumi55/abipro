@@ -101,7 +101,7 @@ class NumberingController extends Controller
             'counter_start'=>'required|integer|min:0',
         ];
         $attr = [
-            'name' => 'Jenis Jurnal',
+            'name' => 'Jenis Transaksi',
             'format' => 'Format Penomoran',
             'counter_start'=>'Counter Reset',
             'counter_digit'=>'Counter Digit',
@@ -113,7 +113,6 @@ class NumberingController extends Controller
         }
         $model->name = $request->name;
         $model->format = $request->format;
-        $model->transaction_type_id = 'journal';
         $model->counter_reset = $request->counter_reset;
         $model->counter_digit = $request->counter_digit;
         $model->counter_start = $request->counter_start;

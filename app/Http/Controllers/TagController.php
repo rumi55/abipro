@@ -72,6 +72,11 @@ class TagController extends Controller
         $mode = 'create';
         return view('company.tag.form', compact('model', 'mode'));
     }
+    public function duplicate($id){
+        $model = Tag::findOrFail($id);
+        $mode = 'create';
+        return view('company.tag.form', compact('model', 'mode'));
+    }
     public function edit($id){
         $model = Tag::findOrFail($id);
         $mode = 'edit';

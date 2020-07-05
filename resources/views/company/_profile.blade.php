@@ -12,11 +12,19 @@
               <img class="profile-user-img img-fluid img-circle" src="{{url_image($company->logo)}}" alt="Logo">
             </div>
             @if(!$company->is_active)
-            <form action="{{route('companies.active', $company->id)}}" method="POST">
+            <form action="{{route('companies.active', $company->id)}}" method="POST" class="mb-2">
             @method('PUT')
             @csrf
-              <button type="submit" class="btn btn-success btn-block">{{__('Activate')}}</button>
+              <button type="submit" class="btn btn-success btn-block">{{__('Activate').' '.__('Company')}}</button>
             </form>
+            @endif
+            @if($user->is_owner && $company->is_active)
+              <a href="{{route('companies.export')}}" class="btn btn-info btn-block">{{__('Export Data')}}</a>
+              <a href="{{route('companies.import')}}" class="btn btn-info btn-block">{{__('Import Data')}}</a>
+              <a href="{{route('companies.transfer')}}" class="btn btn-info btn-block">{{__('Transfer Data')}}</a>
+            @endif
+            @if($user->is_owner && !$company->is_active)
+              <a href="{{route('companies.delete.confirm', $company->id)}}" class="btn btn-danger btn-block">{{__('Delete').' '.__('Company')}}</a>
             @endif
           </div>
           <div class="col-md-9 col-sm-12">

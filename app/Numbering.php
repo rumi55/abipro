@@ -19,16 +19,7 @@ class Numbering extends Model
 
     public static function createDefault($company_id){
         Numbering::create([
-            'name'=>'Jurnal Umum',
-            'company_id'=>$company_id,
-            'format'=>'J[c].[m].[Y]',
-            'counter_digit'=>6,
-            'counter_reset'=>'y',
-            'counter_start'=>1,
-            'transaction_type_id'=>TransactionType::JOURNAL, 
-        ]);
-        Numbering::create([
-            'name'=>'Jurnal Umum',
+            'name'=>'Adjustment Journal',
             'company_id'=>$company_id,
             'format'=>'ADJ-[c]/[m]/[Y]',
             'counter_digit'=>6,
@@ -36,41 +27,95 @@ class Numbering extends Model
             'counter_start'=>1,
             'transaction_type_id'=>TransactionType::JOURNAL, 
         ]);
-        // Numbering::create([
-        //     'name'=>'Penerimaan',
-        //     'company_id'=>$company_id,
-        //     'format'=>'CI-[c]/[m]/[Y]',
-        //     'counter_digit'=>6,
-        //     'counter_reset'=>'y',
-        //     'counter_start'=>1,
-        //     'transaction_type_id'=>TransactionType::CASHIN, 
-        // ]);
-        // Numbering::create([
-        //     'name'=>'Pembayaran',
-        //     'company_id'=>$company_id,
-        //     'format'=>'CO-[c]/[m]/[Y]',
-        //     'counter_digit'=>6,
-        //     'counter_reset'=>'y',
-        //     'counter_start'=>1,
-        //     'transaction_type_id'=>TransactionType::CASHOUT, 
-        // ]);
-        // Numbering::create([
-        //     'name'=>'Biaya',
-        //     'company_id'=>$company_id,
-        //     'format'=>'EXP-[c]/[m]/[Y]',
-        //     'counter_digit'=>6,
-        //     'counter_reset'=>'y',
-        //     'counter_start'=>1,
-        //     'transaction_type_id'=>TransactionType::EXPENSE, 
-        // ]);
-        // Numbering::create([
-        //     'name'=>'Produk',
-        //     'company_id'=>$company_id,
-        //     'format'=>'P-[c]',
-        //     'counter_digit'=>6,
-        //     'counter_reset'=>'n',//no reset
-        //     'counter_start'=>1,
-        //     'transaction_type_id'=>TransactionType::PRODUCT, 
-        // ]);
+        Numbering::create([
+            'name'=>'Bank In Journal',
+            'company_id'=>$company_id,
+            'format'=>'BI-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Bank Out Journal',
+            'company_id'=>$company_id,
+            'format'=>'BO-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Cash In Journal',  
+            'company_id'=>$company_id,
+            'format'=>'CI-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Cash Out Journal',
+            'company_id'=>$company_id,
+            'format'=>'CO-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Expenses Journal',
+            'company_id'=>$company_id,
+            'format'=>'EXP-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Operational Expenses Journal',
+            'company_id'=>$company_id,
+            'format'=>'OPS-[c]/[m]/[Y]',
+            'counter_digit'=>6,
+            'counter_reset'=>'y',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::JOURNAL, 
+        ]);
+        Numbering::create([
+            'name'=>'Customer ID',
+            'company_id'=>$company_id,
+            'format'=>'CUST-[c]',
+            'counter_digit'=>6,
+            'counter_reset'=>'n',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::CONTACT, 
+        ]);
+        Numbering::create([
+            'name'=>'Supplier ID',
+            'company_id'=>$company_id,
+            'format'=>'SUP-[c]',
+            'counter_digit'=>6,
+            'counter_reset'=>'n',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::CONTACT, 
+        ]);
+        Numbering::create([
+            'name'=>'Employee ID',
+            'company_id'=>$company_id,
+            'format'=>'EMP-[c]',
+            'counter_digit'=>6,
+            'counter_reset'=>'n',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::CONTACT, 
+        ]);
+        Numbering::create([
+            'name'=>'Product ID',
+            'company_id'=>$company_id,
+            'format'=>'PROD-[c]',
+            'counter_digit'=>6,
+            'counter_reset'=>'n',
+            'counter_start'=>1,
+            'transaction_type_id'=>TransactionType::PRODUCT, 
+        ]);
     }
 }

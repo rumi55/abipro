@@ -1,5 +1,5 @@
 @php 
-$active_menu='company'; 
+$active_menu=''; 
 $breadcrumbs = array(
     ['label'=>trans('Company')]
 );
@@ -20,7 +20,7 @@ $breadcrumbs = array(
           <ul class="nav nav-pills flex-column">
           @foreach($companies as $i=> $company)
             <li class="nav-item">
-              <a href="#comp-{{$company->id}}" class="nav-link {{$i==0?' active':''}}" data-toggle="tab">
+              <a href="#comp-{{$company->id}}" class="nav-link {{empty(request('id'))?($i==0?' active':''):(request('id')==$company->id?' active':'')}}" data-toggle="tab">
               {{$company->name}}
               @if($company->is_active)<span class="float-right badge badge-success">{{__('Active')}}</span>@endif
               </a>
@@ -33,7 +33,7 @@ $breadcrumbs = array(
     <div class="col-md-8">
       <div class="tab-content p-0">
         @foreach($companies as $i=> $company)
-        <div id="comp-{{$company->id}}" class="tab-pane {{$i==0?' active':''}}">
+        <div id="comp-{{$company->id}}" class="tab-pane {{empty(request('id'))?($i==0?' active':''):(request('id')==$company->id?' active':'')}}">
           @include('company._profile', ['company'=>$company])
         </div>      
         @endforeach

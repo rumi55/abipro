@@ -189,6 +189,7 @@ if (!function_exists('fmonth')) {
 }
 if (!function_exists('fcurrency')) {
     function fcurrency($value){
+        $value = parse_number($value);
         if(empty($value))return 0;
         return number_format($value, 2, ',', '.');
     }
