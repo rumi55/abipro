@@ -37,7 +37,7 @@ class LedgerImport implements ToCollection, WithHeadingRow
         try{
             \DB::beginTransaction();
             $prev_no = null;
-        foreach($rows as $i => $row){
+            foreach($rows as $i => $row){
             $trans_date = fdate($row['transaction_date'], 'Y-m-d');
             $trans_no = $row['transaction_no'];
             $description = $row['description'];

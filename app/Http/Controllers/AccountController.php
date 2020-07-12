@@ -27,6 +27,7 @@ class AccountController extends Controller
         $accounts = $account->get();
         return view('account.index', compact('accounts'));
     }
+    
 
     public function view($id){ 
         $account = Account::findOrFail($id);

@@ -18,7 +18,7 @@ $breadcrumbs = array(
         'method'=>'POST', 'btn_label'=>__('Submit')
     ])
       @slot('title') 
-      <a href="{{route('company.profile')}}"><i class="fas fa-chevron-left"></i></a> {{__('Transfer Data')}} {{$company->name}}
+      <a href="{{route('companies.index')}}"><i class="fas fa-chevron-left"></i></a> {{__('Transfer Data')}} {{$company->name}}
       @endslot
       <div class="callout callout-info">
         <p>Proses ini akan menggabungkan data dari sumber data perusahaan terpilih.</p>

@@ -48,22 +48,67 @@
               {{__('Voucher')}}
               </p>
             </a>
+          </li>          
+                    
+          <li class="nav-item has-treeview {{isset($active_menu) && in_array($active_menu,['sales_invoices', 'sales_quotes','sales_orders'])?'menu-open':''}}">
+            <a href="#" class="nav-link {{isset($active_menu) && in_array($active_menu,['sales_invoices', 'sales_quotes','sales_orders'])?'active':''}}">
+              <i class="nav-icon fas fa-shopping-cart"></i>
+              <p>
+              {{__('Sales')}} 
+                <i class="right fas fa-angle-left"></i>
+              </p>
+            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{asset(route('dcru.index', ['name'=>'sales_invoices'],false))}}" class="nav-link {{isset($active_menu) && $active_menu=='sales_invoices'?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>{{__('Sales Invoice')}} </p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{asset(route('dcru.index', ['name'=>'sales_orders'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='sales_orders'?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>{{__('Sales Order')}} </p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{asset(route('dcru.index', ['name'=>'sales_quotes'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='sales_quotes'?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>{{__('Sales Quote')}} </p>
+                </a>
+              </li>
+            </ul>
           </li>
           <li class="nav-item">
-            <a href="{{asset(route('dcru.index', ['name'=>'journals'], false))}}" class="nav-link {{isset($active_menu) && $active_menu=='journals'?'active':''}}">
+            <a href="{{route('dcru.index', 'products')}}" class="nav-link {{isset($active_menu) && $active_menu=='products'?'active':''}}">
+              <i class="nav-icon  	fas fa-box"></i>
+              <p>
+              {{__('Product')}} 
+              </p>
+            </a>
+          </li>
+          <li class="nav-item has-treeview {{isset($active_menu) && ($active_menu=='journals' || $active_menu=='accounts')?'menu-open':''}}">
+            <a href="#" class="nav-link {{isset($active_menu) && ($active_menu=='journals' || $active_menu=='accounts')?'active':''}}">
               <i class="nav-icon fas fa-book"></i>
               <p>
-              {{__('Journals')}}
+              {{__('Ledger')}} 
+                <i class="right fas fa-angle-left"></i>
               </p>
             </a>
-          </li>
-          <li class="nav-item">
-            <a href="{{asset(route('dcru.index', ['name'=>'accounts'], false))}}" class="nav-link {{isset($active_menu) && $active_menu=='accounts'?'active':''}}">
-              <i class="nav-icon fas fa-wallet"></i>
-              <p>
-              {{__('Chart of Account')}}
-              </p>
-            </a>
+            <ul class="nav nav-treeview">
+              <li class="nav-item">
+                <a href="{{asset(route('dcru.index', ['name'=>'journals'],false))}}" class="nav-link {{isset($active_menu) && $active_menu=='journals'?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>{{__('Journal')}} </p>
+                </a>
+              </li>
+              <li class="nav-item">
+                <a href="{{asset(route('dcru.index', ['name'=>'accounts'], false))}}" class="nav-link  {{isset($active_menu) && $active_menu=='accounts'?'active':''}}">
+                  <i class="far fa-circle nav-icon"></i>
+                  <p>{{__('Account')}} </p>
+                </a>
+              </li>
+            </ul>
           </li>
           <li class="nav-item">
             <a href="{{route('company.profile')}}" class="nav-link {{isset($active_menu) && $active_menu=='company'?'active':''}}">

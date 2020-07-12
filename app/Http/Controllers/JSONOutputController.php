@@ -15,6 +15,9 @@ class JSONOutputController extends Controller
         
         return $this->$name($request);
     }
+    public function account_types(Request $request){
+        return \App\AccountType::all();
+    }
     public function accounts(Request $request){
         $company_id = company('id');
         $account = Account::where('company_id', $company_id);

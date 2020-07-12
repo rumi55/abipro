@@ -15,7 +15,7 @@ $breadcrumbs = array(
     <div class="col-md-9">
     @component('components.card')
       @slot('title') 
-      <a href="{{route('company.profile')}}"><i class="fas fa-chevron-left"></i></a> {{__('Impor Data')}} {{$company->name}}
+      <a href="{{route('companies.index')}}"><i class="fas fa-chevron-left"></i></a> {{__('Impor Data')}} {{$company->name}}
       @endslot
         <div class="row">
             <div class="col-md-6">

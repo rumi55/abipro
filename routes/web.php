@@ -25,7 +25,17 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::post('/companies/import', 'ImportDataController@import')->name('companies.import.save');
     Route::get('/companies/export', 'CompanyController@export')->name('companies.export');
     Route::get('/companies/{name}/export', 'ExportDataController@excel')->name('companies.export.excel');
-
+    
+    //conversion
+    Route::get('/conversion', 'ConvertAbiproController@index')->name('convert.index');
+    Route::post('/conversion/upload/{name}', 'ConvertAbiproController@upload')->name('convert.upload');
+    Route::get('/conversion/departments', 'ConvertAbiproController@departmentConversion')->name('convert.departments');
+    Route::get('/conversion/sortirs', 'ConvertAbiproController@sortirConversion')->name('convert.sortirs');
+    Route::get('/conversion/chart_of_accounts', 'ConvertAbiproController@accountConversion')->name('convert.accounts');
+    Route::get('/conversion/journals', 'ConvertAbiproController@journalConversion')->name('convert.journals');
+    Route::get('/conversion/account_type_mapping', 'ConvertAbiproController@accountTypeMapping')->name('convert.account_type_mapping');
+    Route::put('/conversion/account_type_mapping', 'ConvertAbiproController@accountTypeMappingSave')->name('convert.account_type_mapping.save');
+    
     //departments
     Route::get('/departments', 'DepartmentController@index')->name('departments.index');
     Route::get('/departments/create', 'DepartmentController@create')->name('departments.create');

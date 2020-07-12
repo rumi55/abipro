@@ -337,6 +337,9 @@ if (!function_exists('param')) {
 if (!function_exists('tt')) {
     function tt($model, $field)
     {
+        if($model==null){
+            return '-';
+        }
         $field_en = $field.'_en';
         $locale = \App::getLocale();
         return $locale=='en'?$model->$field_en:$model->$field;

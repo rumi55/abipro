@@ -118,9 +118,26 @@ class CompanyController extends Controller
             DB::beginTransaction();
             $company = Company::create($data);
             //create default user group
-            UserGroup::create(['name'=>'admin', 'display_name'=>'Admin', 'company_id'=>$company->id]);
-            UserGroup::create(['name'=>'operator', 'display_name'=>'Operator', 'company_id'=>$company->id]);
-            
+            $admin = UserGroup::create(['name'=>'admin', 'display_name'=>'Admin', 'company_id'=>$company->id]);
+            $operator = UserGroup::create(['name'=>'operator', 'display_name'=>'Operator', 'company_id'=>$company->id]);
+            $query = DB::table('actions');
+            $action_count = $query->count();
+            $query->chunkById($action_count, function ($actions) use($admin, $operator, $company) {
+                foreach($actions as $action){
+                    DB::table('user_group_actions')->updateOrInsert(
+                        ['user_group_id'=>$admin->id,'action_id'=>$action->id,'company_id'=>$company->id],
+                        ['user_group_id'=>$admin->id,'action_id'=>$action->id,'company_id'=>$company->id]
+                    );
+                    if(in_array($action->name, ['index','view']) || in_array($action->group,['reports']) ||
+                    (in_array($action->name, ['journals', 'vouchers', 'contacts']) && in_array($action->name, ['edit', 'create', 'delete']))
+                    ){
+                        DB::table('user_group_actions')->updateOrInsert(
+                            ['user_group_id'=>$operator->id,'action_id'=>$action->id,'company_id'=>$company->id],
+                            ['user_group_id'=>$operator->id,'action_id'=>$action->id,'company_id'=>$company->id]
+                        );
+                    }
+                }
+            });
             //setup data
             //insert data journal type, numbering format
             \App\Numbering::createDefault($company->id);
@@ -238,5 +255,15 @@ class CompanyController extends Controller
         ->get();
         $company = $user->activeCompany();
         return view('company.transfer', compact('company', 'companies'));
+    }
+    public function convert()
+    {
+        $user = Auth::user();
+        $companies = Company::where('owner_id', $user->id)
+        ->orderBy('is_active', 'desc')
+        ->orderBy('name')
+        ->get();
+        $company = $user->activeCompany();
+        return view('company.convert', compact('company', 'companies'));
     }
 }
