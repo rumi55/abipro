@@ -70,4 +70,20 @@ class User extends Authenticatable
         $user_group_id = $userGroup!=null?$userGroup->user_group_id:0;
         return \DB::table('user_group_actions')->where('action_id', $action->id)->where('user_group_id', $user_group_id)->exists();
     }
+    
+    public static function getUsersHaveAction($group, $action){
+        $company = \Auth::user()->activeCompany();
+        $company_id = $company->id;
+        $users = \DB::table('users')
+        ->join('company_users', function($join)use($company_id){
+            $join->on('company_users.user_id', '=', 'users.id')->where('company_id', $company_id);
+        })
+        ->join('user_group_actions', 'user_group_actions.user_group_id', '=', 'company_users.user_group_id')
+        ->join('actions', function($join)use($group,$action){
+            $join->on('user_group_actions.action_id', '=', 'actions.id')
+                 ->where('group', '=', $group)->where('actions.name', $action);
+        })
+        ->pluck('users.id')->toArray();
+        return array_merge([$company->owner_id],$users);
+    }
 }

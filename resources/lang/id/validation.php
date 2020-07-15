@@ -113,7 +113,7 @@ return [
     'starts_with' => ':attribute must start with one of following: :values',
     'string' => ':attribute harus berupa string.',
     'timezone' => ':attribute must be a valid zone.',
-    'unique' => ':attribute telah diambil.',
+    'unique' => ':attribute sudah ada.',
     'uploaded' => ':attribute failed to upload.',
     'url' => ':attribute format is invalid.',
     'uuid' => ':attribute must be a valid UUID.',

@@ -72,12 +72,27 @@ class DcruController extends Controller
         if(count($filter)>0){
             $query = $query->where(function($q)use($filter){
                 foreach($filter as $fil){
-                    if($fil['type']=='daterange'){
-                        if(!empty($fil['value']['start'])){
-                            $q = $q->where($fil['name'], '>=', fdate($fil['value']['start'], 'Y-m-d'));
+                    
+                    if(isset($fil['value']['start']) && isset($fil['value']['end'])){
+                        $start = $fil['value']['start'];
+                        $end = $fil['value']['end'];
+                        if(strpos($start, '.')>-1){
+                            $start = parse_number($start);
+                            $end = parse_number($end);
+                        }else
+                        if(strpos($start, '-')>-1){
+                            $start = fdate($start, 'Y-m-d');
+                            $end = fdate($end, 'Y-m-d');
                         }
-                        if(!empty($fil['value']['end'])){
-                            $q = $q->where($fil['name'], '<=', fdate($fil['value']['end'], 'Y-m-d'));
+                        if(!empty($start)){
+                            $q = $q->where($fil['name'], '>=', $start);
+                        }
+                        if(!empty($end)){
+                            $q = $q->where($fil['name'], '<=', $end);
+                        }
+                    }else if(is_array($fil['value'])){
+                        if(count($fil['value'])>0){
+                            $q = $q->whereIn($fil['name'], $fil['value']);
                         }
                     }else{
                         if(!empty($fil['value'])){
@@ -86,6 +101,7 @@ class DcruController extends Controller
                     }
                 }
             });
+            // $query->dd();
         }
         
         $order_flag = 0;

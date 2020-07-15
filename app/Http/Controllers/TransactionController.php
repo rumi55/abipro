@@ -239,6 +239,20 @@ class TransactionController extends Controller
             }
             //
             // $this->addToJournal($transaction);
+            if($transaction->status=='submitted'){
+                notify([
+                    'url'=>route('vouchers.view', $transaction->id),
+                    'message_en'=>$transaction->createdBy->name.' submitted a new voucher',
+                    'message'=>$transaction->createdBy->name.' mengajukan voucher baru',
+                    'users'=>\App\User::getUsersHaveAction('vouchers', 'approve')
+                ]);
+            }
+            $reference =[
+                'id'=>$transaction->id,
+                'Transaction No.'=>$transaction->trans_no,
+                'Total'=>$transaction->total
+            ];
+            add_log('vouchers', 'create', json_encode($reference));
             \DB::commit();        
         }catch(Exception $e){
             \DB::rollback();
@@ -400,11 +414,12 @@ class TransactionController extends Controller
     }
     public function approve(Request $request, $id){
         $company_id = company('id');
+        $user = \Auth::user();
         $transaction = Transaction::findOrFail($id);
         if($transaction->company_id!=$company_id || !(in_array($request->status, ['approved', 'rejected', 'submitted'])) ){
             abort(401);
         }
-        if($request->status=='submitted' && user('id')!=$transaction->created_by){
+        if($request->status=='submitted' && $user->id!=$transaction->created_by){
             abort(401);
         }
         $transaction->status = $request->status;
@@ -414,7 +429,19 @@ class TransactionController extends Controller
         $transaction->update();
         if($transaction->status=='approved'){
             $this->addToJournal($transaction);
+            $msg = $user->name.' menyetujui voucher #'.$transaction->trans_no;
+            $msg_en = $user->name.' approved voucher #'.$transaction->trans_no;
+        }else
+        if($transaction->status=='rejected'){
+            $msg = $user->name.' menolak voucher #'.$transaction->trans_no;
+            $msg_en = $user->name.' rejected voucher #'.$transaction->trans_no;
         }
+        notify([
+            'url'=>route('vouchers.view', $transaction->id),
+            'message_en'=>$msg_en,
+            'message'=>$msg,
+            'users'=>[$transaction->created_by]
+        ]);
         
         $msg = $transaction->status=='submitted'?trans('Voucher submitted!'):($transaction->status=='approved'?trans('Voucher approved!'):trans('Voucher rejected!'));
         return redirect()->route('vouchers.view', $transaction->id)->with('success', $msg);

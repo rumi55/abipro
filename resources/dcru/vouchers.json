@@ -31,6 +31,11 @@
                 "data":"trans_no", 
                 "name":"trans_no", 
                 "type":"detail",
+                "filter":{
+                    "type":"unique",
+                    "table":"transactions",
+                    "column":"trans_no"
+                },
                 "detail_id":"id", 
                 "detail_name":"vouchers", 
                 "title":"Transaction No."

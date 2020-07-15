@@ -22,12 +22,35 @@
 
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
+    <li class="nav-item dropdown notifications">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+              <i class="far fa-bell"></i>
+              <span class="badge badge-warning navbar-badge notification-count"></span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+              <span class="dropdown-item dropdown-header header"></span>
+              <div class="dropdown-divider"></div>
+              <span id="list-notifications">
+              <a href="#" class="dropdown-item">
+              8 friend requests
+                <span class="float-right text-muted text-sm">12 hours</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              <a href="#" class="dropdown-item">
+                <i class="fas fa-file mr-2"></i> 3 new reports
+                <span class="float-right text-muted text-sm">2 days</span>
+              </a>
+              <div class="dropdown-divider"></div>
+              </span>
+            </div>
+          </li>
       <li class="nav-item dropdown user-menu">
         <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
           <img src="{{asset(empty(user('photo'))?'img/user2-160x160.jpg':url_file(user('photo')))}}" class="user-image img-circle elevation-2" alt="User Image"  >
         </a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <!-- User image -->
+          
           <li class="user-header bg-gray">
           <img src="{{asset(empty(user('photo'))?'img/user2-160x160.jpg':url_file(user('photo')))}}" class="img-circle elevation-2" alt="User Image">
             <p>

@@ -1,6 +1,6 @@
 @if(count($filter)>0)
+@include('dcru._dtfilter', ['fields'=>$filter['fields']])
 @endif
-@include('dcru._dtfilter', ['fields'=>$columns])
 @include('dcru._dtcolumns')
 <div class="table-responsive-sm">
   <table id="{{$dtname}}" style="width:100%" class="table table-hover table-strip">
@@ -53,41 +53,7 @@ foreach($parameters as $key=>$param){
 ?>
 <script>
     var {{$dtname}}config = {
-      processing: true,
-      serverSide: true,
-      ajax: {
-        url: "{!! asset(route('dcru.index.dt', ['name'=>$name], false)) !!}",
-        data: { {!! $str_data !!} dtname:"{{$dtname}}"}
-      },
       lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-      columns:[
-        @foreach($dtcolumns as $dt)
-          @if(!($dt['type']=='checkbox' && $cb_actions==0))
-          { 
-            data:"{{$dt['data']}}",
-            name:"{{$dt['name']}}",
-            @if(isset($dt['class']))
-            className:"{{$dt['class']}}",
-            @elseif(in_array($dt['type'], ['boolean', 'icon', 'badge', 'image']))
-            className:"text-center",
-            @elseif(in_array($dt['type'], ['number', 'currency']))
-            className:"text-right",
-            @endif
-            @if($dt['type']!='checkbox')
-            title:"{{__($dt['title'])}}",
-            @endif
-            @if($dt['type']=='checkbox'||$dt['type']=='menu')
-            searchable:false,
-            orderable:false,
-            @else
-            searchable:{{$dt['searchable']==1?'true':'false'}},
-            orderable:{{$dt['orderable']==1?'true':'false'}},
-            visible:{{$dt['visible']==true?'true':'false'}}            
-            @endif
-          },
-          @endif
-        @endforeach
-      ],
       dom:"<'row mb-2'<'col-sm-12 col-md-6'><'col-sm-12 col-md-6 text-right hide'B>>"+
         "<'row'<'col-sm-12 col-md-7 mb-2 bulk-actions-wrapper-{{$dtname}}'><'col-sm-12 col-md-5 mb-2'f>>"+
         "<'row'<'col-sm-12'tr>>"+
@@ -146,63 +112,7 @@ foreach($parameters as $key=>$param){
     };
   $(function () {
     load{{$dtname}}();
-    $('#filter-{{$dtname}}').submit(function(e){
-      e.preventDefault();
-      var form = $(this).serializeArray();
-      var data = [];
-      for(var i=0;i<form.length;i++){
-        var d = form[i]
-        if(d.value==""){
-          continue;
-        }
-        if(d.name.endsWith('[]')){
-          var name = d.name.replace('[]', '');
-          var f = data.find(function(item){
-            return item.name==name;
-          });
-          if(f==undefined){
-            data.push({
-              name:name,
-              value: [d.value]
-            })
-          }else{
-            f.value.push(d.value)
-          }
-        }else if(d.name.endsWith('[start]')){
-          var name = d.name.replace('[start]', '');
-          var f = data.find(function(item){
-            return item.name==name;
-          });
-          if(f==undefined){
-            data.push({
-              name:name,
-              value: {start:d.value}
-            })
-          }else{
-            f.value.start = d.value;
-          }
-        }else if(d.name.endsWith('[end]')){
-          var name = d.name.replace('[end]', '');
-          var f = data.find(function(item){
-            return item.name==name;
-          });
-          if(f==undefined){
-            if(d.value!=""){
-            data.push({
-              name:name,
-              value: {end:d.value}
-            })
-            }
-          }else{
-            f.value.end = d.value;
-          }
-        }else{
-          data.push({name:d.name, value:d.value})
-        }
-      }
-        console.log(data)
-      load{{$dtname}}(data);
-    });
+    
     $('#{{$dtname}}').on( 'draw.dt', function () {
       $('.bulk-actions-wrapper-{{$dtname}}').html(
         '<div class="btn-group">'+
@@ -239,6 +149,7 @@ foreach($parameters as $key=>$param){
         $('#{{$dtname}}').DataTable().column($(this).val()).visible($(this).prop('checked'));
       });
       
+      @if(count($filter)>0)
         $('.bulk-actions-wrapper-{{$dtname}}').append(
           `
           <button id="toggle-filter-{{$dtname}}" class="btn btn-sm btn-secondary"  data-toggle="collapse" data-target="#filter-{{$dtname}}" aria-expanded="false" aria-controls="filter"  ><i class="fas fa-filter"></i> {{__("Filter")}}</button>
@@ -253,6 +164,7 @@ foreach($parameters as $key=>$param){
         $('#filter-{{$dtname}}').on('show.bs.collapse', function () {
           $('#toggle-filter-{{$dtname}}').addClass('active')
         })
+      @endif
       
       @if($cb_actions>0)
       $('.bulk-actions-wrapper-{{$dtname}}').append(
@@ -281,21 +193,6 @@ foreach($parameters as $key=>$param){
           }else{
             $('#bulk-actions-{{$dtname}}').hide();
           }
-      });
-      $('.btn-delete').click(function(e){
-        var form = $(this).parent();
-        Swal.fire({
-          title: '{{__("Warning")}}!',
-          icon: 'warning',
-          html:'{{__("Are you sure want to delete the selected item?")}}',
-          showCloseButton: false,
-          showCancelButton: true,
-          focusConfirm: false
-        }).then(function(result){
-          if(result.value){
-            form.submit();
-          }
-        })
       });
       
       @if($cb_actions>0)
@@ -344,14 +241,16 @@ foreach($parameters as $key=>$param){
           }
     });
   });
-  function load{{$dtname}}(filter=[]){
-    {{$dtname}}config.ajax.data.filter = filter;
+  function load{{$dtname}}(){
+    @if(count($filter)>0)
+    {{$dtname}}config.ajax.data.filter = [
+        @foreach($filter['fields'] as $field)
+        {name: "{{$field['name']}}", type: "{{$field['type']}}", value: @if($field['type']=='daterange'){start: $("#ft_{{$dtname}}_{{$field['name']}}_start").val(), end: $("#ft_{{$dtname}}_{{$field['name']}}_end").val()} @else  $("#ft_{{$dtname}}_{{$field['name']}}").val() @endif},
+        @endforeach
+    ];
+    @endif
     $('#{{$dtname}}').DataTable().destroy();
-    var dt = $('#{{$dtname}}').DataTable({{$dtname}}config);
-
-    $('#search').on('keyup change', function () {
-    dt.search(this.value).draw();
-});
+    $('#{{$dtname}}').DataTable({{$dtname}}config);
   }
 </script>
 @endpush

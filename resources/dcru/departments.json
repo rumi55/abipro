@@ -7,7 +7,12 @@
             {
                 "data":"custom_id",
                 "name":"custom_id",
-                "title":"Kode",
+                "title":"Code",
+                "filter":{
+                    "type":"unique",
+                    "table":"departments",
+                    "column":"custom_id"
+                },
                 "type":"text"
             },
             {

@@ -11,6 +11,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/', 'HomeController@index')->name('home');
     //
     
+    
     Route::get('/company/profile', 'CompanyController@profile')->name('company.profile');
     Route::get('/company/profile/edit', 'CompanyController@profileEdit')->name('company.profile.edit');
     Route::put('/company/profile', 'CompanyController@profileUpdate')->name('company.profile.update');
@@ -233,6 +234,9 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/select2/{name}', 'Select2OutputController@get')->name('select2');
     //JSON Output
     Route::get('/json/{name}', 'JSONOutputController@index')->name('json.output');
+
+    Route::get('/notifications', 'NotificationController@latest')->name('notifications.latest');
+    Route::get('/notifications/{id}', 'NotificationController@read')->name('notifications.read');
 
     //CRUD
     Route::get('/dt/{name}', 'DcruController@dt')->name('dcru.index.dt');

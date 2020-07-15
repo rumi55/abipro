@@ -85,6 +85,9 @@ class DepartmentController extends Controller
     {
         $department = Department::findOrFail($id);
         $name = $department->name;
+        if($department->isLocked()){
+            return redirect()->route('departments.index')->with('error', 'Departemen '.$name.' tidak dapat dihapus karena digunakan dalam transaksi.');
+        }
         $department->delete();
         add_log('departments', 'delete', '');
         return redirect()->route('departments.index')->with('success', 'Departemen '.$name.' telah dihapus.');

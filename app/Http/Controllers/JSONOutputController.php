@@ -212,4 +212,20 @@ class JSONOutputController extends Controller
         $company_id = company('id');
         return \App\ProductUnit::where('company_id', $company_id)->get();
     }
+    
+    public function unique(Request $request){
+        $table = $request->table;
+        $column = $request->column;
+        $company_id = company('id');
+        return \DB::table($table)->where('company_id', $company_id)->select($column)->pluck($column)->toArray();
+    }
+    public function search(Request $request){
+        $table = $request->table;
+        $column = $request->column;
+        $q = $request->q;
+        $company_id = company('id');
+        return \DB::table($table)->where('company_id', $company_id)
+        ->where($column, 'like', "%$q%")
+        ->select($column)->pluck($column)->toArray();
+    }
 }

@@ -345,5 +345,24 @@ if (!function_exists('tt')) {
         return $locale=='en'?$model->$field_en:$model->$field;
     }
 }
+if (!function_exists('notify')) {
+    function notify($config)
+    {
+        $to = $config['url'];
+        $users = $config['users'];
+        $users = ($users) ?: [user('id')];
+        foreach ($users as $id) {
+            $a = [];
+            $a['created_at'] = date('Y-m-d H:i:s');
+            $a['user_id'] = $id;
+            $a['message'] = $config['message'];
+            $a['message_en'] = $config['message_en'];
+            $a['is_read'] = 0;
+            $a['url'] = $config['url'];
+            DB::table('notifications')->insert($a);
+        }
+        return true;
+    }
+}
 
 ?>

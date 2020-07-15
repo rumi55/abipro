@@ -12,4 +12,16 @@ class Department extends Model
         'company_id',
         'description'
     ];
+
+    public function isLocked(){
+        $exists = TransactionDetail::where('department_id', $this->id)->exists();
+        if($exists){
+            return true;
+        }
+        $exists = JournalDetail::where('department_id', $this->id)->exists();
+        if($exists){
+            return true;
+        }
+        return false;
+    }
 }
