@@ -51,7 +51,7 @@
             }
         ],
         "query":{
-            "table":"vw_ledger",
+            "table":"vw_journals",
             "select":"journal_detail_id as id, journal_id, trans_date, trans_no, account_id, account_name, account_no, description, debit, credit, department_name",
             "where":{
                 "condition": "company_id=? AND (account_id=? OR account_parent_id=?)",

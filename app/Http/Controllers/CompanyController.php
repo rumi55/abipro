@@ -266,4 +266,26 @@ class CompanyController extends Controller
         $company = $user->activeCompany();
         return view('company.convert', compact('company', 'companies'));
     }
+    public function convertUpload(Request $request){
+        $user = Auth::user();
+        $company = $user->activeCompany();
+        $data = $request->all();
+        $results = array();
+        foreach($data as $key => $value){
+            $filename = Str::slug($company->name.' '.$key,'-');
+            $filename = upload_file($key, $filename, 'public/dbf');  
+            $dbf_path = storage_path("/app/$filename");
+            $import = \App\ImportData::updateOrCreate(
+                ['company_id' => $company->id, 'target'=>$key],
+                [
+                    'file' => $dbf_path,
+                    'status' => 'uploaded',
+                    'company_id' => $company->id,
+                    'created_by' => $user->id,
+                ]
+            );
+            $results[] = $import;
+        }
+        return response()->json(collect($results));
+    }
 }

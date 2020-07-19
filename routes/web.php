@@ -25,11 +25,14 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/companies/import', 'CompanyController@import')->name('companies.import');
     Route::post('/companies/import', 'ImportDataController@import')->name('companies.import.save');
     Route::get('/companies/export', 'CompanyController@export')->name('companies.export');
+    Route::get('/companies/convert', 'CompanyController@convert')->name('companies.convert');
+    Route::post('/companies/convert', 'CompanyController@convertUpload')->name('companies.convert.upload');
     Route::get('/companies/{name}/export', 'ExportDataController@excel')->name('companies.export.excel');
     
     //conversion
     Route::get('/conversion', 'ConvertAbiproController@index')->name('convert.index');
     Route::post('/conversion/upload/{name}', 'ConvertAbiproController@upload')->name('convert.upload');
+    Route::post('/conversion/execute/{id}', 'ConvertAbiproController@execute')->name('convert.execute');
     Route::get('/conversion/departments', 'ConvertAbiproController@departmentConversion')->name('convert.departments');
     Route::get('/conversion/sortirs', 'ConvertAbiproController@sortirConversion')->name('convert.sortirs');
     Route::get('/conversion/chart_of_accounts', 'ConvertAbiproController@accountConversion')->name('convert.accounts');
@@ -163,8 +166,8 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/accounts', 'AccountController@index')->name('accounts.index');
     Route::get('/accounts/opening_balance', 'AccountController@openingBalance')->name('accounts.opening_balance');
     Route::post('/accounts/opening_balance', 'AccountController@saveOpeningBalance')->name('accounts.opening_balance.save');
-    Route::get('/accounts/budgets', 'BudgetController@index')->name('accounts.budgets');
-    Route::post('/accounts/budgets', 'BudgetController@save')->name('accounts.budgets.save');
+    Route::get('/accounts/budgets', 'AccountController@budget')->name('accounts.budgets');
+    Route::post('/accounts/budgets', 'AccountController@saveBudget')->name('accounts.budgets.save');
     Route::get('/accounts/create', 'AccountController@create')->name('accounts.create');
     Route::post('/accounts/create', 'AccountController@save')->name('accounts.create.save');
     Route::get('/accounts/import', 'AccountController@import')->name('accounts.import');

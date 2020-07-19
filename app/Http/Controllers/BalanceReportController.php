@@ -20,14 +20,14 @@ class BalanceReportController extends Controller
         }else{
             $accounts = $this->query($params, $company);
         }
-        
+
         $title = 'Laporan Neraca';
         $view = 'report.balance.default';
         $period = fdate($params['end_date'], 'd M Y');
         $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');
         $departments = Department::whereIn('id', $params['department_id'])->get();
-        
-        
+
+
         $data = array(
             'report'=>'balance',
             'title'=>$title,
@@ -35,7 +35,7 @@ class BalanceReportController extends Controller
             'departments'=>$departments,
             'columns'=>$params['columns'],
             'compare'=>$params['compare'],
-            'subaccount'=>$params['subaccount'], 
+            'subaccount'=>$params['subaccount'],
             'accounts'=>$accounts,
             'view'=>$view
         );
@@ -58,7 +58,7 @@ class BalanceReportController extends Controller
     private function html($view, $data){
         return view('report.viewer', $data);
     }
-    
+
     private function pdf($view, $data){
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
@@ -78,23 +78,23 @@ class BalanceReportController extends Controller
             $end_date = $column['end_date'];
             $departments = '';
             $plus = "+ (IF(SUM(c$i.opening_balance) IS NULL, 0,SUM(c$i.opening_balance)))";
-            
+
             $groupby = '';
             if(!empty($params['department_id'])){
                 $dept_id = implode(',',$params['department_id']);
                 $departments = " AND c$i.department_id IN ($dept_id) ";
                 $plus = '';
             }
-            
+
             if($start_date==null){
                 $re = "(SELECT IF(SUM(cb.profit) IS NULL, 0, SUM(cb.profit)) FROM closing_books cb WHERE a.id=cb.account_id AND cb.end_date<='$end_date')";
                 $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))+$re $plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id 
+                FROM vw_balance c$i WHERE c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id
                 and a.id=c$i.account_id $departments) as total_$i");
             }else{
                 $re = "(SELECT IF(SUM(cb.profit) IS NULL, 0, SUM(cb.profit)) FROM closing_books cb WHERE a.id=cb.account_id AND cb.end_date>='$start_date' AND cb.end_date<='$end_date')";
                 $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))+$re
-                FROM vw_balance c$i WHERE c$i.`trans_date`>='$start_date' AND c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id 
+                FROM vw_balance c$i WHERE c$i.`trans_date`>='$start_date' AND c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id
                 and a.id=c$i.account_id $departments) as total_$i");
             }
         }
@@ -104,14 +104,13 @@ class BalanceReportController extends Controller
         ->whereIn('a.account_group',['asset', 'liability', 'equity'])
         ->distinct()
         ->orderBy(DB::raw('a.account_group, a.sequence'))->get();
-        
         return $balance;
     }
     private function query2($params, $company){
         $select = [
             DB::raw('a.id, a.sequence, a.account_no, a.account_type, a.account_type_id, a.account_group, a.account_name, a.tree_level')
         ];
-        
+
         foreach($params['columns'] as $i=>$header){
             $date= $params['end_date'];
             $plus = '';
@@ -119,17 +118,17 @@ class BalanceReportController extends Controller
             if($id===null & $header->name==null){//tanpa department
                 $plus = '+a.balance';
                 $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id 
+                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
                 and a.id=c$i.account_id AND department_id IS NULL) as total_$i");
-            }else if($id===null & $header->name!=null){//total 
+            }else if($id===null & $header->name!=null){//total
                 $plus = '+a.balance';
                 $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id 
-                and a.id=c$i.account_id) as total_$i");     
+                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
+                and a.id=c$i.account_id) as total_$i");
             }else{
                 $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id 
-                and a.id=c$i.account_id AND department_id=$id) as total_$i");     
+                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
+                and a.id=c$i.account_id AND department_id=$id) as total_$i");
             }
         }
         $balance = DB::table(DB::raw('vw_accounts a'))
@@ -147,19 +146,19 @@ class BalanceReportController extends Controller
         $compare_period = $request->query('compare_period',0);
         $start_date = $request->query('start_date', date('Y-m-d'));
         $end_date = $start_date;
-        
+
         $zero = filter_var($request->zero, FILTER_VALIDATE_BOOLEAN);
         $cumulative = filter_var($request->cumulative, FILTER_VALIDATE_BOOLEAN);
-        
+
         $subaccount = $request->query('subaccount', '0');
-        
+
         //cut off date
         $cutoff_date = Company::find($company_id)->accounting_start_date;
         $cbook = \App\ClosingBook::whereDate('end_date', '<=', $end_date)->orderBy('end_date','desc')->first();
-        
+
         if($cbook!=null){
             $co_date = $cbook->end_date;
-            $cutoff_date = \Carbon\Carbon::parse($co_date)->addDay()->format('Y-m-d'); 
+            $cutoff_date = \Carbon\Carbon::parse($co_date)->addDay()->format('Y-m-d');
         }
 
         $columns = array();
@@ -195,7 +194,7 @@ class BalanceReportController extends Controller
             $sdate = $start_date;
             $edate = $end_date;
             $loop = $cumulative?($compare_period+1)*2:$compare_period+1;
-            
+
             if($period=='daily'){
                 for($i=0;$i<$loop;$i++){
                     if($cumulative){
@@ -204,8 +203,8 @@ class BalanceReportController extends Controller
                     }else{
                         $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'd-m-Y')];
                     }
-                    $sdate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d'); 
-                    $edate = $sdate; 
+                    $sdate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d');
+                    $edate = $sdate;
                 }
             }else if($period=='weekly'){
                 for($i=0;$i<$loop;$i++){
@@ -215,8 +214,8 @@ class BalanceReportController extends Controller
                     }else{
                         $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'd-m-Y').' s.d '.fdate($edate, 'd-m-Y')];
                     }
-                    $sdate = \Carbon\Carbon::parse($sdate)->subWeek()->format('Y-m-d'); 
-                    $edate = \Carbon\Carbon::parse($edate)->subWeek()->format('Y-m-d'); 
+                    $sdate = \Carbon\Carbon::parse($sdate)->subWeek()->format('Y-m-d');
+                    $edate = \Carbon\Carbon::parse($edate)->subWeek()->format('Y-m-d');
                 }
             }else if($period=='monthly'){
                 for($i=0;$i<$loop;$i++){
@@ -226,8 +225,8 @@ class BalanceReportController extends Controller
                     }else{
                         $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'M Y')];
                     }
-                    $sdate = \Carbon\Carbon::parse($sdate)->subMonth()->format('Y-m-d'); 
-                    $edate = \Carbon\Carbon::parse($sdate)->endOfMonth()->format('Y-m-d'); 
+                    $sdate = \Carbon\Carbon::parse($sdate)->subMonth()->format('Y-m-d');
+                    $edate = \Carbon\Carbon::parse($sdate)->endOfMonth()->format('Y-m-d');
                 }
             }else if($period=='quarterly'){
                 for($i=0;$i<$loop;$i++){
@@ -237,8 +236,8 @@ class BalanceReportController extends Controller
                     }else{
                         $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'M Y').' - '.fdate($edate, 'M Y')];
                     }
-                    $edate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d'); 
-                    $sdate = \Carbon\Carbon::parse($edate)->startOfMonth()->subMonth(2)->format('Y-m-d'); 
+                    $edate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d');
+                    $sdate = \Carbon\Carbon::parse($edate)->startOfMonth()->subMonth(2)->format('Y-m-d');
                 }
             }else if($period=='semiyearly'){
                 for($i=0;$i<$loop;$i++){
@@ -248,19 +247,19 @@ class BalanceReportController extends Controller
                     }else{
                         $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'M Y').' - '.fdate($edate, 'M Y')];
                     }
-                    $edate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d'); 
-                    $sdate = \Carbon\Carbon::parse($edate)->startOfMonth()->subMonth(5)->format('Y-m-d'); 
+                    $edate = \Carbon\Carbon::parse($sdate)->subDay()->format('Y-m-d');
+                    $sdate = \Carbon\Carbon::parse($edate)->startOfMonth()->subMonth(5)->format('Y-m-d');
                 }
             }else if($period=='yearly'){
                 for($i=0;$i<$loop;$i++){
                     $columns[$i] = ['start_date'=>$sdate, 'end_date'=>$edate, 'label'=>fdate($sdate, 'Y')];
-                    $sdate = \Carbon\Carbon::parse($sdate)->subYear()->format('Y-m-d'); 
-                    $edate = \Carbon\Carbon::parse($edate)->subYear()->format('Y-m-d'); 
+                    $sdate = \Carbon\Carbon::parse($sdate)->subYear()->format('Y-m-d');
+                    $edate = \Carbon\Carbon::parse($edate)->subYear()->format('Y-m-d');
                 }
             }
             $columns = array_reverse($columns);
         }
-             
+
         $params = [
             'department_id'=>$departments,
             'end_date'=>$end_date,
@@ -288,14 +287,14 @@ class BalanceReportController extends Controller
                 $departments[] = decode($id);
             }
         }
-        
+
         $period = $request->period;
         $end_date = $request->end_date;
         $compare = $request->compare;
         $zero = $request->query('zero', true);
         $subaccount = $request->query('subaccount', false);
         $level = $request->query('level', '1');
-        
+
         if(!empty($end_date)){
             $paramsString.=($paramsString!=''?'&':'')."end_date=$end_date";
         }
@@ -368,7 +367,7 @@ class BalanceReportController extends Controller
                 }
             }
         }
-        
+
         $columns = array();
         if($compare=='department'){
             $columns = $cols;
@@ -377,7 +376,7 @@ class BalanceReportController extends Controller
                 $columns[]=$cols[$i];
             }
         }
-        
+
         $params = [
             'params'=>$paramsString,
             'department_id'=>$departments,

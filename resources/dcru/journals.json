@@ -3,9 +3,9 @@
     "title":"Journal",
     "actions":[{"type":"create","label":"Create Journal"},
         {
-            "label":"Import Journal", 
+            "label":"Import Journal",
             "route":{
-                "name":"journals.import", 
+                "name":"journals.import",
                 "params":{
                 }
             }
@@ -19,39 +19,39 @@
                 "type":"checkbox"
             },
             {
-                "data":"trans_date", 
-                "name":"trans_date", 
-                "type":"date", 
+                "data":"trans_date",
+                "name":"trans_date",
+                "type":"date",
                 "title":"Transaction Date"
             },
             {
-                "data":"trans_no", 
-                "name":"trans_no", 
+                "data":"trans_no",
+                "name":"trans_no",
                 "type":"detail",
                 "filter":{
                     "type":"unique",
-                    "table":"transactions",
+                    "table":"journals",
                     "column":"trans_no"
                 },
-                "detail_id":"id", 
-                "detail_name":"journals", 
+                "detail_id":"id",
+                "detail_name":"journals",
                 "title":"Number"
             },
             {
-                "data":"description", 
-                "name":"description", 
-                "type":"text", 
+                "data":"description",
+                "name":"description",
+                "type":"text",
                 "title":"Description"
             },
             {
-                "data":"total", 
-                "name":"total", 
-                "type":"currency", 
+                "data":"total",
+                "name":"total",
+                "type":"currency",
                 "title":"Total"
             },
             {
-                "data":"created_name", 
-                "name":"created_by", 
+                "data":"created_name",
+                "name":"created_by",
                 "title":"Created By",
                 "type":"route",
                 "route":{
@@ -62,9 +62,9 @@
                 }
             },
             {
-                "data":"is_locked", 
-                "name":"is_locked", 
-                "type":"icon", 
+                "data":"is_locked",
+                "name":"is_locked",
+                "type":"icon",
                 "title":"",
                 "searchable":false,
                 "orderable":false,
@@ -74,9 +74,9 @@
                 }
             },
             {
-                "data":"", 
-                "name":"", 
-                "type":"menu", 
+                "data":"",
+                "name":"",
+                "type":"menu",
                 "title":"",
                 "orderable":false,
                 "items":[

@@ -27,7 +27,7 @@ $breadcrumbs = array(
         <div class="form-group row">
             <label for="custom_id" class="col-sm-2 col-form-label">{{__('ID')}}</label>
             <div class="col-md-4 col-sm-6">
-            <input type="text" @if($model->isLocked()) readonly @endif required class="form-control @error('custom_id') is-invalid @enderror  @error('display_name') is-invalid @enderror" name="custom_id" id="custom_id" value="{{old('custom_id', $model->custom_id)}}">
+            <input type="text" @if($model->isLocked() && $mode=='edit') readonly @endif required class="form-control @error('custom_id') is-invalid @enderror  @error('display_name') is-invalid @enderror" name="custom_id" id="custom_id" value="{{old('custom_id', $model->custom_id)}}">
             @error('custom_id') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>

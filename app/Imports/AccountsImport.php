@@ -45,15 +45,7 @@ class AccountsImport implements ToCollection, WithHeadingRow
                 if(empty($parent_no)){
                     $parent_id = null;
                     $tree_level = 0;
-                    $seq = Account::where('company_id', $this->company_id)
-                    ->whereNull('account_parent_id')
-                    ->where('account_type_id', $account_type)
-                    ->orderBy('sequence', 'desc')->first();
-                    if($seq==null){
-                        $sequence = $account_type*1000;
-                    }else{
-                        $sequence = $seq->sequence+1;
-                    }
+                    $sequence = $account_type.'-'.$account_no;
                 }else{
                     //cari parent
                     $parent = Account::where('company_id', $this->company_id)->where('account_no', $parent_no)->first();
@@ -63,21 +55,21 @@ class AccountsImport implements ToCollection, WithHeadingRow
                         $parent_id = $parent->id;
                         $tree_level = $parent->tree_level+1;
                         $account_type = $parent->account_type_id;//tipe akun sama dengan parent
-                        $seq = Account::where('company_id', $this->company_id)
-                        ->where('account_parent_id', $parent->id)
-                        ->orderBy('sequence', 'desc')->first();
-                        if($seq!=null){
-                            $ex = explode('.',$seq->sequence);
-                            foreach($ex as $i => $x){
-                                if($i==count($ex)-1){
-                                    $sequence .= (intval($x)+1);
-                                }else{
-                                    $sequence .= $x.'.';
-                                }
-                            }
-                        }else{
-                            $sequence = $parent->sequence.'.1000';
-                        }
+                        // $seq = Account::where('company_id', $this->company_id)
+                        // ->where('account_parent_id', $parent->id)
+                        // ->orderBy('sequence', 'desc')->first();
+                        // if($seq!=null){
+                        //     $ex = explode('.',$seq->sequence);
+                        //     foreach($ex as $i => $x){
+                        //         if($i==count($ex)-1){
+                        //             $sequence .= (intval($x)+1);
+                        //         }else{
+                        //             $sequence .= $x.'.';
+                        //         }
+                        //     }
+                        // }else{
+                        // }
+                        $sequence = $parent->sequence.'-'.$account_no;
                     }
                 }
                 // dd($parent_id.'-'.$row['nama']);

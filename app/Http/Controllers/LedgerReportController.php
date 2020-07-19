@@ -13,10 +13,10 @@ class LedgerReportController extends Controller
     public function index(Request $request){
         $company = Auth::user()->activeCompany();
         $company_id = $company->id;
-        
+
         $params = $this->getParams($request, $company_id);
         $data = $this->query($params, $company);
-        
+
         $title = 'Buku Besar';
         $view = 'report.ledger.default';
         if(count($params['tags'])>0){
@@ -31,8 +31,8 @@ class LedgerReportController extends Controller
             'period'=>$period,
             'columns'=>$params['columns'],
             'tags'=>$request->tags,
-            'accounts'=>$data[0], 
-            'ledgers'=>$data[1], 
+            'accounts'=>$data[0],
+            'ledgers'=>$data[1],
             'balance_date'=>$balance_date,
             'view'=>$view
         );
@@ -64,7 +64,7 @@ class LedgerReportController extends Controller
         $pdf->loadView('report.pdf', $data);
         return $pdf->download($data['report'].'.pdf');
     }
-    
+
     private function query($params, $company){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
@@ -72,7 +72,7 @@ class LedgerReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        
+
         $account = DB::table("vw_accounts")
         ->where("company_id", $company->id);
         // ->where(function($query)use($start_date){
@@ -82,21 +82,21 @@ class LedgerReportController extends Controller
         if(count($params['account_id'])){
             $account = $account->whereIn('id', $params['account_id']);
         }
-        $account = $account->selectRaw("vw_accounts.id, (SELECT IF(SUM(vw_ledger.total) IS NULL,0, SUM(vw_ledger.total)) FROM vw_ledger WHERE account_id=vw_accounts.id AND vw_ledger.company_id=vw_accounts.company_id 
-        AND vw_ledger.trans_date<'$start_date')+vw_accounts.balance AS balance")
+        $account = $account->selectRaw("vw_accounts.id, (SELECT IF(SUM(vw_journals.total) IS NULL,0, SUM(vw_journals.total)) FROM vw_journals WHERE account_id=vw_accounts.id AND vw_journals.company_id=vw_accounts.company_id
+        AND vw_journals.trans_date<'$start_date')+vw_accounts.balance AS balance")
         ->groupBy("id")
         ->pluck("balance", "id");
 
         // dd($account);
         // DB::enableQueryLog();
-        $ledger = DB::table(DB::raw("vw_ledger a"))
+        $ledger = DB::table(DB::raw("vw_journals a"))
         ->where("a.company_id", $company->id)
         ->where("a.trans_date", ">=", $params['start_date'])
         ->where("a.trans_date", "<=", $params['end_date']);
         if(count($params['account_id'])>0){
             $ledger = $ledger->whereIn(DB::raw('a.account_id'), $params['account_id']);
         }
-        
+
         if(count($params['department_id'])>0){
             $ledger = $ledger->whereIn(DB::raw('a.department_id'), $params['department_id']);
         }
@@ -116,21 +116,21 @@ class LedgerReportController extends Controller
         ->selectRaw("a.journal_id, a.account_id, a.account_no, a.account_name,
         a.department_name, a.trans_date, a.trans_no, a.description,
         a.tags, a.debit, a.credit, a.debit_sign, a.credit_sign, a.created_by,
-        (SELECT IF(SUM(b.total) IS NULL,0, SUM(b.total)) 
-        FROM vw_ledger b 
-        WHERE a.account_id=b.account_id AND a.company_id=b.company_id 
-        AND b.trans_date<'$start_date')+a.opening_balance AS opening_balance, 
-        (SELECT IF(SUM(c.total) IS NULL,0, SUM(c.total)) 
-        FROM vw_ledger c 
-        WHERE a.account_id=c.account_id AND a.company_id=c.company_id 
+        (SELECT IF(SUM(b.total) IS NULL,0, SUM(b.total))
+        FROM vw_journals b
+        WHERE a.account_id=b.account_id AND a.company_id=b.company_id
+        AND b.trans_date<'$start_date')+a.opening_balance AS opening_balance,
+        (SELECT IF(SUM(c.total) IS NULL,0, SUM(c.total))
+        FROM vw_journals c
+        WHERE a.account_id=c.account_id AND a.company_id=c.company_id
         AND c.trans_date<='$end_date')+a.opening_balance AS final_balance,
-        (SELECT IF(SUM(d.debit) IS NULL,0, SUM(d.debit)) 
-        FROM vw_ledger d 
-        WHERE a.account_id=d.account_id AND a.company_id=d.company_id 
+        (SELECT IF(SUM(d.debit) IS NULL,0, SUM(d.debit))
+        FROM vw_journals d
+        WHERE a.account_id=d.account_id AND a.company_id=d.company_id
         AND d.trans_date>='$start_date' AND d.trans_date<='$end_date') AS total_debit,
-        (SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit)) 
-        FROM vw_ledger e 
-        WHERE a.account_id=e.account_id AND a.company_id=e.company_id 
+        (SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit))
+        FROM vw_journals e
+        WHERE a.account_id=e.account_id AND a.company_id=e.company_id
         AND e.trans_date>='$start_date' AND e.trans_date<='$end_date') AS total_credit
         ")
         ->orderBy(DB::raw("a.department_id, a.account_type_id, a.account_no, a.trans_date"))
@@ -145,7 +145,7 @@ class LedgerReportController extends Controller
     //     $last_period = $period[0];
     //     $start_period = $period[1];
     //     $end_period = $period[2];
-        
+
     //     // DB::enableQueryLog();
     //     $account = DB::table("vw_accounts")
     //     ->where("company_id", $company->id);
@@ -156,14 +156,14 @@ class LedgerReportController extends Controller
     //     if(count($params['account_id'])){
     //         $account = $account->whereIn('id', $params['account_id']);
     //     }
-    //     $account = $account->selectRaw("vw_accounts.id, (SELECT IF(SUM(vw_ledger.total) IS NULL,0, SUM(vw_ledger.total)) FROM vw_ledger WHERE account_id=vw_accounts.id AND vw_ledger.company_id=vw_accounts.company_id 
-    //     AND vw_ledger.trans_date<'$start_date')+vw_accounts.balance AS balance")
+    //     $account = $account->selectRaw("vw_accounts.id, (SELECT IF(SUM(vw_journals.total) IS NULL,0, SUM(vw_journals.total)) FROM vw_journals WHERE account_id=vw_accounts.id AND vw_journals.company_id=vw_accounts.company_id
+    //     AND vw_journals.trans_date<'$start_date')+vw_accounts.balance AS balance")
     //     ->groupBy("id")
     //     ->pluck("balance", "id");
 
     //     // dd(DB::getQueryLog());
     //     // dd($account);
-    //     $ledger = DB::table(DB::raw("vw_ledger a"))
+    //     $ledger = DB::table(DB::raw("vw_journals a"))
     //     ->where("a.company_id", $company->id)
     //     ->where("a.trans_date", ">=", $params['start_date'])
     //     ->where("a.trans_date", "<=", $params['end_date']);
@@ -199,7 +199,7 @@ class LedgerReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        
+
         if($start_date==$start_period){
             $account = DB::table("balances")
             ->where("company_id", $company->id);
@@ -209,27 +209,27 @@ class LedgerReportController extends Controller
             $account = $account->whereDate("balance_date", $last_period)
             ->pluck("balance", "account_id");
         }else{
-            $account = DB::table("vw_ledger")
+            $account = DB::table("vw_journals")
             ->leftJoin("balances", function($join)use($last_period){
-                $join->on("vw_ledger.account_id","=","balances.account_id")
-                ->on("vw_ledger.company_id", "=", "balances.company_id")
+                $join->on("vw_journals.account_id","=","balances.account_id")
+                ->on("vw_journals.company_id", "=", "balances.company_id")
                 ->where("balance_date", "=", $last_period);
             })
-            ->where("vw_ledger.company_id", $company->id)
-            ->where("vw_ledger.trans_date", ">=",$start_period)
-            ->where("vw_ledger.trans_date", "<",$start_date);
+            ->where("vw_journals.company_id", $company->id)
+            ->where("vw_journals.trans_date", ">=",$start_period)
+            ->where("vw_journals.trans_date", "<",$start_date);
             if(count($params['account_id'])){
-                $account = $account->whereIn('vw_ledger.account_id', $params['account_id']);
+                $account = $account->whereIn('vw_journals.account_id', $params['account_id']);
             }
             if(count($params['department_id'])){
-                $account = $account->whereIn('vw_ledger.department_id', $params['department_id']);
+                $account = $account->whereIn('vw_journals.department_id', $params['department_id']);
             }
-            $account = $account->selectRaw("vw_ledger.account_id,SUM(debit_sign+credit_sign)+IF(balance IS NULL, 0, balance) as balance")
-            ->groupBy("vw_ledger.account_id", "balance")
+            $account = $account->selectRaw("vw_journals.account_id,SUM(debit_sign+credit_sign)+IF(balance IS NULL, 0, balance) as balance")
+            ->groupBy("vw_journals.account_id", "balance")
             ->pluck("balance", "account_id");
         }
         // DB::enableQueryLog();
-        $ledger = DB::table(DB::raw("vw_ledger a"))
+        $ledger = DB::table(DB::raw("vw_journals a"))
         ->where("a.company_id", $company->id)
         ->where("a.trans_date", ">=", $params['start_date']);
         // ->where("a.trans_date", "<=", $params['end_date']);
@@ -265,12 +265,12 @@ class LedgerReportController extends Controller
         $tag_opt = $request->query('tag_opt', 'or');
         $departments = $request->departments??[];
         $columns = ['tags'=>false, 'created_by'=>false, 'department'=>false];
-        
-        
+
+
         $start_date = $request->start_date;
         $end_date = $request->end_date;
         if(empty($start_date)){
-            $max_date = DB::table('vw_ledger')
+            $max_date = DB::table('vw_journals')
             ->where('company_id', $company_id)->max('trans_date');
             if($max_date==null){
                 $max_date = date('Y-m-d');
@@ -279,14 +279,14 @@ class LedgerReportController extends Controller
             $end_date = $max_date;
         }
 
-        $columns = ['tags'=>empty($request->tags)?false:true, 
-        'description'=>empty($request->description)?false:true, 
-        'created_by'=>empty($request->created_by)?false:true, 
+        $columns = ['tags'=>empty($request->tags)?false:true,
+        'description'=>empty($request->description)?false:true,
+        'created_by'=>empty($request->created_by)?false:true,
         'department'=>empty($request->department)?false:true,];
 
         $start_date = fdate($start_date, 'Y-m-d');
         $end_date = fdate($end_date, 'Y-m-d');
-        
+
         $params = [
             'columns'=>$columns,
             'account_id'=>$accounts,

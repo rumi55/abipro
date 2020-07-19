@@ -22,7 +22,7 @@
         </select>
       </div>
     </div>
-    @php 
+    @php
     $start_date = request('start_date', date('d-m-Y'));
     $date = explode('-', $start_date);
     $y = date('Y');
@@ -83,7 +83,7 @@
         </div>
         <small id="start_date_error" class="text-danger"></small>
       </div>
-    </div>  
+    </div>
     <div class="col-md-3 period-container">
       <div class="form-group">
         <label>Perbandingan Periode</label>
@@ -102,14 +102,6 @@
           <option {{request('compare_period')=='11'?'selected':''}}      value="11">11 periode sebelumnya</option>
         </select>
       </div>
-      <div class="mt-1">
-          <div class="icheck-success d-inline">
-            <input type="checkbox" name="cumulative" value="1" id="cumulative"  {{request('cumulative')=='1'?'checked':''}}>
-            <label for="cumulative">
-              Jumlah Kumulatif
-            </label>
-          </div>
-      </div>
     </div>
     <div class="col-md-3">
       <div class="form-group">
@@ -127,7 +119,7 @@
           <option {{request('subaccount')==2?'selected':''}} value="2">Level 2</option>
         </select>
       </div>
-    </div> 
+    </div>
 </div>
 @endcomponent
 @push('css')

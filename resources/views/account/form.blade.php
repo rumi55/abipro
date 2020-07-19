@@ -17,21 +17,7 @@ $breadcrumbs = array(
     ])
     
         <div class="form-group row">
-            <label for="account_no" class="col-sm-2 col-form-label">{{__('Account No.')}}</label>
-            <div class="col-md-10 col-sm-10">
-            <input type="text" required class="form-control @error('account_no') is-invalid @enderror" name="account_no" id="account_no" value="{{old('account_no', $account->account_no)}}">
-            @error('account_no') <small class="text-danger">{!! $message !!}</small> @enderror
-            </div>
-        </div>
-        <div class="form-group row">
-            <label for="account_name" class="col-sm-2 col-form-label">{{__('Account Name')}}</label>
-            <div class="col-md-10 col-sm-10">
-            <input type="text" required class="form-control @error('account_name') is-invalid @enderror" name="account_name" id="account_name" value="{{old('account_name', $account->account_name)}}">
-            @error('account_name') <small class="text-danger">{!! $message !!}</small> @enderror
-            </div>
-        </div>
-        <div class="form-group row">
-        <label for="account_type_id" class="col-sm-2 col-form-label">{{__('Account Type')}}</label>
+            <label for="account_type_id" class="col-sm-2 col-form-label">{{__('Account Type')}}</label>
             <div class="col-md-10 col-sm-10">
             @if($mode=='create' || ($mode=='edit' && $account->tree_level==0))
             <select class="form-control select2 @error('account_type_id') is-invalid @enderror" id="account_type_id" name="account_type_id" value="{{old('account_type_id', $account->account_type_id)}}">
@@ -46,7 +32,21 @@ $breadcrumbs = array(
             @endif
             </div>
         </div>
-        @if($mode=='create' || $mode=='add_child')
+        <div class="form-group row">
+            <label for="account_no" class="col-sm-2 col-form-label">{{__('Account No.')}}</label>
+            <div class="col-md-10 col-sm-10">
+            <input type="text" {{($mode=='edit' && $account->isLocked())?'readonly':''}} required class="form-control{{($mode=='edit' && $account->isLocked())?'-plaintext':''}} @error('account_no') is-invalid @enderror" name="account_no" id="account_no" value="{{old('account_no', $account->account_no)}}">
+            @error('account_no') <small class="text-danger">{!! $message !!}</small> @enderror
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="account_name" class="col-sm-2 col-form-label">{{__('Account Name')}}</label>
+            <div class="col-md-10 col-sm-10">
+            <input type="text" required class="form-control @error('account_name') is-invalid @enderror" name="account_name" id="account_name" value="{{old('account_name', $account->account_name)}}">
+            @error('account_name') <small class="text-danger">{!! $message !!}</small> @enderror
+            </div>
+        </div>
+        
         <div class="form-group row">
             <label for="account_parent_id" class="col-sm-2 col-form-label">{{__('Account Parent')}}</label>
             <div class="col-md-10 col-sm-10">
@@ -54,12 +54,11 @@ $breadcrumbs = array(
             <select class="form-control select2 @error('account_parent_id') is-invalid @enderror" id="account_parent_id" name="account_parent_id" data-selected="{{old('account_parent_id', $account->account_parent_id)}}"></select>            
             @error('account_parent_id') <small class="text-danger">{!! $message !!}</small> @enderror
             @else
-            <input readonly tabindex="-1" class="form-control-plaintext"  value="{{$account->parent->account_name}}">
+            <input readonly tabindex="-1" class="form-control-plaintext"  value="{{'('.$account->parent->account_no.') '.$account->parent->account_name}}">
             <input type="hidden" name="account_parent_id"  value="{{$account->account_parent_id}}">
             @endif
             </div>
         </div>
-        @endif
     @endcomponent
   </div>
 </div>
@@ -94,7 +93,7 @@ function select2Load(selector, url, data={}){
 }
 $(function () {
     $(".select2").select2({theme: 'bootstrap4'});
-    select2Load('#account_parent_id', "{{route('select2', ['name'=>'accounts'])}}")
+    select2Load('#account_parent_id', "{{route('select2', ['name'=>'accounts'])}}", {tree_level:0})
     $('#account_type_id').change(function(){
         var v = $(this).val();
         var data = accounts.filter(function(item){return item.account_type_id==$('#account_type_id').val()});

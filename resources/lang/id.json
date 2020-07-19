@@ -28,13 +28,13 @@
     "Create Account":"Tambah Akun",
     "Import Accounts":"Impor Akun",
     "Import Account":"Impor Akun",
-    
+
     "Balance":"Saldo",
     "Opening Balance":"Saldo Awal",
     "Budget":"Anggaran",
     "Debit":"Debet",
     "Credit":"Kredit",
-    
+
     "Contact":"Kontak",
     "Contact Type":"Jenis Kontak",
     "Contacts":"Kontak",
@@ -45,8 +45,8 @@
     "Employee":"Karyawan",
     "Salesman":"Salesman",
     "Others":"Lainnya",
-    
-    
+
+
     "User":"Pengguna",
     "Users":"Pengguna",
     "Dashboard":"Dasbor",
@@ -62,8 +62,8 @@
     "Timestamp":"Waktu",
     "Transaction No.":"No. Transaksi",
 
-    
-    
+
+
     "Sales":"Penjualan",
     "Sales Quote":"Penawaran Penjualan",
     "Create Sales Quote":"Buat Penawaran Penjualan",
@@ -80,7 +80,7 @@
     "Approved by":"Disetujui oleh",
     "Rejected by":"Ditolak oleh",
     "at":"pada",
-    
+
     "Product":"Produk",
     "Product ID":"Kode Produk",
     "Product Name":"Nama Produk",
@@ -96,8 +96,8 @@
     "Discount":"Diskon",
     "Term":"Syarat Pembayaran",
     "Due Date":"Tanggal Jatuh Tempo",
-    
-    
+
+
     "Logout":"Keluar",
     "Change Password":"Ganti Password",
     "Create Company":"Buat Perusahaan",
@@ -110,8 +110,8 @@
     "Actions":"Aksi",
     "Group":"Grup",
     "Account Mapping":"Pemetaan Akun",
-    
-    
+
+
     "Report":"Laporan",
     "Reports":"Laporan",
     "Finance":"Keuangan",
@@ -141,7 +141,7 @@
     "Other Expense":"Biaya Lainnya",
     "Total Other Expense":"Total Biaya Lainnya",
     "Net Profit":"Laba Bersih",
-    
+
     "Custom ID":"Kode",
     "ID":"Kode",
     "Name":"Nama",
@@ -168,9 +168,9 @@
     "New Cash Receipt":"Penerimaan Baru",
     "Edit Cash Receipt":"Edit Penerimaan",
     "Beneficiary":"Penerima",
-    "Payer":"Yang Membayar", 
-    "New Voucher":"Voucher Baru", 
-    "Transaction Group":"Grup Transaksi", 
+    "Payer":"Yang Membayar",
+    "New Voucher":"Voucher Baru",
+    "Transaction Group":"Grup Transaksi",
     "Before":"Sebelum",
     "After":"Setelah",
     "No account available.":"Akun belum tersedia.",
@@ -187,7 +187,7 @@
     "Monthly":"Bulanan",
     "Daily":"Harian",
     "No Reset":"Tidak Direset",
-    
+
     "Export":"Ekspor",
     "Import":"Impor",
     "Add":"Tambah",
@@ -215,9 +215,13 @@
     "Submit Voucher":"Ajukan Voucher",
     "Submit":"Kirim",
     "Save as Draft":"Simpan sebagai Konsep",
-    
+
     "Data Reference":"Data Referensi",
     "Data Transaction":"Data Transaksi",
+    "Ascending":"Urut Turun",
+    "Descending":"Urut Naik",
+    "Created Date":"Tanggal Dibuat",
+    "Show Columns":"Tampilkan Kolom",
 
     "Select":"Pilih",
     "Please Choose":"Silakan Pilih",
@@ -239,5 +243,6 @@
     "Are you sure want to delete the selected items?":"Apakah Anda yakin ingin menghapus item terpilih?",
     "Are you sure want to approve this voucher?":"Apakah Anda yakin ingin menyetujui voucher ini?",
     "Are you sure want to reject this voucher?":"Apakah Anda yakin ingin menolak voucher ini?",
-    "Write your rejection note below!":"Tulis catatan penolakan Anda di bawah ini!"
+    "Write your rejection note below!":"Tulis catatan penolakan Anda di bawah ini!",
+    "This process will delete all your data. Are you sure want to continue this process?":"Proses ini akan menghapus data Anda sebelumnya, apakah Anda yakin ingin melanjutkan?"
 }

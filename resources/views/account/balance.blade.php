@@ -8,75 +8,80 @@ $breadcrumbs = array(
 @extends('layouts.app')
 @section('title', 'Saldo Awal')
 @section('content')
+
+<div class="card">
+    <div class="card-body">
+    <form action="{{route('accounts.opening_balance')}}" method="get">
+        <div class="row">
+            <div class="col">
+                <div class="form-group">
+                    <label for="account_type" >{{__('Account Type')}}</label>
+                    <select id="account_type" name="account_type_id" class="form-control select2"></select>
+                </div>
+            </div>  
+            <div class="col">
+                <div class="form-group">
+                    <label for="department_id" >{{__('Department')}}</label>
+                    <select id="department_id" name="department_id" class="form-control select2"></select>
+                </div>
+            </div>  
+            <div class="col">
+                <div class="form-group">
+                    <button type="submit" class="btn btn-info mt-4">Filter</button>
+                </div>
+            </div>  
+        </div>   
+    </form> 
+    </div>    
+</div>    
 <form id="balance-form" action="{{route('accounts.opening_balance.save')}}" method="POST">
 @csrf
 <div class="card">
-    <div class="card-header">    
-        <h4 class="card-title">Saldo Awal per {{fdate($balance_date)}}</h4>
-    </div>
-    <div class="card-body pb-1">    
-        <div class="table-responsive mt-4" style="height:400px">
+    <div class="card-body">
+        <table class="table table-hover table-sm">
+            <thead>
+                <tr>
+                    <th style="width:20%">{{__('Account No.')}}</th>
+                    <th style="width:60%">{{__('Account Name')}}</th>
+                    <th style="width:20%" class="text-right">{{__('Opening Balance')}}</th>
+                </tr>
+            </thead>
+        </table>
+        
+        <div class="table-responsive" style="height:400px">
             <table class="table table-hover table-sm">
-                <thead>
-                    <tr>
-                        <th style="width:10%">Kode</th>
-                        <th style="width:40%">Akun</th>
-                        <th style="width:25%">Debet</th>
-                        <th style="width:25%">Kredit</th>
-                    </tr>
-                </thead>
                 <tbody>
                 @php $type = null; @endphp
                 @foreach($accounts as $account)
                     @if($type!=$account->account_type_id)
                     @php $type = $account->account_type_id; @endphp
                     <tr>
-                        <td class="font-weight-bold" colspan="4">{{$account->accountType->name}}</td>
+                        <td class="font-weight-bold" colspan="4">{{$account->account_type_name}}</td>
                     </tr>
                     @endif
                     <tr id="row-{{$account->id}}" class="tr-row" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
                         @if($account->tree_level==1)
-                        <td class="pl-4" style="vertical-align:middle">{{$account->account_no}}</td>
+                        <td class="pl-4" style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
                         @elseif($account->tree_level==2)
-                        <td class="pl-5" style="vertical-align:middle">{{$account->account_no}}</td>
+                        <td class="pl-5" style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
                         @else
-                        <td style="vertical-align:middle">{{$account->account_no}}</td>
+                        <td style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
                         @endif
-                        <td style="vertical-align:middle">{{$account->account_name}}</td>
-                        <td>
+                        <td style="vertical-align:middle;width:60%">{{$account->account_name}}</td>
+                        <td class="text-right" style="width:20%">
                             @if($account->has_children==0)
-                            <input style="width:200px" name="debit_{{$account->id}}" data-index="{{$account->id}}" type="text" id="debit_{{$account->id}}" class="form-control debit @error('debit_'.$account->id) is-invalid @enderror" value="{{old('debit_'.$account->id, $account->op_debit)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                            @error('debit_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
-                            @endif
-                        </td>
-                        <td>
-                            @if($account->has_children==0)
-                            <input style="width:200px" name="credit_{{$account->id}}" data-index="{{$account->id}}" type="text" id="credit_{{$account->id}}" class="form-control credit @error('credit_'.$account->id) is-invalid @enderror" value="{{old('credit_'.$account->id, $account->op_credit)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                            @error('credit_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{old('balance.'.$account->id, $account->balance)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
                             @endif
                         </td>
                     </tr>
                 @endforeach
                 </tbody>
             </table>
+            @if(!empty(request('department_id')))
+                <input type="hidden" name="department_id" value="{{request('department_id')}}" />
+            @endif
         </div>
-        <table style="width:100%">
-            <tfoot>
-                <tr>
-                    <th colspan="2" style="width:50%">
-                        Total
-                    </th>
-                    <th class="text-right" style="width:25%">
-                        <input style="width:200px" tabindex="-1" name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
-                        @error('total_debit')<small class="text-danger">{!! $message !!}</small>@enderror
-                    </th>
-                    <th class="text-right" style="width:25%">
-                        <input style="width:200px" tabindex="-1" name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
-                        @error('total_credit')<small class="text-danger">{!! $message !!}</small>@enderror
-                    </th>
-                </tr>
-            </tfoot>
-        </table>
     </div>
     <div class="card-footer">
         <a  href="{{route('accounts.index')}}" class="btn btn-default">Batal</a>
@@ -85,6 +90,10 @@ $breadcrumbs = array(
 </div>
 </form>
 @endsection
+@push('css')
+  <link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
+  <link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
+@endpush
 @push('js')
 <script src="{{asset('plugins/moment/moment.min.js')}}"></script>
 <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
@@ -119,7 +128,49 @@ $(function(){
     });
     $('.currency').inputmask({ 'alias': 'currency' })
     $('[data-mask]').inputmask();
-    $(".select2").select2({theme: 'bootstrap4'});
+    $.ajax({
+        url: BASE_URL+'/json/account_types',
+        dataType: 'json',
+        cache: false,
+        success:function(res){
+            var items =$.map(res, function (item) {
+                    return {
+                        text: item.name,
+                        id: item.id
+                    }
+                })
+            $("#account_type").select2({
+                theme: 'bootstrap4',
+                allowClear:true,
+                placeholder: '{{__("Select Account Type")}}',
+                data:items
+            })
+            $('#account_type').val('{{request("account_type_id")}}')
+            $('#account_type').trigger('change')
+        }
+    })
+    $.ajax({
+        url: BASE_URL+'/json/departments',
+        dataType: 'json',
+        cache: false,
+        success:function(res){
+            var items =$.map(res, function (item) {
+                    return {
+                        text: item.name,
+                        id: item.id
+                    }
+                })
+            $("#department_id").select2({
+                theme: 'bootstrap4',
+                allowClear:true,
+                placeholder: '{{__("Select Department")}}',
+                data:items
+            })
+            $('#department_id').val('{{request("department_id")}}')
+            $('#department_id').trigger('change')
+        }
+    })
+    
     onchange();
     // $('#balance-form').submit(function(e){
     //     e.preventDefault();

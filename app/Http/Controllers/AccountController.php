@@ -7,8 +7,10 @@ use App\Http\Resources\AccountResource;
 use App\Http\Resources\JournalDetailResource;
 use App\Exceptions\ApiValidationException;
 use App\Account;
+use App\AccountType;
 use App\Balance;
 use App\JournalDetail;
+use App\Department;
 use App\Imports\AccountsImport;
 use Auth;
 use Validator;
@@ -49,7 +51,7 @@ class AccountController extends Controller
             $mode= 'add_child';
         }
         $account_types = \App\AccountType::orderBy('id')->get();
-        $account_parent = \App\Account::where('company_id', $company->id)->orderBy('sequence')->get();
+        $account_parent = \App\Account::where('tree_level', '<',0)->where('company_id', $company->id)->orderBy('sequence')->get();
         return view('account.form', compact('account', 'mode', 'account_types', 'account_parent'));
     }
     public function import(Request $request){
@@ -73,7 +75,7 @@ class AccountController extends Controller
         $account = Account::findOrFail($id);
         $mode= 'edit';
         $account_types = \App\AccountType::orderBy('id')->get();
-        $account_parent = \App\Account::where('company_id', $company->id)->orderBy('sequence')->get();
+        $account_parent = \App\Account::where('tree_level', 0)->where('company_id', $company->id)->orderBy('sequence')->get();
         return view('account.form', compact('account', 'mode', 'account_types', 'account_parent'));
     }
     public function save(Request $request){
@@ -109,32 +111,10 @@ class AccountController extends Controller
                 $parent = Account::find($account_parent_id);
                 if($parent!==null){
                     $level = $parent->tree_level+1;
-                    $seq = Account::where('company_id', $company->id)
-                    ->where('account_parent_id', $parent->id)
-                    ->orderBy('sequence', 'desc')->first();
-                    if($seq!=null){
-                        $ex = explode('.',$seq->sequence);
-                        foreach($ex as $i => $x){
-                            if($i==count($ex)-1){
-                                $sequence .= (intval($x)+1);
-                            }else{
-                                $sequence .= $x.'.';
-                            }
-                        }
-                    }else{
-                        $sequence = $parent->sequence.'.1000';
-                    }
+                    $sequence = $parent->sequence.'-'.$data['account_no'];
                 }
             }else{
-                $seq = Account::where('company_id', $company->id)
-                ->whereNull('account_parent_id')
-                ->where('account_type_id', $data['account_type_id'])
-                ->orderBy('sequence', 'desc')->first();
-                if($seq==null){
-                    $sequence = $data['account_type_id']*1000;
-                }else{
-                    $sequence = $seq->sequence+1;
-                }
+                $sequence = $data['account_type_id'].'-'.$data['account_no'];
             }
             $account = Account::create([
                 'account_name' => $data['account_name'],
@@ -345,22 +325,63 @@ class AccountController extends Controller
 
     public function budget(Request $request){
         $user = Auth::user();
-        $company_id = $user->activeCompany()->id;
-        $account = Account::where('company_id', $company_id)->where('account_type_id','>',11);
+        $company = $user->activeCompany();
+        $balance_date = $company->accounting_start_date;
+        $department_id = $request->department_id;
+        $account_type_id = $request->query('account_type_id', 1);
+        $budget_year = $request->query('budget_year', date('Y'));
+        $account = \DB::table('accounts')
+        ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
+        ->leftJoin('budgets', function($join)use($budget_year, $department_id){
+            if(empty($department_id)){
+                $join->on('budgets.account_id', '=', 'accounts.id')->where('budget_year', $budget_year)->whereNull('department_id');
+            }else{
+                $join->on('budgets.account_id', '=', 'accounts.id')->where('budget_year', $budget_year)->where('department_id', $department_id);
+            }
+        })
+        ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id, 
+        account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, jan, feb, mar, apr, may, jun, jul, aug, sep, `oct`, nov, `dec`, total')
+        ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
+        
+        if(!empty($account_type_id)){
+            $account = $account->where('account_type_id', $account_type_id);
+        }
         $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
         $accounts = $account->get();
-        return view('account.budget', compact('accounts'));
+        $departments = Department::where('company_id', $company->id)->get();
+        $account_types = AccountType::orderBy('id')->get();
+        return view('account.budget', compact('accounts', 'budget_year', 'departments', 'account_types', 'account_type_id'));
     }
     public function openingBalance(Request $request){
         $user = Auth::user();
         $company = $user->activeCompany();
-        $account = Account::where('company_id', $company->id)->where('account_type_id','<',12);
+        $balance_date = $company->accounting_start_date;
+        $department_id = $request->department_id;
+        $account_type_id = $request->account_type_id;
+        $account = \DB::table('accounts')
+        ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
+        ->leftJoin('balances', function($join)use($department_id){
+            if(empty($department_id)){
+                $join->on('balances.account_id', '=', 'accounts.id')->whereNull('department_id');
+            }else{
+                $join->on('balances.account_id', '=', 'accounts.id')->where('department_id', $department_id);
+            }
+        })
+        ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id, account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, balance')
+        ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
+        
+        
+        
+        if(!empty($account_type_id)){
+            $account = $account->where('account_type_id', $account_type_id);
+        }
         $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
         $accounts = $account->get();
-        $balance_date = $company->accounting_start_date;
-        return view('account.balance', compact('accounts', 'balance_date'));
+        $departments = Department::where('company_id', $company->id)->get();
+        $account_types = AccountType::orderBy('id')->get();
+        return view('account.balance', compact('accounts', 'balance_date', 'departments', 'account_types'));
     }
 
     public function saveOpeningBalance(Request $request){
@@ -368,17 +389,57 @@ class AccountController extends Controller
         $company = $user->activeCompany();
         $period = $company->getPeriod();
         $data = $request->all();
-        $accounts = Account::where('company_id', $company->id)
-        ->where('has_children',0)
-        ->where('account_type_id','<',12)
-        ->get();
-
-        foreach($accounts as $account){
-            $account->op_debit=parse_number($data['debit_'.$account->id]);
-            $account->op_credit=parse_number($data['credit_'.$account->id]);
-            $account->op_date=date('Y-m-d');
-            $account->save();
-        }   
-        return redirect()->route('accounts.opening_balance')->with('success', 'Saldo awal telah disimpan.');
+        $opening_balance = array();
+        foreach($data['balance'] as $account_id =>$balance){
+            \DB::table('balances')->updateOrInsert([
+                'company_id' => $company->id,
+                'department_id' => $request->department_id??null,
+                'account_id' => $account_id,
+            ],['balance' => parse_number($balance),
+                'created_by'=>$user->id,
+                'created_at'=>date('Y-m-d H:i:s')
+            ]);
+        }
+        \DB::table('balances')->insert($opening_balance);
+        return redirect()->route('accounts.opening_balance', empty($department_id)?[]:['department_id'=>$department_id])->with('success', 'Saldo awal telah disimpan.');
+    }   
+    public function saveBudget(Request $request){
+        $user = Auth::user();
+        $company = $user->activeCompany();
+        $period = $company->getPeriod();
+        $data = $request->all();
+        $budgets = array();
+        // dd($data);        
+        foreach($data['budget'] as $account_id =>$account_budgets){
+            $budget_values=array(
+                'created_by'=>$user->id,
+                'updated_by'=>$user->id,
+                'created_at'=>date('Y-m-d H:i:s'),
+                'updated_at'=>date('Y-m-d H:i:s'),
+            );
+            $total = 0;
+            foreach($account_budgets as $month => $budget){
+                $budget_values[$month] = parse_number($budget);
+                if($month!='total'){
+                    $total += $budget_values[$month];
+                }
+            }
+            $budget_values['total']=$total;
+            \DB::table('budgets')->updateOrInsert([
+                'company_id' => $company->id,
+                'department_id' => $request->department_id??null,
+                'account_id' => $account_id,
+                'budget_year' => $data['budget_year'],
+            ],$budget_values);
+        }
+        \DB::table('balances')->insert($budgets);
+        $params = [
+            'budget_year'=>$data['budget_year'],
+            'account_type_id'=>$data['account_type_id']
+        ];
+        if(!empty($department_id)){
+            $params['department_id']=$department_id;
+        }
+        return redirect()->route('accounts.budgets', $params)->with('success', 'Saldo awal telah disimpan.');
     }   
 }

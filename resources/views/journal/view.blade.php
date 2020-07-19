@@ -74,8 +74,8 @@ $breadcrumbs = array(
                 <tbody>
                 @foreach($journal->details as $detail)
                     <tr>
-                        <td>{{$detail->account->account_no}}</td>
-                        <td>{{$detail->account->account_name}}</td>
+                        <td><a href="{{route('accounts.view', $detail->account_id)}}">{{$detail->account->account_no}}</a></td>
+                        <td><a href="{{route('accounts.view', $detail->account_id)}}">{{$detail->account->account_name}}</a></td>
                         <td>{{$detail->description}}</td>
                         <td>{{$detail->department!=null?$detail->department->name:'-'}}</td>
                         <td class="text-right">{{fcurrency($detail->debit)}}</td>

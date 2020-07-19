@@ -60,7 +60,7 @@ class JournalReportController extends Controller
         $pdf->loadView('report.pdf', $data);
         return $pdf->download('journal.pdf');
     }
-    
+
     private function query($params, $company, $is_voucher){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
@@ -68,7 +68,7 @@ class JournalReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        $table = $is_voucher?'vw_voucher':'vw_ledger';
+        $table = $is_voucher?'vw_voucher':'vw_journals';
 
         // DB::enableQueryLog();
         $journal = DB::table($table)
@@ -91,9 +91,14 @@ class JournalReportController extends Controller
         if(empty($params['sort_key'])){
             $journal = $journal->orderBy('trans_date');
             $journal = $journal->orderBy('trans_no');
+            $journal = $journal->orderBy('journal_detail_id');
+            $journal = $journal->orderBy('sequence');
         }else{
             $journal = $journal->orderBy($sort_key, $sort_order);
             $journal = $journal->orderBy("trans_date", $sort_order);
+            $journal = $journal->orderBy('trans_no');
+            $journal = $journal->orderBy('journal_detail_id');
+            $journal = $journal->orderBy('sequence');
         }
         $journal = $journal->get();
         // dd(DB::getQueryLog());
@@ -108,10 +113,10 @@ class JournalReportController extends Controller
         $sort_key = $request->sort_key;
         $sort_order = $request->sort_order??'asc';
         // dd($department_id);
-        
-        $columns = ['tags'=>empty($request->tags)?false:true, 
-        'description'=>empty($request->description)?false:true, 
-        'created_by'=>empty($request->created_by)?false:true, 
+
+        $columns = ['tags'=>empty($request->tags)?false:true,
+        'description'=>empty($request->description)?false:true,
+        'created_by'=>empty($request->created_by)?false:true,
         'department'=>empty($request->department)?false:true,];
 
         $paramsString = "layout=$layout";
@@ -120,7 +125,7 @@ class JournalReportController extends Controller
         $start_date = fdate($request->start_date, 'Y-m-d');
         $end_date = fdate($request->end_date, 'Y-m-d');
         if(empty($start_date)  && empty($end_date)){
-            $max_date = DB::table('vw_ledger')
+            $max_date = DB::table('vw_journals')
             ->where('company_id', $company_id)->max('trans_date');
             if($max_date==null){
                 $max_date = date('Y-m-d');
@@ -128,21 +133,21 @@ class JournalReportController extends Controller
             $start_date = \Carbon\Carbon::parse($max_date)->startOfMonth()->format('Y-m-d');
             $end_date = $max_date;
         }
-        
+
         if(count($journals)>0){
-            $end_date = DB::table('vw_ledger')
+            $end_date = DB::table('vw_journals')
             ->where('company_id', $company_id)
             ->whereIn('journal_id', $journals)
             ->max('trans_date');
-            $start_date = DB::table('vw_ledger')
+            $start_date = DB::table('vw_journals')
             ->where('company_id', $company_id)
             ->whereIn('journal_id', $journals)
             ->min('trans_date');
         }
-        
+
         $start_date = fdate($start_date, 'Y-m-d');
         $end_date = fdate($end_date, 'Y-m-d');
-        
+
         $params = [
             'layout'=>$layout,
             'columns'=>$columns,

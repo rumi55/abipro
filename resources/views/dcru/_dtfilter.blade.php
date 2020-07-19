@@ -160,33 +160,33 @@ $(function () {
       var table = $(this).attr('data-table');
       var column = $(this).attr('data-column');
       $(this).select2({
-      theme: 'bootstrap4',
-      placeholder: '',
-      minimumInputLength: 2,
-      ajax: {
-      url: BASE_URL+'/json/search',
-      dataType: 'json',
-      delay: 250,
-      data: function (params) {
-        return {
-          q: params.term,
-          table: table,
-          column: column,
-        };
-      },
-      processResults: function (data) {
-        return {
-          results:  $.map(data, function (item) {
-            return {
-              text: item,
-              id: item
-            }
-          })
-        };
-      },
-      cache: true
-    }
-    })
+        theme: 'bootstrap4',
+        placeholder: '',
+        minimumInputLength: 2,
+        ajax: {
+        url: BASE_URL+'/json/search',
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+          return {
+            q: params.term,
+            table: table,
+            column: column,
+          };
+        },
+        processResults: function (data) {
+          return {
+            results:  $.map(data, function (item) {
+              return {
+                text: item,
+                id: item
+              }
+            })
+          };
+        },
+        cache: true
+        }
+      })
     })
     
     

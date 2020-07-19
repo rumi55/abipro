@@ -22,7 +22,7 @@
               <a href="{{route('companies.export')}}" class="btn btn-info btn-block">{{__('Export Data')}}</a>
               <a href="{{route('companies.import')}}" class="btn btn-info btn-block">{{__('Import Data')}}</a>
               <a href="{{route('companies.transfer')}}" class="btn btn-info btn-block">{{__('Transfer Data')}}</a>
-              <a href="{{route('convert.index')}}" class="btn btn-info btn-block">{{__('Convert Abipro Desktop')}}</a>
+              <a href="{{route('companies.convert')}}" class="btn btn-info btn-block">{{__('Convert Abipro Desktop')}}</a>
             @endif
             @if($user->is_owner && !$company->is_active)
               <a href="{{route('companies.delete.confirm', $company->id)}}" class="btn btn-danger btn-block">{{__('Delete').' '.__('Company')}}</a>

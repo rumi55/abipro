@@ -44,6 +44,9 @@ class Select2OutputController extends Controller
         if(isset($request->parent_id)){
             $query = $query->where('account_parent_id', $request->parent_id);
         }
+        if(isset($request->tree_level)){
+            $query = $query->where('tree_level', $request->tree_level);
+        }
         if(isset($request->type_id)){
             $query = $query->where('account_type_id', $request->type_id);
         }
