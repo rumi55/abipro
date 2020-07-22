@@ -1,5 +1,5 @@
-@php 
-$active_menu='accounts'; 
+@php
+$active_menu='accounts';
 $breadcrumbs = array(
     ['label'=>trans('Account'), 'url'=>route('accounts.index')],
     ['label'=>($mode=='create' || $mode=='add_child')?trans('New Account'):trans('Edit Account')]
@@ -15,16 +15,16 @@ $breadcrumbs = array(
         'method'=>($mode=='create' || $mode=='add_child')?'POST':'PUT',
         'btn_label'=>($mode=='create' || $mode=='add_child')?trans('Create Account'):trans('Save'),
     ])
-    
+
         <div class="form-group row">
             <label for="account_type_id" class="col-sm-2 col-form-label">{{__('Account Type')}}</label>
             <div class="col-md-10 col-sm-10">
-            @if($mode=='create' || ($mode=='edit' && $account->tree_level==0))
+            @if($mode=='create' || ($mode=='edit' && $account->tree_level==0 && !$account->isLocked()))
             <select class="form-control select2 @error('account_type_id') is-invalid @enderror" id="account_type_id" name="account_type_id" value="{{old('account_type_id', $account->account_type_id)}}">
                 @foreach($account_types as $type)
                 <option {{$type->id==old('account_type_id', $account->account_type_id)?'selected':''}} value="{{$type->id}}">{{tt($type,'name')}}</option>
                 @endforeach
-            </select>            
+            </select>
             @error('account_type_id') <small class="text-danger">{!! $message !!}</small> @enderror
             @else
             <input readonly tabindex="-1" class="form-control-plaintext"  value="{{$account->accountType->name}}">
@@ -46,12 +46,12 @@ $breadcrumbs = array(
             @error('account_name') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>
-        
+        @if(($account->parent!=null && $mode=='edit') || $mode=='create')
         <div class="form-group row">
             <label for="account_parent_id" class="col-sm-2 col-form-label">{{__('Account Parent')}}</label>
             <div class="col-md-10 col-sm-10">
             @if($mode=='create')
-            <select class="form-control select2 @error('account_parent_id') is-invalid @enderror" id="account_parent_id" name="account_parent_id" data-selected="{{old('account_parent_id', $account->account_parent_id)}}"></select>            
+            <select class="form-control select2 @error('account_parent_id') is-invalid @enderror" id="account_parent_id" name="account_parent_id" data-selected="{{old('account_parent_id', $account->account_parent_id)}}"></select>
             @error('account_parent_id') <small class="text-danger">{!! $message !!}</small> @enderror
             @else
             <input readonly tabindex="-1" class="form-control-plaintext"  value="{{'('.$account->parent->account_no.') '.$account->parent->account_name}}">
@@ -59,6 +59,7 @@ $breadcrumbs = array(
             @endif
             </div>
         </div>
+    @endif
     @endcomponent
   </div>
 </div>

@@ -422,8 +422,9 @@ class ConvertAbiproController extends Controller
                 // } else {
                 //     $sequence++;
                 // }
-                
+
                 \App\JournalDetail::create([
+                    'trans_date' => $trans_date,
                     'sequence' => $sequence,
                     'account_id' => $account->id,
                     'description' => $description,

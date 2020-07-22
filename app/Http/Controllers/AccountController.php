@@ -29,16 +29,16 @@ class AccountController extends Controller
         $accounts = $account->get();
         return view('account.index', compact('accounts'));
     }
-    
 
-    public function view($id){ 
+
+    public function view($id){
         $account = Account::findOrFail($id);
         $data = dcru_dt('transactions', 'dtables');
         $data['account'] = $account;
         return view('account.view', $data);
     }
-    
-    
+
+
     public function create(Request $request){
         $user = Auth::user();
         $company = $user->activeCompany();
@@ -80,7 +80,7 @@ class AccountController extends Controller
     }
     public function save(Request $request){
         $data = $request->all();
-        
+
         $user = Auth::user();
         $company = $user->activeCompany();
         $rules = [
@@ -95,12 +95,12 @@ class AccountController extends Controller
             'account_type_id'=>trans('Account Type'),
             'account_parent_id'=>trans('Account Parent'),
         ];
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        
+
         $account_parent_id = $request->account_parent_id;
         $parent = null;
         $level = 0;
@@ -129,7 +129,7 @@ class AccountController extends Controller
                 $parent->has_children = true;
                 $parent->update();
             }
-        \DB::commit();        
+        \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
@@ -143,7 +143,7 @@ class AccountController extends Controller
     }
     public function saveImport(Request $request){
         $data = $request->all();
-        
+
         $user = Auth::user();
         $company = $user->activeCompany();
         $rules = [
@@ -152,7 +152,7 @@ class AccountController extends Controller
         $attr = [
             'file'=>'File',
         ];
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -166,7 +166,7 @@ class AccountController extends Controller
     public function update(Request $request, $id){
         $account = Account::findOrFail($id);
         $data = $request->all();
-        
+
         $user = Auth::user();
         $company = $user->activeCompany();
         $rules = [
@@ -180,7 +180,7 @@ class AccountController extends Controller
             'account_type_id'=>trans('Account Type'),
             'account_parent_id'=>trans('Account Parent'),
         ];
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -188,10 +188,10 @@ class AccountController extends Controller
         $old_account_name = $account->account_name;
         $old_account_no = $account->account_no;
         $old_account_type = $account->accountType->name;
-        
+
         $account->account_name = $request->account_name;
         $account->account_no = $request->account_no;
-        
+
         if($account->tree_level==0 && $account->account_type_id!=$request->account_type_id){
             $account->account_type_id = $request->account_type_id;
             //ubah semua tipe akun childrennya
@@ -267,7 +267,7 @@ class AccountController extends Controller
         $details = JournalDetail::join('journals', 'journal_details.journal_id', '=', 'journals.id')
         ->whereIn('account_id', $account_id)
         ->where('company_id', $company->id);
-        
+
         $departments = $request->query('departements');
         $start_date = $request->query('start_date');
         $end_date = $request->query('end_date');
@@ -290,13 +290,13 @@ class AccountController extends Controller
         $sort_order = $request->query('sort_order', 'asc');
         $search = $request->query('search');
         $filter = $request->query('filter');
-        
+
         if(isset($filter)){
             foreach($filter as $column => $value){
                 $details = $details->where($column,'=', $value);
             }
         }
-        
+
         $sort = $request->query('sort');
         if(!empty($sort)){
             $sort = explode('-',$sort);
@@ -311,7 +311,7 @@ class AccountController extends Controller
                 ->orWhere('journals.trans_date','like', "%$search%");
             });
         }
-        
+
         if(!empty($sort_key)){
             $details = $details->orderBy($sort_key, $sort_order);
         }
@@ -339,10 +339,10 @@ class AccountController extends Controller
                 $join->on('budgets.account_id', '=', 'accounts.id')->where('budget_year', $budget_year)->where('department_id', $department_id);
             }
         })
-        ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id, 
+        ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id,
         account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, jan, feb, mar, apr, may, jun, jul, aug, sep, `oct`, nov, `dec`, total')
         ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
-        
+
         if(!empty($account_type_id)){
             $account = $account->where('account_type_id', $account_type_id);
         }
@@ -370,9 +370,9 @@ class AccountController extends Controller
         })
         ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id, account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, balance')
         ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
-        
-        
-        
+
+
+
         if(!empty($account_type_id)){
             $account = $account->where('account_type_id', $account_type_id);
         }
@@ -391,25 +391,37 @@ class AccountController extends Controller
         $data = $request->all();
         $opening_balance = array();
         foreach($data['balance'] as $account_id =>$balance){
-            \DB::table('balances')->updateOrInsert([
-                'company_id' => $company->id,
-                'department_id' => $request->department_id??null,
-                'account_id' => $account_id,
-            ],['balance' => parse_number($balance),
-                'created_by'=>$user->id,
-                'created_at'=>date('Y-m-d H:i:s')
-            ]);
+            if(!empty($balance)){
+                \DB::table('balances')->updateOrInsert([
+                    'company_id' => $company->id,
+                    'department_id' => $request->department_id??null,
+                    'account_id' => $account_id,
+                ],['balance' => parse_number($balance),
+                    'created_by'=>$user->id,
+                    'created_at'=>date('Y-m-d H:i:s')
+                ]);
+            }
         }
         \DB::table('balances')->insert($opening_balance);
-        return redirect()->route('accounts.opening_balance', empty($department_id)?[]:['department_id'=>$department_id])->with('success', 'Saldo awal telah disimpan.');
-    }   
+        $params = [
+        ];
+        if(!empty($request->account_type_id)){
+            $params = [
+                'account_type_id'=>$data['account_type_id']
+            ];
+        }
+        if(!empty($request->department_id)){
+            $params['department_id']=$request->department_id;
+        }
+        return redirect()->route('accounts.opening_balance', $params)->with('success', 'Saldo awal telah disimpan.');
+    }
     public function saveBudget(Request $request){
         $user = Auth::user();
         $company = $user->activeCompany();
         $period = $company->getPeriod();
         $data = $request->all();
         $budgets = array();
-        // dd($data);        
+        // dd($data);
         foreach($data['budget'] as $account_id =>$account_budgets){
             $budget_values=array(
                 'created_by'=>$user->id,
@@ -441,5 +453,5 @@ class AccountController extends Controller
             $params['department_id']=$department_id;
         }
         return redirect()->route('accounts.budgets', $params)->with('success', 'Saldo awal telah disimpan.');
-    }   
+    }
 }

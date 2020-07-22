@@ -23,8 +23,6 @@ class BalanceReportController extends Controller
 
         $title = 'Laporan Neraca';
         $view = 'report.balance.default';
-        $period = fdate($params['end_date'], 'd M Y');
-        $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');
         $departments = Department::whereIn('id', $params['department_id'])->get();
 
 
@@ -66,80 +64,138 @@ class BalanceReportController extends Controller
         if($c>3){
             $pdf->setPaper('a4', 'landscape');
         }
-        $pdf->loadView('report.print', $data);
+// return view('report.pdf', $data);
+        $pdf->loadView('report.pdf', $data);
         return $pdf->stream($data['report'].'.pdf');
     }
     private function query($params, $company){
         $select = [
-            DB::raw('a.id,  a.sequence, a.account_no, a.account_type, a.account_type_id, a.account_group, a.account_name, a.tree_level')
+            DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
         ];
-        foreach($params['columns'] as $i=>$column){
-            $start_date = $column['start_date'];
-            $end_date = $column['end_date'];
-            $departments = '';
-            $plus = "+ (IF(SUM(c$i.opening_balance) IS NULL, 0,SUM(c$i.opening_balance)))";
-
-            $groupby = '';
-            if(!empty($params['department_id'])){
-                $dept_id = implode(',',$params['department_id']);
-                $departments = " AND c$i.department_id IN ($dept_id) ";
-                $plus = '';
-            }
-
-            if($start_date==null){
-                $re = "(SELECT IF(SUM(cb.profit) IS NULL, 0, SUM(cb.profit)) FROM closing_books cb WHERE a.id=cb.account_id AND cb.end_date<='$end_date')";
-                $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))+$re $plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id
-                and a.id=c$i.account_id $departments) as total_$i");
-            }else{
-                $re = "(SELECT IF(SUM(cb.profit) IS NULL, 0, SUM(cb.profit)) FROM closing_books cb WHERE a.id=cb.account_id AND cb.end_date>='$start_date' AND cb.end_date<='$end_date')";
-                $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))+$re
-                FROM vw_balance c$i WHERE c$i.`trans_date`>='$start_date' AND c$i.`trans_date`<='$end_date' AND  c$i.company_id=a.company_id
-                and a.id=c$i.account_id $departments) as total_$i");
-            }
+        $departments = null;
+        $dept_id = null;
+        $department_id = $params['department_id'];
+        if(!empty($params['department_id'])){
+            $dept_id = implode(',',$params['department_id']);
+            $departments = " AND tb.department_id IN ($dept_id) ";
         }
-        $balance = DB::table(DB::raw('vw_accounts a'))
+
+        foreach($params['columns'] as $i=>$column){
+            $end_date = $column['end_date'];
+            $select[] = DB::raw (
+            "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+            FROM vw_transaction_balance tb WHERE tb.`trans_date`<='$end_date' AND  (tb.account_id=a.id OR tb.account_parent_id=a.id) $departments
+            )+vw_opening_balance.balance as total_$i");
+        }
+        $balance = DB::table(DB::raw('accounts a'))
         ->select($select)
+        ->join('account_types', 'account_types.id','=','account_type_id')
+        ->leftJoin('vw_opening_balance', function($join)use($department_id){
+            if(count($department_id)==0){
+                $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereNull('department_id');
+            }else{
+                $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereIn('vw_opening_balance.department_id', $department_id);
+            }
+
+        })
         ->whereRaw("a.company_id='$company->id'")
-        ->whereIn('a.account_group',['asset', 'liability', 'equity'])
+        ->whereIn('group',['asset', 'liability', 'equity'])
         ->distinct()
-        ->orderBy(DB::raw('a.account_group, a.sequence'))->get();
+        ->orderBy('a.sequence')->get();
         return $balance;
     }
+
+
     private function query2($params, $company){
         $select = [
-            DB::raw('a.id, a.sequence, a.account_no, a.account_type, a.account_type_id, a.account_group, a.account_name, a.tree_level')
+            DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
         ];
 
         foreach($params['columns'] as $i=>$header){
-            $date= $params['end_date'];
+            $date= $params['year'].'-'.$params['end_month'].'-31';
             $plus = '';
             $id = $header->id;
             if($id===null & $header->name==null){//tanpa department
                 $plus = '+a.balance';
-                $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
-                and a.id=c$i.account_id AND department_id IS NULL) as total_$i");
+                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
+                FROM vw_transaction_balance tb WHERE tb.`trans_date`<='$date' AND  tb.company_id=a.company_id
+                and a.id=tb.account_id AND department_id IS NULL) as total_$i");
             }else if($id===null & $header->name!=null){//total
                 $plus = '+a.balance';
-                $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
-                and a.id=c$i.account_id) as total_$i");
+                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
+                FROM vw_transaction_balance tb WHERE tb.`trans_date`<='$date' AND  tb.company_id=a.company_id
+                and a.id=tb.account_id) as total_$i");
             }else{
-                $select[] = DB::raw ("(SELECT IF(SUM(c$i.total) IS NULL, 0,SUM(c$i.total))$plus
-                FROM vw_balance c$i WHERE c$i.`trans_date`<='$date' AND  c$i.company_id=a.company_id
-                and a.id=c$i.account_id AND department_id=$id) as total_$i");
+                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
+                FROM vw_transaction_balance tb WHERE tb.`trans_date`<='$date' AND  tb.company_id=a.company_id
+                and a.id=tb.account_id AND department_id=$id) as total_$i");
             }
         }
-        $balance = DB::table(DB::raw('vw_accounts a'))
+        $balance = DB::table(DB::raw('accounts a'))
         ->select($select)
+        ->join('account_types', 'account_types.id','=','account_type_id')
+        ->leftJoin('vw_opening_balance', function($join){
+            $join->on('vw_opening_balance.account_id', '=', 'a.id');
+        })
         ->whereRaw("a.company_id='$company->id'")
-        ->whereIn('a.account_group',['asset', 'liability', 'equity'])
+        ->whereIn('group',['asset', 'liability', 'equity'])
         ->distinct()
-        ->orderBy(DB::raw('a.sequence'))->get();
+        ->orderBy('a.sequence')->get();
         return $balance;
     }
     private function getParams(Request $request, $company_id){
+        $departments = $request->query('departments', []);
+        $compare = $request->compare??'period';
+        $year = $request->year??date('Y');
+        $start_month = $request->start_month??date('m');
+        $end_month = $request->end_month??date('m');
+        $total_year = filter_var($request->total_year, FILTER_VALIDATE_BOOLEAN);
+        $total_last_year = filter_var($request->total_last_year, FILTER_VALIDATE_BOOLEAN);
+        $subaccount = $request->subaccount??0;
+        $columns = array();
+        if($compare=='department'){
+            if(!empty($departments)){
+                $columns = Department::where('company_id', $company_id)->whereIn('id', $departments)->get();
+            }else{
+                $columns = Department::where('company_id', $company_id)->get();
+                $columns->push(new Department());
+                $all = new Department();
+                $all->name = 'Jumlah';
+                $columns->push($all);
+            }
+        }else{
+            if($total_last_year){
+                $columns[] = [
+                    'end_date'=>($year-1).'-12-31',
+                    'label'=>$year-1,
+                ];
+            }
+            for($month=$start_month;$month<=$end_month;$month++){
+                $columns[] = [
+                    'end_date'=>$year.'-'.$month.'-31',
+                    'label'=>fmonth($year.'-'.$month.'-01'),
+                ];
+            }
+            if($total_year){
+                $columns[] = [
+                    'end_date'=>$year.'-12-31',
+                    'label'=>$year,
+                ];
+            }
+        }
+
+        $params = [
+            'department_id'=>$departments,
+            'year'=>$year,
+            'start_month'=>$start_month,
+            'end_month'=>$end_month,
+            'compare'=>$compare,
+            'columns'=>$columns,
+            'subaccount'=>$subaccount,
+        ];
+        return $params;
+    }
+    private function getParamsOld(Request $request, $company_id){
         $departments = $request->query('departments', []);
         $compare = $request->query('compare', 'period');
         $period = $request->query('period', 'monthly');

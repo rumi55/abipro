@@ -26,7 +26,7 @@ class JournalController extends Controller
     public function getAllVoucher(Request $request){
         return $this->query($request, true);
     }
-    
+
     public function query(Request $request, $is_voucher=false){
         $company_id = Auth::user()->activeCompany()->id;
         $journal = \DB::table('journals')->where('company_id', '=', $company_id)
@@ -85,7 +85,7 @@ class JournalController extends Controller
     public function duplicate($id){
         $company_id = \Auth::user()->activeCompany()->id;
         $journal = Journal::findOrFail($id);
-        
+
         //redirect jika single entry
         if($journal->is_voucher==1 && $journal->is_single_entry==1){
             $trans = \App\Transaction::findOrFail($journal->transaction_id);
@@ -154,7 +154,7 @@ class JournalController extends Controller
         }
         return view('report.viewer', $data);
     }
-    
+
     public function save(Request $request){
         $data = $request->all();
         // dd($data);
@@ -172,7 +172,7 @@ class JournalController extends Controller
             'detail_debit'=>'Debit',
             'detail_credit'=>'Kredit',
         ];
-        
+
         $rules = [
             'trans_no' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
@@ -191,13 +191,13 @@ class JournalController extends Controller
         foreach($keys as $key){
             $f = substr($key, 0, strripos($key, '_'));
             if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];    
+                $rules[$key] = $detail_rules[$f];
             }
             if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];    
+                $attr[$key] = $detail_attr[$f];
             }
         }
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -224,14 +224,14 @@ class JournalController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
-                
+                );
+
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Journal::where('trans_no', $trans_no)->where('company_id', $company_id)->count(); 
-                    
+                    $c = Journal::where('trans_no', $trans_no)->where('company_id', $company_id)->count();
+
                     if($c==0){
                         $journal = Journal::create([
                             'journal_id'=>$trans_no,
@@ -249,7 +249,7 @@ class JournalController extends Controller
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 $trans_no = $request->trans_no;
                 $journal = Journal::create([
@@ -280,12 +280,12 @@ class JournalController extends Controller
             // $jcounter = Counter::firstOrCreate(
             //         ['period'=>$period, 'numbering_id'=>$jnumbering->id, 'company_id'=>$company_id],
             //         ['counter'=>$jnumbering->counter_start-1]
-            // );        
+            // );
             // $check = true;
             // do{
             //     $jcounter->getNumber();
             //     $journal_id = $jcounter->last_number;
-            //     $jc = Journal::where('journal_id', $journal_id)->where('company_id', $company_id)->count(); 
+            //     $jc = Journal::where('journal_id', $journal_id)->where('company_id', $company_id)->count();
             //     if($jc==0){
             //         $journal->journal_id = $journal_id;
             //         $journal->update();
@@ -303,6 +303,7 @@ class JournalController extends Controller
                 $credit = 'detail_credit_'.$i;
                 JournalDetail::create([
                     'sequence'=>$i,
+                    'trans_date'=>$trans_date,
                     'account_id'=>$request->$account_id,
                     'description'=>$request->$description,
                     'department_id'=>$request->$department_id ?? null,
@@ -311,9 +312,9 @@ class JournalController extends Controller
                     'credit'=>parse_number($request->$credit),
                     'journal_id'=>$journal->id,
                     'created_by'=>$user->id
-                ]);    
+                ]);
             }
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
@@ -322,14 +323,14 @@ class JournalController extends Controller
             'Transaction No.'=>$journal->trans_no,
             'Total'=>$journal->total
         ];
-        
+
         add_log($is_voucher?'vouchers':'journals', 'create', json_encode($reference));
         return redirect()->route('journals.view', $journal->id)->with('success', 'Jurnal berhasil dibuat');
     }
 
     public function update(Request $request, $id){
         $data = $request->all();
-        
+
         $detail_rules = [
             'detail_account_id'=>'required',
             'detail_desciption'=>'required',
@@ -344,7 +345,7 @@ class JournalController extends Controller
             'detail_debit'=>'Debit',
             'detail_credit'=>'Kredit',
         ];
-        
+
         $rules = [
             'trans_no' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
@@ -359,13 +360,13 @@ class JournalController extends Controller
         foreach($keys as $key){
             $f = substr($key, 0, strripos($key, '_'));
             if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];    
+                $rules[$key] = $detail_rules[$f];
             }
             if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];    
+                $attr[$key] = $detail_attr[$f];
             }
         }
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -375,13 +376,13 @@ class JournalController extends Controller
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-        
+
         $journal->trans_date = $trans_date;
         $journal->description = $request->description;
         $journal->contact_id = $request->contact_id;
         $journal->total = parse_number($request->total);
         $journal->updated_by = $user->id;
-        
+
         try{
             \DB::beginTransaction();
             $auto=false;
@@ -399,25 +400,25 @@ class JournalController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
+                );
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count(); 
-                    if($c==0){                
+                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
+                    if($c==0){
                         $journal->journal_id = $trans_no;
                         $journal->trans_no = $trans_no;
                         $journal->update();
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 $trans_no = $request->trans_no;
                 $journal->update();
             }
-            //cek id 
+            //cek id
             $old_details = array();
 
             foreach($journal->details as $detail){
@@ -436,6 +437,7 @@ class JournalController extends Controller
                     JournalDetail::updateOrcreate([
                         'account_id'=>$request->$account_id,
                         'sequence'=>$i,
+                        'trans_date'=>$trans_date,
                         'description'=>$request->$description,
                         'department_id'=>$request->$department_id,
                         'tags'=>$request->$tags,
@@ -443,11 +445,12 @@ class JournalController extends Controller
                         'credit'=>parse_number($request->$credit),
                         'journal_id'=>$journal->id,
                         'created_by'=>$user->id
-                    ]);    
+                    ]);
                 }else{
                     $jid = $request->$detail_id;
                     $jdetail = JournalDetail::findOrFail($jid);
                     $jdetail->sequence=$i;
+                    $jdetail->trans_date=$trans_date;
                     $jdetail->account_id=$request->$account_id;
                     $jdetail->description=$request->$description;
                     $jdetail->department_id=$request->$department_id;
@@ -458,14 +461,14 @@ class JournalController extends Controller
                     $jdetail->updated_by=$user->id;
                     $jdetail->update();
                     if(array_key_exists($jid, $old_details)){
-                       unset($old_details[$jid]); 
+                       unset($old_details[$jid]);
                     }
                 }
             }
             foreach($old_details as $detail){
                 $detail->delete();
             }
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
@@ -507,7 +510,7 @@ class JournalController extends Controller
         $journal->delete();
         return response()->json(null, 204);
     }
-    
+
     public function batchDelete(Request $request){
         $id = $request->id;
         $ids = array();
@@ -525,7 +528,7 @@ class JournalController extends Controller
         $journal->save();
         return redirect()->back();
     }
-    
+
     public function lockJournalBatch(Request $request){
         $locked = isset($request->locked)?$request->locked:false;
         $id = $request->id;
@@ -562,7 +565,7 @@ class JournalController extends Controller
         Journal::whereIn('id', $ids)->update(['is_voucher'=>false]);
         return redirect()->back();
     }
-    
+
     public function toVoucherBatch(Request $request){
         $id = $request->id;
         $ids = array();
@@ -675,9 +678,9 @@ class JournalController extends Controller
     }
     public function importSave(Request $request)
     {
-        
+
         $data = $request->all();
-        
+
         $user = Auth::user();
         $company = $user->activeCompany();
         $rules = [
@@ -686,7 +689,7 @@ class JournalController extends Controller
         $attr = [
             'file'=>'File',
         ];
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -695,7 +698,7 @@ class JournalController extends Controller
         $filename = upload_file('file', $filename, 'public/files/import');
         $excel = \Excel::import(new \App\Imports\LedgerImport($company->id, $user->id), storage_path("/app/".$filename));
         add_log('journals', 'import', json_encode(['name'=>'Journal File', 'url'=>url_file($filename)]));
-        return redirect()->route('dcru.index', 'journals')->with('success', 'Jurnla berhasil ditambahkan');        
+        return redirect()->route('dcru.index', 'journals')->with('success', 'Jurnla berhasil ditambahkan');
     }
-    
+
 }

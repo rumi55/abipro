@@ -38,7 +38,7 @@ class TransactionController extends Controller
         $next_id = $next!=null?$next->id:'';
         return view('transaction.view', compact('transaction', 'next_id', 'prev_id'));
     }
-    
+
     public function reportTransaction(Request $request){
         $data = $this->query($request, 1);
         // return view('pdf.Transaction.report', array('Transactions'=>$data));
@@ -56,7 +56,7 @@ class TransactionController extends Controller
         return $pdf->download('Transactions.pdf');
         // return $pdf->stream('Transaction.pdf');
     }
-    
+
     public function create(Request $request, $type){
         $company_id = \Auth::user()->activeCompany()->id;
         $transaction = new Transaction;
@@ -65,7 +65,7 @@ class TransactionController extends Controller
         ->where('has_children', false)->orderBy('account_type_id')->get();
         $departments = \App\Department::where('company_id', $company_id)->get();
         $contacts = \App\Contact::where('company_id', $company_id)->orderBy('name')->get();
-        
+
         $tags = \App\Tag::where('company_id', $company_id)->orderBy('group')->orderBy('item_id')->get();
         $numberings = \App\Numbering::where('company_id', $company_id)
         ->where('transaction_type_id', TransactionType::JOURNAL)->get();
@@ -121,7 +121,7 @@ class TransactionController extends Controller
             'detail_tags'=>'Sortir',
             'detail_amount'=>'Jumlah'
         ];
-        
+
         $rules = [
             'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
@@ -148,13 +148,13 @@ class TransactionController extends Controller
                 $data[$key] = parse_number($data[$key]);
             }
             if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];    
+                $rules[$key] = $detail_rules[$f];
             }
             if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];    
+                $attr[$key] = $detail_attr[$f];
             }
         }
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
@@ -163,7 +163,7 @@ class TransactionController extends Controller
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-        
+
         try{
             \DB::beginTransaction();
             $auto = true;
@@ -181,12 +181,12 @@ class TransactionController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
+                );
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count(); 
+                    $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
                     if($c==0){
                         $transaction = Transaction::create([
                             'trans_no'=>$trans_no,
@@ -206,7 +206,7 @@ class TransactionController extends Controller
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 $trans_no = $request->trans_no;
                 $transaction = Transaction::create([
@@ -235,7 +235,7 @@ class TransactionController extends Controller
                     'tags'=>$data["detail_tags_$i"],
                     'transaction_id'=>$transaction->id,
                     'created_by'=>$user->id
-                ]);    
+                ]);
             }
             //
             // $this->addToJournal($transaction);
@@ -253,11 +253,11 @@ class TransactionController extends Controller
                 'Total'=>$transaction->total
             ];
             add_log('vouchers', 'create', json_encode($reference));
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
-        
+
         return redirect()->route('dcru.index', 'vouchers')->with('success', 'Transaksi berhasil dibuat.');
     }
     public function update(Request $request, $type, $id){
@@ -278,7 +278,7 @@ class TransactionController extends Controller
             'detail_tags'=>'Sortir',
             'detail_amount'=>'Jumlah'
         ];
-        
+
         $rules = [
             'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
@@ -305,22 +305,22 @@ class TransactionController extends Controller
                 $data[$key] = parse_number($data[$key]);
             }
             if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];    
+                $rules[$key] = $detail_rules[$f];
             }
             if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];    
+                $attr[$key] = $detail_attr[$f];
             }
         }
-        
+
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
-        
+
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-        
+
         $transaction->trans_date = $trans_date;
         $transaction->account_id = $data['account_id'];
         $transaction->contact_id = $data['contact_id'];
@@ -347,24 +347,24 @@ class TransactionController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
+                );
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count(); 
-                    if($c==0){                
+                    $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
+                    if($c==0){
                         $transaction->trans_no = $trans_no;
                         $transaction->update();
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 // $trans_no = $request->trans_no;
                 $transaction->update();
             }
-            //cek id 
+            //cek id
             $old_details = array();
             foreach($transaction->details as $detail){
                 $old_details[$detail->id] = $detail;
@@ -382,11 +382,11 @@ class TransactionController extends Controller
                         'tags'=>$data["detail_tags_$i"],
                         'transaction_id'=>$transaction->id,
                         'created_by'=>$user->id
-                    ]);        
+                    ]);
                 }else{
                     $jid = $data["detail_id_$i"];
                     $jdetail = TransactionDetail::findOrFail($jid);
-                    $old_sq = $jdetail->sequence; 
+                    $old_sq = $jdetail->sequence;
                     $jdetail->sequence=$i;
                     $jdetail->account_id=$data["detail_account_id_$i"];
                     $jdetail->amount=$data["detail_amount_$i"];
@@ -397,7 +397,7 @@ class TransactionController extends Controller
                     $jdetail->updated_by=$user->id;
                     $jdetail->update();
                     if(array_key_exists($jid, $old_details)){
-                       unset($old_details[$jid]); 
+                       unset($old_details[$jid]);
                     }
                 }
                 $transaction_details[] = $jdetail;
@@ -405,11 +405,11 @@ class TransactionController extends Controller
             foreach($old_details as $detail){
                 $detail->delete();
             }
-            // $this->updateJournal($transaction, $transaction_details);    
-            \DB::commit();        
+            // $this->updateJournal($transaction, $transaction_details);
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
-        }        
+        }
         return redirect()->route('vouchers.view', $transaction->id)->with('success', trans('Changes have been saved.'));
     }
     public function approve(Request $request, $id){
@@ -442,7 +442,7 @@ class TransactionController extends Controller
             'message'=>$msg,
             'users'=>[$transaction->created_by]
         ]);
-        
+
         $msg = $transaction->status=='submitted'?trans('Voucher submitted!'):($transaction->status=='approved'?trans('Voucher approved!'):trans('Voucher rejected!'));
         return redirect()->route('vouchers.view', $transaction->id)->with('success', $msg);
     }
@@ -472,8 +472,8 @@ class TransactionController extends Controller
         $transaction->delete();
         return redirect()->route('vouchers.index')->with('success', trans(':attr has been deleted.', ['attr'=>trans('Voucher')]));
     }
-    
-    
+
+
     public function batchDelete(Request $request){
         $id = $request->id;
         $ids = array();
@@ -489,7 +489,7 @@ class TransactionController extends Controller
         Transaction::destroy($ids);
         return redirect()->route('vouchers.index')->with('success', trans(':attr has been deleted.', ['attr'=>trans('Voucher')]));
     }
-    
+
 
     private function updateJournal($transaction, $transaction_details){
         if($transaction->trans_type=='receipt'){
@@ -511,7 +511,7 @@ class TransactionController extends Controller
         $journal->total = $transaction->amount;
         $journal->updated_by = Auth::user()->id;
         $journal->save();
-        
+
         $debit = 0;
         $credit = 0;
         if($transaction->trans_type=='receipt'){
@@ -523,12 +523,13 @@ class TransactionController extends Controller
         }
 
         $journal_detail = JournalDetail::where('journal_id', $journal->id)->where('sequence', 0)->first();
+        $journal_detail->trans_date = $transaction->trans_date;
         $journal_detail->sequence = 0;
         $journal_detail->account_id = $transaction->account_id;
         $journal_detail->department_id = $transaction->department_id;
         $journal_detail->tags = $transaction->tags;
-        $journal_detail->debit = $debit;             
-        $journal_detail->credit = $credit;             
+        $journal_detail->debit = $debit;
+        $journal_detail->credit = $credit;
         $journal_detail->account_id=$transaction->account_id;
         $journal_detail->description=$description;
         $journal_detail->update();
@@ -550,16 +551,17 @@ class TransactionController extends Controller
                 $debit = $detail->amount;
                 $credit = 0;
             }
-            $jdetail = JournalDetail::where('journal_id', $journal->id)->where('sequence', $detail->sequence+1)->first();                
+            $jdetail = JournalDetail::where('journal_id', $journal->id)->where('sequence', $detail->sequence+1)->first();
             if($jdetail==null){//ada tambahan baru
                 $jdetail = new JournalDetail;
             }
             $jdetail->journal_id = $journal->id;
+            $jdetail->trans_date = $journal->trans_date;
             $jdetail->sequence = $detail->sequence+1;
             $jdetail->department_id = $detail->department_id;
             $jdetail->tags = $detail->tags;
-            $jdetail->debit = $debit;             
-            $jdetail->credit = $credit;             
+            $jdetail->debit = $debit;
+            $jdetail->credit = $credit;
             $jdetail->account_id=$detail->account_id;
             $jdetail->description=$detail->description;
             $jdetail->save();
@@ -570,7 +572,7 @@ class TransactionController extends Controller
                 $detail->delete();
             }
         }
-        
+
         return $journal;
     }
 
@@ -584,12 +586,12 @@ class TransactionController extends Controller
                 ->setStatusCode(201);
         }
         try{
-            \DB::beginTransaction();        
+            \DB::beginTransaction();
             $journal = $this->addToJournal($transaction);
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
-        }        
+        }
 
         return (new JournalResource($journal))
                 ->response()
@@ -602,7 +604,7 @@ class TransactionController extends Controller
         }else if($transaction->trans_type=='payment'){
             $description = 'Pengeluaran untuk '.$transaction->contact->name;
         }
-        
+
         //save to journal
         $jnumbering = Numbering::where('transaction_type_id', TransactionType::JOURNAL)->first();
         if($jnumbering->counter_reset=='y'){
@@ -622,7 +624,7 @@ class TransactionController extends Controller
         do{
             $jcounter->getNumber();
             $journal_id = $jcounter->last_number;
-            $jc = Journal::where('journal_id', $journal_id)->where('company_id', $transaction->company_id)->count(); 
+            $jc = Journal::where('journal_id', $journal_id)->where('company_id', $transaction->company_id)->count();
             if($jc==0){
                 $journal = Journal::create([
                     'journal_id'=>$journal_id,
@@ -653,6 +655,7 @@ class TransactionController extends Controller
             $debit = 0;
         }
         JournalDetail::create([
+            'trans_date'=>$transaction->trans_date,
             'sequence'=>0,
             'account_id'=>$transaction->account_id,
             'description'=>$description,
@@ -663,7 +666,7 @@ class TransactionController extends Controller
             'credit'=>$credit,
             'journal_id'=>$journal->id,
             'created_by'=>$journal->created_by
-        ]);    
+        ]);
         foreach($transaction->details as $i =>$detail){
             $debit = 0;
             $credit = 0;
@@ -675,6 +678,7 @@ class TransactionController extends Controller
                 $credit = 0;
             }
             JournalDetail::create([
+                'trans_date'=>$transaction->trans_date,
                 'sequence'=>$detail->sequence+1,
                 'account_id'=>$detail->account_id,
                 'description'=>$detail->description,

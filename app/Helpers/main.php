@@ -58,18 +58,18 @@ if (!function_exists('company')) {
 if (!function_exists('user')) {
     function user($attribute){
         $user = Auth::user();
-        if($attribute=='group.display_name'){            
+        if($attribute=='group.display_name'){
             return ($user->userGroup()!=null?$user->userGroup()->userGroup->display_name:($user->is_owner?'Owner':''));
         }
 
         if($attribute=='group.name'){
             return $user->userGroup()!=null?$user->userGroup()->userGroup->name:($user->is_owner?'owner':'');
         }
-        
+
         if($attribute=='company_id'){
             return $user->activeCompany()!==null?$user->activeCompany()->id:null;
         }
-        
+
         return $user->$attribute;
     }
 }
@@ -103,7 +103,7 @@ if (!function_exists('inword')) {
         return $result;
     }
 }
-        
+
 if (!function_exists('ndigit')) {
     function ndigit($id, $len)
     {
@@ -139,7 +139,7 @@ if (!function_exists('upload_file')) {
             Storage::makeDirectory($file_path);
             if (Storage::putFileAs($file_path, $file, $filename)) {
                 return $file_path.'/'.$filename;
-            }    
+            }
         }
         return null;
     }
@@ -219,7 +219,7 @@ if (!function_exists('add_log')) {
         $data['company_id'] = $user->activeCompany()->id;
         $action = DB::table('actions')->where('group', $action_group)->where('name', $action_name)->first();
         $data['action_id'] = $action!=null?$action->id:null;
-        
+
         DB::table('logs')->insert($data);
     }
 }
@@ -252,7 +252,7 @@ if (!function_exists('status_approval')) {
             return 'draft';
         }
         //action_id = 1:proposed, 2:reviewed 3:accepted, 4:processed, 9:rejected
-        
+
         $approval = $last_flow->approval;
         if($last_flow->action_id==1){
             return 'proposed';
@@ -298,7 +298,7 @@ if (!function_exists('is_current_uri')) {
         if(count($ex_uri)!=2){
             return false;
         }
-        
+
         $route = Route::current();
         $params = $route->parameters();
         if(array_key_exists('group', $params) && array_key_exists('name', $params)){
@@ -307,7 +307,7 @@ if (!function_exists('is_current_uri')) {
         $curr_uri = $route->uri;
         $ex_curr_uri = explode('/', $curr_uri);
         if(count($ex_curr_uri)>=2){
-            return $ex_curr_uri[0]==$ex_uri[0] && $ex_curr_uri[1]==$ex_uri[1]; 
+            return $ex_curr_uri[0]==$ex_uri[0] && $ex_curr_uri[1]==$ex_uri[1];
         }
         return false;
     }

@@ -1,14 +1,14 @@
 
 @php
 if($report=='print_journal') {
-    $active_menu=$data->is_voucher==0?'journals':'vouchers'; 
+    $active_menu=$data->is_voucher==0?'journals':'vouchers';
     $breadcrumbs = array(
         ['label'=>trans($title), 'url'=>route('dcru.index', $active_menu)],
         ['label'=>'Detail '.trans($data->is_voucher==0?'Jurnal':'Voucher'), 'url'=>route($active_menu.'.view', $data->id)],
         ['label'=>trans('Cetak') .' '.trans($data->is_voucher==0?'Journal':'Voucher')],
     );
 }else{
-    $active_menu='reports'; 
+    $active_menu='reports';
     $breadcrumbs = array(
         ['label'=>trans('Report'), 'url'=>route('reports.index')],
         ['label'=>$title],
@@ -40,9 +40,9 @@ if($report=='print_journal') {
 <div class="row mb-3">
     <div id="report-container" class="col-md-12">
         <div class="invoice p-5 mb-3 elevation-1 report">
-        @include('report._header')   
+        @include('report._header')
         <div class="table-responsive">
-            @include($view)   
+            @include($view)
         </div>
         </div>
     </div>
@@ -54,6 +54,7 @@ if($report=='print_journal') {
 <link rel="stylesheet" media="print" href="{{asset('css/print.css')}}">
 @endpush
 @push('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/0.9.0rc1/jspdf.min.js"></script>
 <script type="text/javascript">
 $(function () {
     $('#print').on('click',function(e){
@@ -84,6 +85,7 @@ $(function () {
         }else{
             url +='?output=pdf';
         }
+        console.log(url)
         window.open(url, '_blank');
     });
     $('#filter').on('hide.bs.collapse', function () {

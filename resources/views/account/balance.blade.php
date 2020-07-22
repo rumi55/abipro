@@ -1,5 +1,5 @@
-@php 
-$active_menu='accounts'; 
+@php
+$active_menu='accounts';
 $breadcrumbs = array(
     ['label'=>'Akun', 'url'=>route('accounts.index')],
     ['label'=>'Saldo Awal'],
@@ -18,22 +18,22 @@ $breadcrumbs = array(
                     <label for="account_type" >{{__('Account Type')}}</label>
                     <select id="account_type" name="account_type_id" class="form-control select2"></select>
                 </div>
-            </div>  
+            </div>
             <div class="col">
                 <div class="form-group">
                     <label for="department_id" >{{__('Department')}}</label>
                     <select id="department_id" name="department_id" class="form-control select2"></select>
                 </div>
-            </div>  
+            </div>
             <div class="col">
                 <div class="form-group">
                     <button type="submit" class="btn btn-info mt-4">Filter</button>
                 </div>
-            </div>  
-        </div>   
-    </form> 
-    </div>    
-</div>    
+            </div>
+        </div>
+    </form>
+    </div>
+</div>
 <form id="balance-form" action="{{route('accounts.opening_balance.save')}}" method="POST">
 @csrf
 <div class="card">
@@ -47,7 +47,7 @@ $breadcrumbs = array(
                 </tr>
             </thead>
         </table>
-        
+
         <div class="table-responsive" style="height:400px">
             <table class="table table-hover table-sm">
                 <tbody>
@@ -71,7 +71,8 @@ $breadcrumbs = array(
                         <td class="text-right" style="width:20%">
                             @if($account->has_children==0)
                             <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{old('balance.'.$account->id, $account->balance)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
+
                             @endif
                         </td>
                     </tr>
@@ -80,6 +81,9 @@ $breadcrumbs = array(
             </table>
             @if(!empty(request('department_id')))
                 <input type="hidden" name="department_id" value="{{request('department_id')}}" />
+            @endif
+            @if(!empty(request('account_type_id')))
+                <input type="hidden" name="account_type_id" value="{{request('account_type_id')}}" />
             @endif
         </div>
     </div>
@@ -117,7 +121,7 @@ $(function(){
         }
         onchange()
     })
-    
+
     $('.date').daterangepicker({
       timePicker: false,
       singleDatePicker:true,
@@ -170,7 +174,7 @@ $(function(){
             $('#department_id').trigger('change')
         }
     })
-    
+
     onchange();
     // $('#balance-form').submit(function(e){
     //     e.preventDefault();

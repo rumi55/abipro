@@ -7,18 +7,7 @@
     <title>@yield('title')</title>
     <style type="text/css">
     @charset "utf-8";
-    @font-face {
-    font-family: 'Source Sans Pro', sans-serif;
-    src: url({{ storage_path('fonts/SourceSansPro-Regular.ttf') }});
-    font-weight: 400;
-    font-style: normal;
-    }
-    @font-face {
-    font-family: 'Source Sans Pro', sans-serif;
-    src:url({{ storage_path('fonts/SourceSansPro-ExtraLight.ttf') }});
-    font-weight: 300;
-    font-style: normal;
-    }
+
     *,
     *::before,
     *::after {
@@ -46,7 +35,7 @@
     text-align: left;
     background-color: #ffffff;
     }
-        
+
     p {
         margin-top: 0;
         margin-bottom: 1rem;
@@ -68,7 +57,6 @@
     <link rel="stylesheet" href="{{asset('css/report.css')}}">
 </head>
 <body>
-    @include('report._header_pdf')
-    @include($view)            
+
 </body>
 </html>

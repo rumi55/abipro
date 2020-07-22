@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class JournalDetail extends Model
 {
     protected $fillable = [
-        'sequence', 'description', 'account_id', 'journal_id', 
+        'sequence', 'description', 'account_id', 'journal_id', 'trans_date',
         'debit', 'credit', 'created_by', 'updated_by', 'department_id', 'tags'
     ];
     public function account(){
