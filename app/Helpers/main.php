@@ -30,6 +30,9 @@ if (!function_exists('currency')) {
     {
         // $fmt = numfmt_create( $locale, NumberFormatter::CURRENCY );
         // return numfmt_format_currency($fmt, $value, "IDR");
+        if($value<0){
+            return '('.number_format(abs($value), 2, ',','.').')';
+        }
         return number_format($value, 2, ',','.');
     }
 }

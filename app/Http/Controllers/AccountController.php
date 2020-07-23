@@ -391,7 +391,7 @@ class AccountController extends Controller
         $data = $request->all();
         $opening_balance = array();
         foreach($data['balance'] as $account_id =>$balance){
-            if(!empty($balance)){
+            if($balance!=null){
                 \DB::table('balances')->updateOrInsert([
                     'company_id' => $company->id,
                     'department_id' => $request->department_id??null,

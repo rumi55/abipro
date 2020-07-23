@@ -1,7 +1,7 @@
 
 <table>
     <tr>
-        <td colspan="2"  class="text-center">
+        <td   class="text-center">
           <h4>{{$title}}</h4>
         </td>
       </tr>
@@ -20,11 +20,11 @@
     <table class="table-report">
         <thead>
             <tr>
-                <th colspan="2"></th>
+                <th ></th>
                 @foreach($columns as $i =>$column)
                     <th class=" text-right">
                     @if($compare=='department')
-                        {{$column->name}}                    
+                        {{$column->name}}
                     @else
                         {{$column['label']}}
                     @endif
@@ -33,9 +33,9 @@
             </tr>
         </thead>
         <tbody>
-        @php 
-        $type = null; 
-        $group = null; 
+        @php
+        $type = null;
+        $group = null;
         $cdata = count($income);
         $sum_1 = array();
         $sum_2 = array();
@@ -45,6 +45,7 @@
         $gross_profit = array();
         $operation_profit = array();
         foreach($columns as $i=>$p){
+            $sum_0[$i]=0;//total penjualan
             $sum_1[$i]=0;//total income
             $sum_2[$i]=0;//total cogs
             $sum_3[$i]=0;//total expense
@@ -58,20 +59,10 @@
             @foreach($income as $i => $dt)
                 @if($type!==$dt->account_type_id)
                 @php $type=$dt->account_type_id @endphp
-                <tr>
-                    <td colspan="{{$colspan}}" class="font-bold">
-                    {{$dt->account_type}}
-                    </td>
-                </tr>        
+
                 @endif
                 @if($dt->tree_level==0 || ($subaccount>0 && $dt->tree_level<=$subaccount))
                 <tr>
-                    <td>
-                        <span style="padding-left:{{$dt->tree_level*20}}px;">&nbsp;</span>
-                        <a href="{{route('accounts.view', $dt->id)}}">
-                        {{$dt->account_no}}
-                        </a>
-                    </td>
                     <td>
                         <span style="padding-left:{{$dt->tree_level*20}}px;">&nbsp;</span>
                         <a href="{{route('accounts.view', $dt->id)}}">
@@ -79,67 +70,92 @@
                         </a>
                     </td>
                     @foreach($columns as $j=> $p)
-                        @php $total = 'total_'.$j; @endphp 
-                        @php 
+                        @php $total = 'total_'.$j; @endphp
+                        @php
                             if($dt->tree_level==0){
+                                if($dt->account_type_id==10){
+                                    $sum_0[$j]=$dt->$total+$sum_0[$j];
+                                }
                                 if($dt->account_type_id==12){
-                                    $sum_1[$j]=$dt->$total+$sum_1[$j]; 
-                                }
-                                if($dt->account_type_id==14){
-                                    $sum_2[$j]=$dt->$total+$sum_2[$j]; 
-                                }
-                                if($dt->account_type_id==15){
-                                    $sum_3[$j]=$dt->$total+$sum_3[$j]; 
+                                    $sum_1[$j]=$dt->$total+$sum_1[$j];
                                 }
                                 if($dt->account_type_id==13){
-                                    $sum_4[$j]=$dt->$total+$sum_4[$j]; 
+                                    $sum_2[$j]=$dt->$total+$sum_2[$j];
+                                }
+                                if($dt->account_type_id==15){
+                                    $sum_3[$j]=$dt->$total+$sum_3[$j];
+                                }
+                                if($dt->account_type_id==13){
+                                    $sum_4[$j]=$dt->$total+$sum_4[$j];
                                 }
                                 if($dt->account_type_id==16){
-                                    $sum_5[$j]=$dt->$total+$sum_5[$j]; 
+                                    $sum_5[$j]=$dt->$total+$sum_5[$j];
                                 }
                             }
                         @endphp
                     <td class="text-right">
                         <a href="{{route('accounts.view', $dt->id)}}?ft_dtables_trans_date_start={{fdate($p['start_date'])}}&ft_dtables_trans_date_end={{fdate($p['end_date'])}}&filter=show">
-                            {{format_number($dt->$total)}}
+                            {{currency($dt->$total)}}
                         </a>
                     </td>
                     @endforeach
-                </tr>        
+                </tr>
                 @endif
-                @if($i+1==$cdata)
+                @if($i+1==$cdata && ($type==13 || $type==15))
                     <tr>
-                        <td colspan="2" class="bt-2 bb-1">{{$type==12?trans('Total Primary Income'):($type==14?trans('Total Cost of Sales'):($type==15?trans('Total Expenses'):($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
+                        <td  class="bt-2 bb-1">
+                            @if($type==13)
+                            Barang Tersedia untuk Dijual
+                            @elseif($type==15)
+                            Jumlah Harga Pokok
+                            @endif
+                        </td>
                         @foreach($columns as $j=> $p)
                             <td class="bt-2 bb-1 text-right">
-                                {{format_number($type==12?$sum_1[$j]:($type==14?$sum_2[$j]:$sum_3[$j]))}}
+                                @if($type==13)
+                                {{currency($sum_1[$j]+$sum_2[$j])}}
+                                @elseif($type==15)
+                                {{currency($sum_1[$j]+$sum_2[$j]+$sum_3[$j])}}
+                                @endif
                             </td>
                         @endforeach
-                    </tr>        
-                @else
+                    </tr>
+                @elseif($type==13 || $type==15)
                     @if($type!=($income[$i+1])->account_type_id)
                     <tr>
-                    <td colspan="2" class="bt-2 bb-1">{{$type==12?trans('Total Income'):($type==14?trans('Total Cost of Sales'):($type==15?trans('Total Expenses'):($type==9?'Total Kewajiban Lancar':($type==10?'Total Kewajiban Tidak Lancar':'Total Modal'))))}}</td>                        
+                        <td  class="bt-2 bb-1">
+                            @if($type==13)
+                            Barang Tersedia untuk Dijual
+                            @elseif($type==15)
+                            Jumlah Harga Pokok
+                            @endif
+                        </td>
                         @foreach($columns as $j=> $p)
-                        <td class="bt-2 bb-1 text-right">{{format_number($type==12?$sum_1[$j]:($type==14?$sum_2[$j]:$sum_3[$j]))}}</td>
+                        <td class="bt-2 bb-1 text-right">
+                            @if($type==13)
+                            {{currency($sum_1[$j]+$sum_2[$j])}}
+                            @elseif($type==15)
+                            {{currency($sum_1[$j]+$sum_2[$j]+$sum_3[$j])}}
+                            @endif
+                        </td>
                         @endforeach
-                    </tr>        
-                    @if($type==14||$type==15)
+                    </tr>
+                    @if($type==15||$type==16)
                     <tr>
-                        <td colspan="2" class="bb-2 ">{{$type==14?'Laba Kotor':'Laba Operasi'}}</td>
+                        <td  class="bb-2 ">{{$type==15?'Laba Kotor':'Laba Operasi'}}</td>
                         @foreach($columns as $j=> $p)
                             <td class="bb-2  text-right">
-                            @if($type==14)
-                            {{format_number($sum_1[$j]-$sum_2[$j])}}
+                            @if($type==15)
+                            {{currency($sum_1[$j]-$sum_2[$j])}}
                             </td>
-                            @elseif($type==15)
-                            {{format_number($sum_1[$j]-$sum_2[$j]-$sum_3[$j])}}
+                            @elseif($type==16)
+                            {{currency($sum_1[$j]-$sum_2[$j]-$sum_3[$j])}}
                             @endif
                         @endforeach
-                    </tr>       
-                    @endif 
+                    </tr>
+                    @endif
                     @endif
                 @endif
-            @endforeach    
+            @endforeach
         </tbody>
     </table>
