@@ -12,7 +12,7 @@ use Auth;
 class JSONOutputController extends Controller
 {
     public function index(Request $request, $name){
-        
+
         return $this->$name($request);
     }
     public function account_types(Request $request){
@@ -25,7 +25,7 @@ class JSONOutputController extends Controller
         // $page_size = $request->query('page_size', 10);
         $sort_key = $request->query('sort_key');
         $sort_order = $request->query('sort_order', 'asc');
-        $search = $request->query('search');
+        $search = $request->query('q');
         $filter = $request->query('filter');
         if(isset($filter)){
             foreach($filter as $column => $value){
@@ -52,23 +52,27 @@ class JSONOutputController extends Controller
         }
         if(!empty($search)){
             $account = $account->where(function ($query) use($search){
-                $query->where('name','like', "%$search%")
+                $query->where('account_name','like', "%$search%")
                 ->orWhere('account_no','like', "%$search%")
+                ->orWhereHas('parent', function ($q) use($search){
+                    $q->where('account_name','like', "%$search%")
+                    ->orWhere('account_no','like', "%$search%");
+                })
                 ->orWhereHas('accountType', function ($q) use($search){
                     $q->where('name', 'like', "%$search%");
                 });
             });
         }
-        
+
         if(!empty($sort_key)){
             $account = $account->orderBy($sort_key, $sort_order);
         }
         if(empty($sort_key) && empty($sort)){
         }
         // $account = $account->orderBy('account_no', 'asc');
-        $account = $account->orderBy('account_type_id', 'asc');
+        // $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
-        
+
         // $data = $account->paginate($page_size)->appends($request->query());
         $data = $account->paginate($page_size)->appends($request->query());
         return AccountResource::collection($data);
@@ -94,7 +98,7 @@ class JSONOutputController extends Controller
                 ->orWhere('description','like', "%$search%");
             });
         }
-        
+
         if(!empty($sort_key)){
             $product = $product->orderBy($sort_key, $sort_order);
         }
@@ -105,14 +109,14 @@ class JSONOutputController extends Controller
             $sort_key=$sort[0];
             $sort_order=count($sort)==2?(substr($sort[1], 0, 3)=='asc'?'asc':'desc'):'asc';
             $product = $product->orderBy($sort_key, $sort_order);
-        }  
+        }
         if(empty($sort_key) && empty($sort)){
             $product = $product->orderBy('name', 'asc');
-        }      
+        }
         $product = $product->paginate($page_size)->appends($request->query());
         return ProductResource::collection($product);
     }
-    
+
     public function taxes(Request $request){
         $company_id = company('id');
         $page_size = $request->query('page_size', 10);
@@ -136,10 +140,10 @@ class JSONOutputController extends Controller
             $sort_order=count($sort)==2?(substr($sort[1], 0, 3)=='asc'?'asc':'desc'):'asc';
             $tax = $tax->orderBy($sort_key, $sort_order);
         }
-        
+
         if(!empty($sort_key)){
             $tax = $tax->orderBy($sort_key, $sort_order);
-        }        
+        }
         $tax = $tax->paginate($page_size)->appends($request->query());
         return \App\Http\Resources\TaxResource::collection($tax);
     }
@@ -174,7 +178,7 @@ class JSONOutputController extends Controller
                 ->orWhere('mobile','like', "%$search%");
             });
         }
-        
+
         if(!empty($sort_key)){
             $contact = $contact->orderBy($sort_key, $sort_order);
         }
@@ -185,10 +189,10 @@ class JSONOutputController extends Controller
             $sort_key=$sort[0];
             $sort_order=count($sort)==2?(substr($sort[1], 0, 3)=='asc'?'asc':'desc'):'asc';
             $contact = $contact->orderBy($sort_key, $sort_order);
-        }  
+        }
         if(empty($sort_key) && empty($sort)){
             $contact = $contact->orderBy('name', 'asc');
-        }      
+        }
         $contact = $contact->paginate($page_size)->appends($request->query());
         return \App\Http\Resources\ContactResource::collection($contact);
     }
@@ -212,7 +216,7 @@ class JSONOutputController extends Controller
         $company_id = company('id');
         return \App\ProductUnit::where('company_id', $company_id)->get();
     }
-    
+
     public function unique(Request $request){
         $table = $request->table;
         $column = $request->column;

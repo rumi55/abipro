@@ -413,7 +413,7 @@ class AccountController extends Controller
         if(!empty($request->department_id)){
             $params['department_id']=$request->department_id;
         }
-        return redirect()->route('accounts.opening_balance', $params)->with('success', 'Saldo awal telah disimpan.');
+        return redirect()->route('accounts.opening_balance', $params)->with('success', trans(':attr have been saved successfully', ['attr'=>trans('Opening Balance')]));
     }
     public function saveBudget(Request $request){
         $user = Auth::user();
@@ -452,6 +452,6 @@ class AccountController extends Controller
         if(!empty($department_id)){
             $params['department_id']=$department_id;
         }
-        return redirect()->route('accounts.budgets', $params)->with('success', 'Saldo awal telah disimpan.');
+        return redirect()->route('accounts.budgets', $params)->with('success', trans(':attr have been saved successfully', ['attr'=>trans('Budget')]));
     }
 }

@@ -157,28 +157,21 @@ class JournalController extends Controller
 
     public function save(Request $request){
         $data = $request->all();
+        $user = Auth::user();
+        $company_id = company('id');
         // dd($data);
-        $detail_rules = [
-            'detail_account_id'=>'required',
-            'detail_desciption'=>'required',
-            // 'detail_department_id'=>'required',
-            'detail_debit'=>'required',
-            'detail_credit'=>'required',
-        ];
-        $detail_attr = [
-            'detail_account_id'=>'Akun',
-            'detail_desciption'=>'Keterangan',
-            'detail_department_id'=>'Departemen',
-            'detail_debit'=>'Debit',
-            'detail_credit'=>'Kredit',
-        ];
-
         $rules = [
-            'trans_no' => 'required',
+            'trans_no' => "required|unique:journals,trans_no,NULL,id,company_id,$company_id",
+            'numbering_id' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
             'description' => 'required',
             'total_debit' => 'same:total_credit',
             'total_credit' => 'same:total_debit',
+            'detail.*.account_id'=>'required',
+            'detail.*.description'=>'required',
+            // 'detail_department_id'=>'required',
+            'detail.*.debit'=>'required',
+            'detail.*.credit'=>'required',
         ];
         $attr = [
             'trans_no' => trans('Number'),
@@ -186,30 +179,25 @@ class JournalController extends Controller
             'description' => trans('Description'),
             'total_debit' => trans('Total Debit'),
             'total_credit' => trans('Total Credit'),
+            'detail.*.account_id'=>trans('Account'),
+            'detail.*.description'=>trans('Description'),
+            'detail.*.department_id'=>trans('Departement'),
+            'detail.*.debit'=>trans('Debit'),
+            'detail.*.credit'=>trans('Credit'),
         ];
-        $keys = array_keys($data);
-        foreach($keys as $key){
-            $f = substr($key, 0, strripos($key, '_'));
-            if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];
-            }
-            if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];
-            }
-        }
 
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
+
         $is_voucher = $request->is_voucher;
-        $user = Auth::user();
-        $company_id = $user->activeCompany()->id;
+
         $trans_date = fdate($request->trans_date, 'Y-m-d');
         $total = parse_number($request->total);
         try{
             \DB::beginTransaction();
-            $auto = true;
+            $auto = empty($request->manual)?true:false;
             if($auto){
                 $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
@@ -239,7 +227,7 @@ class JournalController extends Controller
                             'trans_date'=>$trans_date,
                             'description'=>$request->description,
                             'company_id'=>$company_id,
-                            'contact_id'=>$request->contact_id,
+                            // 'contact_id'=>$request->contact_id,
                             'is_voucher'=>$is_voucher,
                             'numbering_id'=>$request->numbering_id,
                             'total'=>$total,
@@ -257,6 +245,7 @@ class JournalController extends Controller
                     'trans_no'=>$trans_no,
                     'trans_date'=>$trans_date,
                     'description'=>$request->description,
+                    'numbering_id'=>$request->numbering_id,
                     'company_id'=>$company_id,
                     'contact_id'=>$request->contact_id,
                     'is_voucher'=>$is_voucher,
@@ -266,50 +255,23 @@ class JournalController extends Controller
                     'created_by'=>$user->id
                 ]);
             }
-            //update journal_id
-            // $jnumbering = Numbering::where('transaction_type_id', TransactionType::JOURNAL)->first();
-            // if($jnumbering->counter_reset=='y'){
-            //     $period = date('Y');
-            // }else if($jnumbering->counter_reset=='m'){
-            //     $period = date('Y-m');
-            // }else if($jnumbering->counter_reset=='d'){
-            //     $period = date('Y-m-d');
-            // }else{
-            //     $period  = null;
-            // }
-            // $jcounter = Counter::firstOrCreate(
-            //         ['period'=>$period, 'numbering_id'=>$jnumbering->id, 'company_id'=>$company_id],
-            //         ['counter'=>$jnumbering->counter_start-1]
-            // );
-            // $check = true;
-            // do{
-            //     $jcounter->getNumber();
-            //     $journal_id = $jcounter->last_number;
-            //     $jc = Journal::where('journal_id', $journal_id)->where('company_id', $company_id)->count();
-            //     if($jc==0){
-            //         $journal->journal_id = $journal_id;
-            //         $journal->update();
-            //         $jcounter->save();
-            //         $check = false;
-            //     }
-            // }while($check);
-            $len = $request->detail_length;
-            for($i=0;$i<$len;$i++){
-                $account_id = 'detail_account_id_'.$i;
-                $department_id = 'detail_department_id_'.$i;
-                $description = 'detail_description_'.$i;
-                $tags = 'detail_tags_'.$i;
-                $debit = 'detail_debit_'.$i;
-                $credit = 'detail_credit_'.$i;
+            $i=0;
+            foreach($request->detail as $i=> $detail){
+                $account_id = $detail['account_id'];
+                $department_id = isset($detail['department_id'])?$detail['department_id']:null;
+                $description = isset($detail['description'])?$detail['description']:null;
+                $tags = isset($detail['tags'])?$detail['tags']:null;
+                $debit = $detail['debit'];
+                $credit = $detail['credit'];
                 JournalDetail::create([
-                    'sequence'=>$i,
+                    'sequence'=>$i++,
                     'trans_date'=>$trans_date,
-                    'account_id'=>$request->$account_id,
-                    'description'=>$request->$description,
-                    'department_id'=>$request->$department_id ?? null,
-                    'tags'=>$request->$tags,
-                    'debit'=>parse_number($request->$debit),
-                    'credit'=>parse_number($request->$credit),
+                    'account_id'=>$account_id,
+                    'description'=>$description,
+                    'department_id'=>$department_id,
+                    'tags'=>$tags,
+                    'debit'=>parse_number($debit),
+                    'credit'=>parse_number($credit),
                     'journal_id'=>$journal->id,
                     'created_by'=>$user->id
                 ]);
@@ -331,41 +293,33 @@ class JournalController extends Controller
     public function update(Request $request, $id){
         $data = $request->all();
 
-        $detail_rules = [
-            'detail_account_id'=>'required',
-            'detail_desciption'=>'required',
-            // 'detail_department_id'=>'required',
-            'detail_debit'=>'required',
-            'detail_credit'=>'required',
-        ];
-        $detail_attr = [
-            'detail_account_id'=>'Akun',
-            'detail_desciption'=>'Keterangan',
-            'detail_department_id'=>'Departemen',
-            'detail_debit'=>'Debit',
-            'detail_credit'=>'Kredit',
-        ];
-
+        $company_id = company('id');
+        // dd($data);
         $rules = [
-            'trans_no' => 'required',
+            'trans_no' => "required|unique:journals,trans_no,$id,id,company_id,$company_id",
+            'numbering_id' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
-            'description' => 'required'
+            'description' => 'required',
+            'total_debit' => 'same:total_credit',
+            'total_credit' => 'same:total_debit',
+            'detail.*.account_id'=>'required',
+            'detail.*.description'=>'required',
+            // 'detail_department_id'=>'required',
+            'detail.*.debit'=>'required',
+            'detail.*.credit'=>'required',
         ];
         $attr = [
-            'trans_no' => 'Nomor',
-            'trans_date' => 'Tanggal',
-            'description' => 'Keterangan',
+            'trans_no' => trans('Number'),
+            'trans_date' => trans('Date'),
+            'description' => trans('Description'),
+            'total_debit' => trans('Total Debit'),
+            'total_credit' => trans('Total Credit'),
+            'detail.*.account_id'=>trans('Account'),
+            'detail.*.description'=>trans('Description'),
+            'detail.*.department_id'=>trans('Departement'),
+            'detail.*.debit'=>trans('Debit'),
+            'detail.*.credit'=>trans('Credit'),
         ];
-        $keys = array_keys($data);
-        foreach($keys as $key){
-            $f = substr($key, 0, strripos($key, '_'));
-            if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];
-            }
-            if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];
-            }
-        }
 
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
@@ -379,15 +333,16 @@ class JournalController extends Controller
 
         $journal->trans_date = $trans_date;
         $journal->description = $request->description;
-        $journal->contact_id = $request->contact_id;
+        $journal->numbering_id = $request->numbering_id;
+        // $journal->contact_id = $request->contact_id;
         $journal->total = parse_number($request->total);
         $journal->updated_by = $user->id;
 
         try{
             \DB::beginTransaction();
-            $auto=false;
+            $auto = empty($request->manual)?true:false;
             if($auto){
-                $numbering = Numbering::findOrFail(decode($request->trans_no));
+                $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
                     $period = date('Y');
                 }else if($numbering->counter_reset=='m'){
@@ -421,42 +376,42 @@ class JournalController extends Controller
             //cek id
             $old_details = array();
 
-            foreach($journal->details as $detail){
-                $old_details[$detail->id] = $detail;
+            foreach($journal->details as $d){
+                $old_details[$d->id] = $d;
             }
-            $len = $request->detail_length;
-            for($i=0;$i<$len;$i++){
-                $detail_id = 'detail_id_'.$i;
-                $account_id = 'detail_account_id_'.$i;
-                $department_id = 'detail_department_id_'.$i;
-                $description = 'detail_description_'.$i;
-                $tags = 'detail_tags_'.$i;
-                $debit = 'detail_debit_'.$i;
-                $credit = 'detail_credit_'.$i;
-                if($request->$detail_id==null){
+            $i=0;
+            foreach($request->detail as $detail){
+                $account_id = $detail['account_id'];
+                $detail_id = isset($detail['id'])?$detail['id']:null;
+                $department_id = isset($detail['department_id'])?$detail['department_id']:null;
+                $description = isset($detail['description'])?$detail['description']:null;
+                $tags = isset($detail['tags'])?$detail['tags']:null;
+                $debit = $detail['debit'];
+                $credit = $detail['credit'];
+                if(empty($detail_id)){
                     JournalDetail::updateOrcreate([
-                        'account_id'=>$request->$account_id,
+                        'account_id'=>$account_id,
                         'sequence'=>$i,
                         'trans_date'=>$trans_date,
-                        'description'=>$request->$description,
-                        'department_id'=>$request->$department_id,
-                        'tags'=>$request->$tags,
-                        'debit'=>parse_number($request->$debit),
-                        'credit'=>parse_number($request->$credit),
+                        'description'=>$description,
+                        'department_id'=>$department_id,
+                        'tags'=>$tags,
+                        'debit'=>parse_number($debit),
+                        'credit'=>parse_number($credit),
                         'journal_id'=>$journal->id,
                         'created_by'=>$user->id
                     ]);
                 }else{
-                    $jid = $request->$detail_id;
+                    $jid = $detail_id;
                     $jdetail = JournalDetail::findOrFail($jid);
-                    $jdetail->sequence=$i;
+                    $jdetail->sequence=$i++;
                     $jdetail->trans_date=$trans_date;
-                    $jdetail->account_id=$request->$account_id;
-                    $jdetail->description=$request->$description;
-                    $jdetail->department_id=$request->$department_id;
-                    // $jdetail->tags=$detail['tags'];
-                    $jdetail->debit=parse_number($request->$debit);
-                    $jdetail->credit=parse_number($request->$credit);
+                    $jdetail->account_id=$account_id;
+                    $jdetail->description=$description;
+                    $jdetail->department_id=$department_id;
+                    $jdetail->tags=$tags;
+                    $jdetail->debit=parse_number($debit);
+                    $jdetail->credit=parse_number($credit);
                     $jdetail->journal_id=$journal->id;
                     $jdetail->updated_by=$user->id;
                     $jdetail->update();
@@ -465,13 +420,14 @@ class JournalController extends Controller
                     }
                 }
             }
-            foreach($old_details as $detail){
-                $detail->delete();
+            foreach($old_details as $d){
+                $d->delete();
             }
             \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
+
         $reference =[
             'before'=>[
                 'id'=>$journal->id,
@@ -505,10 +461,16 @@ class JournalController extends Controller
 
     public function delete($id)
     {
-        $id = decode($id);
         $journal = Journal::findOrFail($id);
+        $reference =[
+            'id'=>$journal->id,
+            'Transaction No.'=>$journal->trans_no,
+            'Total'=>$journal->total
+        ];
+        $trans_no = $journal->trans_no;
         $journal->delete();
-        return response()->json(null, 204);
+        add_log('journals', 'delete', json_encode($reference));
+        return redirect()->route('dcru.index', 'journals')->with('success', "Jurnal #$trans_no telah dihapus");
     }
 
     public function batchDelete(Request $request){

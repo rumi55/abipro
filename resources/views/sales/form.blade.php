@@ -1,4 +1,4 @@
-@php 
+@php
 $active_menu="sales_quotes";
 $page_title = trans('Sales Quote');
 $breadcrumbs = array(
@@ -19,22 +19,22 @@ $breadcrumbs = array(
     <div class="card-header">
         <h5 class="card-title">{{$mode=='create'?trans('New Sales Quote'):trans('Sales Quote').' #'.$transaction->trans_no}}</h5>
     </div>
-    <div class="card-body pb-1">  
-        <div class="row">    
+    <div class="card-body pb-1">
+        <div class="row">
             <div class="col-md-3">
                 <div class="form-group">
                     <label>{{__('Customer')}}</label>
                     <select id="customer_id" name="transaction[customer_id]" data-value="{{old('transaction.customer_id', $transaction->customer_id)}}" class="form-control select2"></select>
                     @error('transaction.customer_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_date">{{__('Transaction Date')}}</label>
                     <input id="trans_date" name="transaction[trans_date]" type="text" class="form-control date @error('trans_date') is-invalid @enderror" value="{{fdate(old('transaction.trans_date', $transaction->trans_date))}}" >
                     @error('transaction.trans_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>   
+            </div>
             @if($mode=='create')
             <div class="col-md-3">
                 <div class="form-group">
@@ -43,14 +43,14 @@ $breadcrumbs = array(
                     </select>
                     @error('transaction.numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_no" >Nomor</label>
                     <input id="trans_no" readonly name="transaction[trans_no]" type="text" class="form-control" value="@if($mode=='edit') {{old('trans_no',$transaction->trans_no)}} @else [Automatic] @endif" >
                     @error('transaction.trans_no')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             @endif
             <div class="col-md-3">
                 <div class="form-group">
@@ -72,25 +72,25 @@ $breadcrumbs = array(
                     <input id="due_date" name="transaction[due_date]" type="text" class="form-control date @error('transaction.due_date') is-invalid @enderror" value="{{fdate(old('due_date',$transaction->due_date))}}" >
                     @error('transaction.due_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>   
+            </div>
             <div class="col-md-6">
                 <div class="form-group">
                     <label>{{__('Description')}}</label>
                     <textarea id="description" name="transaction[description]" class="form-control @error('transaction.description') is-invalid @enderror"  rows="1" cols="100">{{old('transaction.description',$transaction->description)}}</textarea >
                     @error('transaction.description')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>      
+            </div>
         </div>
         <h4 class="mt-3">Rincian Transaksi</h4>
         <div class="container mt-3 mb-3">
             <ul id="detail" class="list-group">
-                @php 
-                $details = $transaction->details; 
+                @php
+                $details = $transaction->details;
                 $row_count = old('detail_length', count($details));
                 $row_count = $row_count==0?1:$row_count;
                 @endphp
                 @for($i=0;$i<$row_count;$i++)
-                @php 
+                @php
                 if(count($details)==0){
                     $detail = new \App\JournalDetail;
                 }else{
@@ -121,7 +121,7 @@ $breadcrumbs = array(
                                     @error('transaction.detail.'.$i.'.description')<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_quantity_{{$i}}" >{{__('Quantity')}}:</label>
@@ -232,7 +232,7 @@ $breadcrumbs = array(
 $(function () {
     load();
     init()
-    
+
     $('.date').daterangepicker({
       timePicker: false,
       singleDatePicker:true,
@@ -251,7 +251,7 @@ $(function () {
     });
     $('#numbering_id').change(function(e){
         var val = $(this).val();
-        
+
         if(val=='' || val==null){
             $('#trans_no').prop('readonly', false);
             $('#trans_no').val('');
@@ -273,7 +273,7 @@ $(function () {
         }
     })
 
-    
+
 });
 function validate(){
   return invalid;
@@ -354,7 +354,6 @@ function  setup(){
     $('.taxes').on('select2:select', function(e){
         var data = e.params.data;
         var index = $('#'+e.params.data.element.parentNode.id).attr('data-index');
-        console.log(data.percentage+' '+index);
         $('#detail_tax_'+index).val(data.percentage);
         sumItem(index);
     })
@@ -478,7 +477,7 @@ function addRow(){
                                     <textarea id="detail_description_${idx}" name="transaction[detail][${idx}][description]" data-index="${idx}" class="form-control" rows="1" cols="100" ></textarea>
                                 </div>
                             </div>
-                            
+
                             <div class="col-md-2 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_quantity_${idx}" >{{__('Quantity')}}:</label>
@@ -490,7 +489,7 @@ function addRow(){
                                     <label for="detail_unit_${idx}" >{{__('Unit')}}: </label>
                                     <select id="detail_unit_id_${idx}" readonly name="transaction[detail][${idx}][unit_id]" data-index="${idx}" data-value="" class="form-control units" style="width:100%" >
                                     </select>
-                                    
+
                                 </div>
                             </div>
                             <div class="col-md-2 col-sm-6">
@@ -521,7 +520,7 @@ function addRow(){
                             </div>
                         </div>
                     </li>
-    `;        
+    `;
     $('#detail').append(row);
     $('#detail_length').val(last_idx+2);
     setSelect2('#detail_product_id_'+idx, products)
@@ -534,7 +533,7 @@ function sumItem(index){
     var qty = $('#detail_quantity_'+index).val();
     var unitPrice = parseNumber($('#detail_unit_price_'+index).val());
     var total = qty*unitPrice-discount;
-        
+
     $('#detail_amount_'+index).val(total+',00');
     var amount = sum('.amount');
     var tax = sumTax();
@@ -625,7 +624,7 @@ function load(){
             setSelect2('#salesman_id',contacts)
         }
     });
-    
+
     $.ajax({
         url: "{{route('json.output', 'numberings')}}",
         dataType: 'json',
@@ -669,7 +668,7 @@ function load(){
             units = res;
             $('.units').each(function(index){
                 setSelect('#'+$(this).attr('id'), units)
-            }) 
+            })
         }
     });
 }
@@ -679,7 +678,7 @@ function setSelect(selector, data){
     for(var i=0;i<data.length;i++){
         var dt = data[i];
         $(selector).append('<option '+(dt.id==val?'selected':'')+' value="'+(dt.id)+'">'+(dt.name)+'</option>');
-    }    
+    }
 }
 function formatResults(item) {
   var $item = $(
@@ -701,7 +700,7 @@ function setSelect2(selector, data, disabled=false, placeholder='Select', clear=
     $(selector).val(null).empty();//.select2('destroy');
     $(selector).select2({
         theme: 'bootstrap4',
-        data:data, 
+        data:data,
         placeholder: placeholder,
         allowClear: clear,
         templateResult: formatResults,

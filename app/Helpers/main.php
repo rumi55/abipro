@@ -345,7 +345,7 @@ if (!function_exists('tt')) {
         }
         $field_en = $field.'_en';
         $locale = \App::getLocale();
-        return $locale=='en'?$model->$field_en:$model->$field;
+        return $locale=='en' && !empty($model->$field_en)?$model->$field_en:$model->$field;
     }
 }
 if (!function_exists('notify')) {

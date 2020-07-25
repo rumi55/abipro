@@ -15,7 +15,7 @@ class TagController extends Controller
     //     $company_id = Auth::user()->activeCompany()->id;
     //     $tags = JournalDetail::where('company_id', $company_id)
     //     ->select('tags')
-    //     ->get();    
+    //     ->get();
     //     return response()->json(['data'=>$tags]);
     // }
     public function getAll(){
@@ -85,7 +85,20 @@ class TagController extends Controller
     public function save(Request $request){
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
-        
+        $rules = [
+            'item_name' => 'required|max:128|unique:tags,item_name,NULL,id,company_id,'.$company_id,
+            'item_id' => 'required|max:16|unique:tags,item_id,NULL,id,company_id,'.$company_id,
+            'group' => 'required|max:64',
+        ];
+        $attr = [
+            'item_name' => trans('Tag Name'),
+            'item_id' => trans('Tag ID'),
+            'group' => trans('Tag Group')
+        ];
+        $validator = \Validator::make($request->all(), $rules)->setAttributeNames($attr);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
         $tag = Tag::updateOrCreate([
             'company_id'=>$company_id,
             'group'=>$request->group,
@@ -93,7 +106,7 @@ class TagController extends Controller
             'item_name'=>$request->item_name,
             'item_id'=>$request->item_id,
         ],
-        [ 
+        [
             'company_id'=>$company_id,
             'group'=>$request->group,
             'tag'=>$request->item_name,
@@ -107,7 +120,20 @@ class TagController extends Controller
     public function update(Request $request, $id){
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
-        
+        $rules = [
+            'item_name' => "required|max:128|unique:tags,item_name,$id,id,company_id,$company_id",
+            'item_id' => "required|max:16|unique:tags,item_id,$id,id,company_id,$company_id",
+            'group' => 'required|max:64',
+        ];
+        $attr = [
+            'item_name' => trans('Tag Name'),
+            'item_id' => trans('Tag ID'),
+            'group' => trans('Tag Group')
+        ];
+        $validator = \Validator::make($request->all(), $rules)->setAttributeNames($attr);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
         $tag = Tag::findOrFail($id);
         $tag->tag=$request->item_name;
         $tag->item_id=$request->item_id;
@@ -134,6 +160,9 @@ class TagController extends Controller
     }
     public function delete(Request $request, $id){
         $tag = Tag::findOrFail($id);
+        if($tag->isLocked()){
+            return redirect()->back()->with('error', 'Data tidak dapat dihapus karena telah digunakan dalam transaksi');
+        }
         $tag->delete();
         add_log('tags', 'delete', '');
         return redirect()->route('tags.index')->with('success', 'Sortir telah dihapus.');

@@ -1,5 +1,5 @@
-@php 
-$active_menu='vouchers'; 
+@php
+$active_menu='vouchers';
 $breadcrumbs = array(
     ['label'=>trans('Vouchers'), 'url'=>route('dcru.index','vouchers')],
     ['label'=>trans('Voucher Detail')],
@@ -43,32 +43,32 @@ $breadcrumbs = array(
         </div>
         </div>
     </div>
-    <div class="card-body pb-1">    
-        <div class="row">    
+    <div class="card-body pb-1">
+        <div class="row">
             <dl class="col-md-4">
                 <dt>{{__('Transaction No.')}}</dt>
                 <dd>{{$transaction->trans_no}}</dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>{{__('Transaction Date')}}</dt>
                 <dd>{{fdate($transaction->trans_date)}}</dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>{{$transaction->trans_type=='in'?__('Payer'):__('Beneficiary')}}</dt>
                 <dd><a href="{{route('contacts.view',$transaction->contact_id)}}">{{$transaction->contact!=null?$transaction->contact->name:'-'}}</a></dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>{{__('Department')}}</dt>
                 <dd>{{$transaction->department!=null?$transaction->department->name:'-'}}</dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>{{__('Account')}}</dt>
                 <dd><a href="{{route('accounts.view',$transaction->account_id)}}">{{$transaction->account!=null?'('.$transaction->account->account_no.') '.$transaction->account->account_name:'-'}}</a></dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>{{__('Description')}}</dt>
                 <dd>{{$transaction->description??'-'}}</dd>
-            </dl>    
+            </dl>
         </div>
         <div class="table-responsive mt-4">
             <table class="table table-hover">
@@ -84,8 +84,19 @@ $breadcrumbs = array(
                 @foreach($transaction->details as $detail)
                     <tr>
                         <td><a href="{{route('accounts.view',$detail->account_id)}}">({{$detail->account->account_no}}) {{$detail->account->account_name}}</a></td>
-                        <td>{{$detail->description}}</td>
-                        <td>{{$detail->department!=null?$detail->department->name:'-'}}</td>
+                        <td>{{$detail->description}}
+                            @if(!empty($detail->tags))
+                            <p>
+                                @foreach($detail->getTags() as $tag)
+                                    <span class="badge badge-secondary">{{$tag->item_name}}</span>
+                                @endforeach
+                            </p>
+                            @endif
+                        </td>
+                        <td>
+                            {{$detail->department!=null?$detail->department->name:'-'}}
+
+                        </td>
                         <td class="text-right">{{fcurrency($detail->amount)}}</td>
                     </tr>
                 @endforeach

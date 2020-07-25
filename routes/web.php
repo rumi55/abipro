@@ -1,6 +1,6 @@
 <?php
 
-Auth::routes();   
+Auth::routes();
 
 Route::group(['middleware'=>['auth', 'owner']],function(){
     Route::get('/company/register', 'CompanyController@register')->name('company.register');
@@ -10,12 +10,12 @@ Route::group(['middleware'=>['auth', 'owner']],function(){
 Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/', 'HomeController@index')->name('home');
     //
-    
-    
+
+
     Route::get('/company/profile', 'CompanyController@profile')->name('company.profile');
     Route::get('/company/profile/edit', 'CompanyController@profileEdit')->name('company.profile.edit');
     Route::put('/company/profile', 'CompanyController@profileUpdate')->name('company.profile.update');
-    
+
     Route::get('/companies', 'CompanyController@index')->name('companies.index');
     Route::put('/companies/{id}', 'CompanyController@setActive')->name('companies.active');
     Route::delete('/companies/{id}/delete', 'CompanyController@delete')->name('companies.delete');
@@ -28,7 +28,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/companies/convert', 'CompanyController@convert')->name('companies.convert');
     Route::post('/companies/convert', 'CompanyController@convertUpload')->name('companies.convert.upload');
     Route::get('/companies/{name}/export', 'ExportDataController@excel')->name('companies.export.excel');
-    
+
     //conversion
     Route::get('/conversion', 'ConvertAbiproController@index')->name('convert.index');
     Route::post('/conversion/upload/{name}', 'ConvertAbiproController@upload')->name('convert.upload');
@@ -39,7 +39,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/conversion/journals', 'ConvertAbiproController@journalConversion')->name('convert.journals');
     Route::get('/conversion/account_type_mapping', 'ConvertAbiproController@accountTypeMapping')->name('convert.account_type_mapping');
     Route::put('/conversion/account_type_mapping', 'ConvertAbiproController@accountTypeMappingSave')->name('convert.account_type_mapping.save');
-    
+
     //departments
     Route::get('/departments', 'DepartmentController@index')->name('departments.index');
     Route::get('/departments/create', 'DepartmentController@create')->name('departments.create');
@@ -47,7 +47,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/departments/{id}/edit', 'DepartmentController@edit')->name('departments.edit');
     Route::put('/departments/{id}/update', 'DepartmentController@update')->name('departments.edit.update');
     Route::delete('/departments/{id}', 'DepartmentController@delete')->name('departments.delete');
-    
+
     //contacts
     Route::get('/contacts', 'ContactController@index')->name('contacts.index');
     Route::get('/contacts/create', 'ContactController@create')->name('contacts.create');
@@ -56,7 +56,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/contacts/{id}', 'ContactController@view')->name('contacts.view');
     Route::put('/contacts/{id}/update', 'ContactController@update')->name('contacts.edit.update');
     Route::delete('/contacts/{id}', 'ContactController@delete')->name('contacts.delete');
-    
+
     //products
     Route::get('/products/create', 'ProductController@create')->name('products.create');
     Route::post('/products', 'ProductController@save')->name('products.create.save');
@@ -64,7 +64,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/products/{id}/duplicate', 'ProductController@duplicate')->name('products.create.duplicate');
     Route::put('/products/{id}/update', 'ProductController@update')->name('products.edit.update');
     Route::delete('/products/{id}', 'ProductController@delete')->name('products.delete');
-    
+
     //tags
     Route::get('/sortirs', 'TagController@index')->name('tags.index');
     Route::get('/sortirs/create', 'TagController@create')->name('tags.create');
@@ -86,8 +86,8 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/reports/hpp', 'HPPReportController@index')->name('reports.hpp');
     Route::get('/reports/cashflow', 'CashflowReportController@index')->name('reports.cashflow');
     Route::get('/reports/sortir', 'SortirReportController@index')->name('reports.sortirs');
-    
-    //voucher    
+
+    //voucher
     Route::get('/vouchers', 'TransactionController@index')->name('vouchers.index');
     Route::get('/vouchers/create', 'JournalController@createVoucher')->name('vouchers.create');
     Route::get('/vouchers/create/{type}', 'TransactionController@create')->name('vouchers.create.single');
@@ -107,8 +107,8 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/vouchers/{id}/receipt', 'JournalController@receipt')->name('vouchers.receipt');
     Route::post('/vouchers/{id}/journal', 'JournalController@toJournal')->name('vouchers.tojournal');
     Route::post('/vouchers/journals', 'JournalController@toJournalBatch')->name('vouchers.tojournal.batch');
-    
-    //transactions    
+
+    //transactions
     // Route::get('/transactions/create', 'TransactionController@create')->name('transactions.create');
     // Route::post('/transactions', 'TransactionController@save')->name('transactions.create.save');
     // Route::get('/transactions/{id}/edit', 'TransactionController@edit')->name('transactions.edit');
@@ -119,8 +119,8 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     // Route::post('/transactions/{id}/lock', 'TransactionController@lockJournal')->name('transactions.lock');
     // Route::post('/transactions/{id}/voucher', 'TransactionController@toVoucher')->name('transactions.tovoucher');
     // Route::post('/transactions/vouchers', 'TransactionController@toVoucherBatch')->name('transactions.tovoucher.batch');
-    
-    //sales invoices   
+
+    //sales invoices
     Route::get('/sales_invoices/create', 'SalesInvoiceController@create')->name('sales_invoices.create');
     Route::post('/sales_invoices', 'SalesInvoiceController@save')->name('sales_invoices.create.save');
     Route::get('/sales_invoices/{id}/edit', 'SalesInvoiceController@edit')->name('sales_invoices.edit');
@@ -130,7 +130,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/sales_invoices/{quote_id}/quotes', 'SalesInvoiceController@createFromQuote')->name('sales_invoices.create.quotes');
     Route::get('/sales_invoices/{id}', 'SalesInvoiceController@view')->name('sales_invoices.view');
     Route::delete('/sales_invoices/{id}', 'SalesInvoiceController@delete')->name('sales_invoices.delete');
-    //sales orders   
+    //sales orders
     Route::get('/sales_orders/create', 'SalesOrderController@create')->name('sales_orders.create');
     Route::post('/sales_orders', 'SalesOrderController@save')->name('sales_orders.create.save');
     Route::get('/sales_orders/{id}/edit', 'SalesOrderController@edit')->name('sales_orders.edit');
@@ -139,7 +139,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/sales_orders/{quote_id}/quotes', 'SalesOrderController@createFromQuote')->name('sales_orders.create.quotes');
     Route::get('/sales_orders/{id}', 'SalesOrderController@view')->name('sales_orders.view');
     Route::delete('/sales_orders/{id}', 'SalesOrderController@delete')->name('sales_orders.delete');
-    //sales quotes   
+    //sales quotes
     Route::get('/sales_quotes/create', 'SalesQuoteController@create')->name('sales_quotes.create');
     Route::post('/sales_quotes', 'SalesQuoteController@save')->name('sales_quotes.create.save');
     Route::get('/sales_quotes/{id}/edit', 'SalesQuoteController@edit')->name('sales_quotes.edit');
@@ -147,13 +147,14 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/sales_quotes/{id}/duplicate', 'SalesQuoteController@duplicate')->name('sales_quotes.create.duplicate');
     Route::get('/sales_quotes/{id}', 'SalesQuoteController@view')->name('sales_quotes.view');
     Route::delete('/sales_quotes/{id}', 'SalesQuoteController@delete')->name('sales_quotes.delete');
-    
-    //journals    
+
+    //journals
     Route::get('/journals/create', 'JournalController@createJournal')->name('journals.create');
     Route::post('/journals', 'JournalController@save')->name('journals.create.save');
     Route::get('/journals/import', 'JournalController@import')->name('journals.import');
     Route::post('/journals/import', 'JournalController@importSave')->name('journals.import.save');
     Route::get('/journals/{id}/edit', 'JournalController@edit')->name('journals.edit');
+    Route::delete('/journals/{id}', 'JournalController@delete')->name('journals.delete');
     Route::put('/journals/{id}', 'JournalController@update')->name('journals.edit.update');
     Route::get('/journals/{id}/duplicate', 'JournalController@duplicate')->name('journals.create.duplicate');
     Route::get('/journals/{id}', 'JournalController@view')->name('journals.view');
@@ -161,8 +162,8 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::post('/journals/{id}/lock', 'JournalController@lockJournal')->name('journals.lock');
     Route::post('/journals/{id}/voucher', 'JournalController@toVoucher')->name('journals.tovoucher');
     Route::post('/journals/vouchers', 'JournalController@toVoucherBatch')->name('journals.tovoucher.batch');
-    
-    //accounts    
+
+    //accounts
     Route::get('/accounts', 'AccountController@index')->name('accounts.index');
     Route::get('/accounts/opening_balance', 'AccountController@openingBalance')->name('accounts.opening_balance');
     Route::post('/accounts/opening_balance', 'AccountController@saveOpeningBalance')->name('accounts.opening_balance.save');
@@ -176,12 +177,12 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/accounts/{id}/edit', 'AccountController@edit')->name('accounts.edit');
     Route::put('/accounts/{id}', 'AccountController@update')->name('accounts.edit.update');
     Route::delete('/accounts/{id}', 'AccountController@delete')->name('accounts.delete');
-    
+
     //settings
     Route::get('/settings', 'SettingController@index')->name('settings.index');
     Route::get('/settings/account_mapping', 'SettingController@accountMapping')->name('settings.account_mapping');
     Route::post('/settings/account_mapping', 'SettingController@accountMappingSave')->name('settings.account_mapping.save');
-    
+
     //numberings
     Route::get('/numberings', 'NumberingController@index')->name('numberings.index');
     Route::get('/numberings/create', 'NumberingController@create')->name('numberings.create');
@@ -191,7 +192,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::put('/numberings/{id}/update', 'NumberingController@update')->name('numberings.edit.update');
     Route::delete('/numberings/{id}', 'NumberingController@delete')->name('numberings.delete');
     Route::get('/numberings/{id}', 'NumberingController@view')->name('numberings.view');
-    
+
     //journal_types
     Route::get('/journal_types', 'JournalController@journalType')->name('journal_types.index');
     Route::get('/journal_types/create', 'JournalController@createJournalType')->name('journal_types.create');
@@ -208,7 +209,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/user_groups/{id}/edit', 'UserGroupController@edit')->name('user_groups.edit');
     Route::put('/user_groups/{id}/update', 'UserGroupController@update')->name('user_groups.edit.update');
     Route::delete('/user_groups/{id}', 'UserGroupController@delete')->name('user_groups.delete');
-    
+
     //user
     Route::post('/users/lang/{id}', 'UserController@setLang')->name('users.language');
     Route::get('/users/profile', 'UserController@profile')->name('users.profile');
@@ -220,13 +221,13 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/users/actions', 'UserController@action')->name('users.actions');
     Route::post('/users/actions', 'UserController@saveAction')->name('users.actions.save');
     Route::get('/users/password', 'UserController@action')->name('user.password');
-    
+
     Route::get('/users/{id}', 'UserController@view')->name('users.view');
     Route::get('/users/{id}/edit', 'UserController@edit')->name('users.edit');
     Route::put('/users/{id}/update', 'UserController@update')->name('users.edit.update');
     Route::delete('/users/{id}', 'UserController@delete')->name('users.delete');
-    
-    
+
+
     //logs
     Route::get('/logs', 'LogController@index')->name('logs.index');
     Route::get('/logs/{id}', 'LogController@view')->name('logs.view');
@@ -256,6 +257,6 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::delete('/{name}/delete/file', 'DcruController@deleteFile')->name('dcru.delete.file');
     Route::delete('/{name}/delete/{id}', 'DcruController@deletePermanent')->name('dcru.delete.permanent');
 
-    
-});    
+
+});
 

@@ -1,13 +1,13 @@
-@php 
+@php
 $type = $journal->is_voucher==1?'vouchers':'journals';
-$title_type = $journal->is_voucher==1?'Voucher':'Jurnal';
+$title_type = $journal->is_voucher==1?'Voucher':'Journal';
 $breadcrumbs = array(
     ['label'=>$title_type, 'url'=>route('dcru.index',$type)],
-    ['label'=>($mode=='edit'?'Edit ':'Buat ').$title_type],
+    ['label'=>($mode=='edit'?__('Edit'):__('Create')).' '.$title_type],
 );
 @endphp
 @extends('layouts.app')
-@section('title', ($mode=='edit'?'Edit ':'Buat ').$title_type)
+@section('title', ($mode=='edit'?__('Edit'):__('Create')).' '.$title_type)
 
 @section('content')
 <form method="POST" action="{{$mode=='edit'?route('journals.edit.update', $journal->id):route('journals.create.save')}}">
@@ -17,31 +17,40 @@ $breadcrumbs = array(
 @endif
 <div class="card">
     <div class="card-header">
-        <h3 class="card-title">{{$title_type}} {{$mode=='create'?'Baru':'#'.$journal->trans_no}}</h3>
+        <h3 class="card-title">{{$mode=='create'?__('New '.$title_type): __($title_type).'#'.$journal->trans_no}}</h3>
     </div>
-    <div class="card-body pb-1">    
-        <div class="row">    
+    <div class="card-body pb-1">
+        <div class="row">
             <div class="col">
                 <div class="form-group">
-                    <label for="trans_no" >Group Transaksi:</label>
+                    <label for="trans_no" >{{__('Transaction Group')}}:</label>
                     <input name="auto" value="1" type="hidden">
-                    <select name="numbering_id" class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
+                    <select name="numbering_id" data-value="{{old('numbering_id', $journal->numbering_id)}}" required class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
                         @foreach($numberings as $numbering)
                         <option {{$numbering->id==old('numbering_id', $journal->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
                         @endforeach
                     </select>
                     @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             <div class="col">
                 <div class="form-group">
-                    <label for="trans_no" >Nomor:</label>
-                    <input id="trans_no" readonly name="trans_no" type="text" class="form-control" value="@if($mode=='edit') {{old('trans_no',$journal->trans_no)}} @else [Automatic] @endif" >
+                    <label for="trans_no" >{{__('Transaction No.')}}:</label>
+                    <div class="input-group mb-3">
+                        <input id="trans_no" {{($mode=='edit' || old('manual', 0)==1)?'':'readonly'}} name="trans_no" type="text" class="form-control" value="@if($mode=='edit' || old('manual', 0)==1) {{old('trans_no',$journal->trans_no)}} @else [Automatic] @endif" >
+
+                        <div class="input-group-append">
+                            <div class="input-group-text">
+                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual', 0)==1)==1?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
+                          </div>
+                        </div>
+                      </div>
+                      @error('trans_no')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             <div class="col">
                 <div class="form-group">
-                    <label for="trans_date">Tanggal:</label>
+                    <label for="trans_date">{{__('Transaction Date')}}:</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text">
@@ -52,114 +61,99 @@ $breadcrumbs = array(
                     </div>
                     @error('trans_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>   
-            <div class="col">
-                <div class="form-group">
-                    <label>Penerima:</label>
-                    <select name="contact_id" class="form-control select2">
-                        <option value="">--Pilih Kontak--</option>
-                        @foreach($contacts as $contact)
-                        <option {{old('contact_id', $journal->contact_id)==$contact->id?'selected':''}} value="{{$contact->id}}">{{$contact->name}}</option>
-                        @endforeach
-                    </select>
-                    @error('contact_id')<small class="text-danger">{!!$message!!}</small>@enderror
-                </div>
-            </div> 
+            </div>
         </div>
 
-        <div class="row">    
+        <div class="row">
             <div class="col-md-6">
                 <div class="form-group">
-                    <label>Keterangan:</label>
+                    <label>{{__('Description')}}:</label>
                     <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"  rows="1">{{old('description',$journal->description)}}</textarea >
                     @error('description')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
-            </div>    
+            </div>
             <div class="col-md">
-            </div>    
+            </div>
             <div class="col-md">
-            </div>    
+            </div>
         </div>
-        <h4 class="mt-3">Rincian Transaksi</h4>
+    <h4 class="mt-3">{{__('Detail Transaction')}}</h4>
         <div class="container mt-3 mb-3">
             <ul id="detail" class="list-group">
-                @php 
-                $details = $journal->details; 
+                @php
+                $details = $journal->details;
                 $row_count = old('detail_length', count($details));
                 $row_count = $row_count==0?2:$row_count;
                 @endphp
                 @for($i=0;$i<$row_count;$i++)
-                @php 
-                if(count($details)==0){
+                @php
+                if(count($details)==0 || !empty(old('detail'))){
                     $detail = new \App\JournalDetail;
                 }else{
                     $detail = $details[$i] ;
                 }
                 @endphp
-                <li class="list-group-item d-item" id="row_{{$i}}" data-row-index="{{$i}}">
+                <li class="list-group-item d-item" id="row_{{$i}}" data-row-index="{{$i}}" data-index="{{$i}}">
                     <div class="row">
                         <div id="no_{{$i}}" class="col">{{$i+1}}</div>
-                        <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="{{$i}}"><i class="fas fa-trash-alt"></i></button></div>
+                        <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="{{$i}}"><i class="fas fa-times"></i></button></div>
                     </div>
                     <div class="row">
-                        <div class="col">
+                        <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="detail_account_id_{{$i}}" >Akun:</label>
-                                <select id="detail_account_id_{{$i}}" name="detail_account_id_{{$i}}" class="form-control select2" style="width:200px">
-                                    @foreach($accounts as $account)
-                                    <option {{old('detail_account_id_'.$i, $detail->account_id)==$account->id?'selected':''}} value="{{$account->id}}">{{$account->account_name}}</option>
-                                    @endforeach
+                                <label for="detail_account_id_{{$i}}" >{{__('Account')}}:</label>
+                                <select id="detail_account_id_{{$i}}" required data-value="{{old('detail.'.$i.'.account_id', $detail->account_id)}}" name="detail[{{$i}}][account_id]" class="form-control select2 account">
+
                                 </select>
                                 @error('detail_account_id_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
                                 @if($mode=='edit')
-                                <input type="hidden" name="detail_id_{{$i}}" value="{{$detail->id}}"/>
+                                <input type="hidden" name="detail[{{$i}}][id]" value="{{$detail->id}}"/>
                                 @endif
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_description_{{$i}}" >Keterangan:</label>
-                                <textarea rows="1" style="width:200px" id="detail_description_{{$i}}" name="detail_description_{{$i}}" data-index="{{$i}}" class="form-control">{{$detail->description}}</textarea>
-                                    @error('detail_description_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+                                <label for="detail_debit_{{$i}}" >{{__('Debit')}}:</label>
+                                <input name="detail[{{$i}}][debit]" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail.'.$i.'.debit') is-invalid @enderror" value="{{old('detail.'.$i.'.debit', $detail!=null?$detail->debit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    @error('detail.'.$i.'.debit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_debit_{{$i}}" >Debit:</label>
-                                <input name="detail_debit_{{$i}}" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail_debit_'.$i) is-invalid @enderror" value="{{old('detail_debit_'.$i, $detail!=null?$detail->debit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                                    @error('detail_debit_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+                                <label for="detail_credit_{{$i}}" >{{__('Credit')}}:</label>
+                                <input name="detail[{{$i}}][credit]" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail.'.$i.'.credit') is-invalid @enderror" value="{{old('detail.'.$i.'.credit', $detail!=null?$detail->credit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    @error('detail.'.$i.'.credit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="detail_credit_{{$i}}" >Kredit:</label>
-                                <input name="detail_credit_{{$i}}" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail_credit_'.$i) is-invalid @enderror" value="{{old('detail_credit_'.$i, $detail!=null?$detail->credit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                                    @error('detail_credit_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+                                <label for="detail_description_{{$i}}" >{{__('Description')}}:</label>
+                                <textarea rows="1" id="detail_description_{{$i}}" name="detail[{{$i}}][description]" data-index="{{$i}}" class="form-control">{{old('detail.'.$i.'.description',$detail->description)}}</textarea>
+                                    @error('detail.'.$i.'.description')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_department_id_{{$i}}" >Departemen:</label>
-                                <select id="detail_department_id_{{$i}}" name="detail_department_id_{{$i}}" class="form-control select2" style="width:200px">
-                                    <option {{empty(old('detail_department_id_'.$i, $detail->department_id))?'selected':''}} value="">--Pilih Departemen--</option>
+                                <label for="detail_department_id_{{$i}}" >{{__('Department')}}:</label>
+                                <select id="detail_department_id_{{$i}}" data-value="{{old('detail_department_id_'.$i, $detail->department_id)}}" name="detail[{{$i}}][department_id]" class="form-control select2 department">
                                     @foreach($departments as $department)
-                                    <option {{old('detail_department_id_'.$i, $detail->department_id)==$department->id?'selected':''}} value="{{$department->id}}">{{$department->name}}</option>
+                                    <option {{old('detail.'.$i.'.department_id', $detail->department_id)==$department->id?'selected':''}} value="{{$department->id}}">{{$department->name}}</option>
                                     @endforeach
                                 </select>
-                                @error('detail_department_id_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+                                @error('detail.'.$i.'.department_id')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_select_tags_{{$i}}" >Sortir:</label>
-                                @php 
-                                $strtags = old('detail_tags_'.$i, $detail->tags);
-                                $arrtags = explode(',', $strtags); 
+                                <label for="detail_select_tags_{{$i}}" >{{__('Tags')}}:</label>
+                                @php
+                                $strtags = old('detail.'.$i.'.tags', $detail->tags);
+                                $arrtags = explode(',', $strtags);
                                 @endphp
-                                <input type="hidden" id="detail_tags_{{$i}}" name="detail_tags_{{$i}}" value="{{$strtags}}" />
-                                <select id="detail_select_tags_{{$i}}" data-index="{{$i}}" multiple class="form-control select2 sortir-select" style="width:200px">
-                                    @php 
-                                    $optgroup = ''; 
+                                <input type="hidden" id="detail_tags_{{$i}}" name="detail[{{$i}}][tags]" value="{{$strtags}}" />
+                                <select id="detail_select_tags_{{$i}}" data-index="{{$i}}" multiple data-value="{{$strtags}}" class="form-control select2 sortir-select">
+                                    @php
+                                    $optgroup = '';
                                     $citem = count($tags);
                                     @endphp
                                     @foreach($tags as $j => $tag)
@@ -176,7 +170,7 @@ $breadcrumbs = array(
                                         @endif
                                     @endforeach
                                 </select>
-                                @error('detail_tag_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+                                @error('detail.'.$i.'.tags')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
                     </div>
@@ -188,12 +182,12 @@ $breadcrumbs = array(
                     <button id="add-btn" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-plus"></i> Tambah Transaksi</button>
                 </div>
                 <div class="col text-right">
-                    <small class="text-muted">Total Debet</small><br>
+                    <small class="text-muted">{{__('Total Debit')}}</small><br>
                     <input name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="{{old('total_debit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_debit')<small class="text-danger">{!! $message !!}</small>@enderror
                 </div>
                 <div class="col text-right">
-                    <small class="text-muted">Total Kredit</small><br>
+                <small class="text-muted">{{__('Total Credit')}}</small><br>
                     <input name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="{{old('total_credit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_credit')<small class="text-danger">{!! $message !!}</small>@enderror
                     <input type="hidden" id="total" name="total" value="{{old('total', $journal->total)}}" />
@@ -206,10 +200,10 @@ $breadcrumbs = array(
     <div class="card-footer">
         <div class="row">
             <div class="col-sm-6">
-                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?'Simpan':'Buat '.$title_type}}</button>
+                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?__('Save'):__('Create').$title_type}}</button>
             </div>
             <div class="col-sm-6 text-right">
-                <a href="{{route('dcru.index', 'journals')}}" class="btn btn-default" >Batal</a>
+            <a href="{{route('dcru.index', 'journals')}}" class="btn btn-default" >{{__('Cancel')}}</a>
             </div>
         </div>
     </div>
@@ -227,8 +221,21 @@ $breadcrumbs = array(
 <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
 <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script src="{{asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js')}}"></script>
+<script src="{{asset('js/select.js')}}"></script>
 <script type="text/javascript">
 function  init(){
+    loadSelect();
+    $('input[name=manual]').change(function(){
+        var manual = $(this).prop('checked');
+        if(manual){
+            $('#trans_no').prop('readonly', false)
+            $('#trans_no').val("{{($mode=='edit' || old('manual', 0)==1)?old('trans_no',$journal->trans_no):''}}");
+            $('#trans_no').focus();
+        }else{
+            $('#trans_no').prop('readonly', true)
+            $('#trans_no').val('[Automatic]');
+        }
+    })
     $('.date').daterangepicker({
       timePicker: false,
       singleDatePicker:true,
@@ -239,8 +246,7 @@ function  init(){
     });
     $('.currency').inputmask({ 'alias': 'currency' })
     $('[data-mask]').inputmask();
-    $(".select2").select2({theme: 'bootstrap4'});
-    
+
     $('.sortir-select').change(function(e){
         var idx = $(this).attr('data-index');
         $('#detail_tags_'+idx).val($(this).val().join())
@@ -248,7 +254,7 @@ function  init(){
     $('.btn-remove').click(function(e){
         e.preventDefault();
         var idx = $(this).attr('data-index');
-        if(idx>0){
+        if($('#detail_length').val()>2){
             $(this).parent().parent().parent().remove();
         }else{
             $('#detail_debit_'+idx).val(0);
@@ -260,15 +266,35 @@ function  init(){
     })
 }
 function reindexing(){
+    var count = 0;
     $('.d-item').each(function(index){
-        var old = $(this).attr('data-row-index');
-        $(this).attr('data-row-index', index);
-        $('button[data-index='+old+']').attr('data-index', index);
-        $('#no_'+old).html(index+1);
-        $('#no_'+old).attr('id', index);
-        $('#row_'+old).attr('id', index);
+        count++;
+        var i = $(this).attr('data-index');
+        $(this).attr('data-index', index);
+        $(this).attr('id', 'row_'+index);
+        $('#no_'+i).html(index+1);
+        $('#no_'+i).attr('id', 'no_'+index);
+        $('#detail_account_id_'+i).attr('data-index', index)
+        $('#detail_account_id_'+i).attr('name', 'detail['+index+'][account_id]')
+        $('#detail_account_id_'+i).attr('id', 'detail_account_id_'+index)
+        $('#detail_debit_'+i).attr('data-index', index)
+        $('#detail_debit_'+i).attr('name', 'detail['+index+'][debit]')
+        $('#detail_debit_'+i).attr('id', 'detail_debit_id_'+index)
+        $('#detail_credit_'+i).attr('data-index', index)
+        $('#detail_credit_'+i).attr('name', 'detail['+index+'][credit]')
+        $('#detail_credit_'+i).attr('id', 'detail_credit_id_'+index)
+        $('#detail_description_'+i).attr('data-index', index)
+        $('#detail_description_'+i).attr('name', 'detail['+index+'][description]')
+        $('#detail_description_'+i).attr('id', 'detail_description_'+index)
+        $('#detail_department_id_'+i).attr('data-index', index)
+        $('#detail_department_id_'+i).attr('name', 'detail['+index+'][department_id]')
+        $('#detail_department_id_'+i).attr('id', 'detail_department_id_'+index)
+        $('#detail_tags_'+i).attr('data-index', index)
+        $('#detail_tags_'+i).attr('name', 'detail['+index+'][tags]')
+        $('#detail_tags_'+i).attr('id', 'detail_tags_'+index)
+        $('button[data-index='+i+']').attr('data-index', index)
         $('#detail_length').val(index+1);
-    })
+    });
 }
 function changeIndex(oldIndex, index){
     $('#row_'+oldIndex).attr('id', 'row_'+index);
@@ -276,7 +302,7 @@ function changeIndex(oldIndex, index){
 }
 $(function () {
     init()
-    
+
     $('#form').submit(function(e){
       if(validate()){
         e.preventDefault();return;
@@ -287,58 +313,56 @@ $(function () {
         var last_idx = parseInt(idx)-1;
         var no = parseInt(idx)+1;
         var row = `
-                <li class="list-group-item d-item" id="row_${idx}" data-row-index="${idx}">
+                <li class="list-group-item d-item" id="row_${idx}" data-row-index="${idx}" data-index="${idx}">
                     <div class="row">
                         <div id="no_${idx}" class="col">${no}</div>
-                        <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="${idx}"><i class="fas fa-trash-alt"></i></button></div>
+                        <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="${idx}"><i class="fas fa-times"></i></button></div>
                     </div>
                     <div class="row">
-                        <div class="col">
+                        <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="detail_account_id_${idx}" >Akun:</label>
-                                <select id="detail_account_id_${idx}" name="detail_account_id_${idx}" class="form-control select2" style="width:200px">
-                                    @foreach($accounts as $account)
-                                    <option value="{{$account->id}}">{{$account->account_name}}</option>
-                                    @endforeach
+                                <label for="detail_account_id_${idx}" >{{__('Account')}}:</label>
+                                <select id="detail_account_id_${idx}" required name="detail[${idx}][account_id]" class="form-control select2 account" >
+
                                 </select>
                             </div>
                         </div>
-                        <div class="col">
+
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_description_${idx}" >Keterangan:</label>
-                                <textarea rows="1" style="width:200px" id="detail_description_${idx}" name="detail_description_${idx}" data-index="${idx}" class="form-control"></textarea>
+                                <label for="detail_debit_${idx}" >{{__('Debit')}}:</label>
+                                <input name="detail[${idx}][debit]" data-index="${idx}" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_debit_${idx}" >Debit:</label>
-                                <input name="detail_debit_${idx}" data-index="${idx}" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <label for="detail_credit_${idx}" >{{__('Credit')}}:</label>
+                                <input name="detail[${idx}][credit]" data-index="${idx}" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-6 col-sm-12">
                             <div class="form-group">
-                                <label for="detail_credit_${idx}" >Kredit:</label>
-                                <input name="detail_credit_${idx}" data-index="${idx}" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <label for="detail_description_${idx}" >{{__('Description')}}:</label>
+                                <textarea rows="1"  id="detail_description_${idx}" name="detail[${idx}][description]" data-index="${idx}" class="form-control"></textarea>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_department_id_${idx}" >Departemen:</label>
-                                <select id="detail_department_id_${idx}" name="detail_department_id_${idx}" class="form-control select2" style="width:200px">
-                                    <option value="">--Pilih Departemen--</option>
-                                    @foreach($departments as $department)
+                                <label for="detail_department_id_${idx}" >{{__('Department')}}:</label>
+                                <select id="detail_department_id_${idx}" name="detail[${idx}][department_id]" class="form-control select2" >
+                                        @foreach($departments as $department)
                                     <option value="{{$department->id}}">{{$department->name}}</option>
                                     @endforeach
                                 </select>
                             </div>
                         </div>
-                        <div class="col">
+                        <div class="col-md-3 col-sm-6">
                             <div class="form-group">
-                                <label for="detail_select_tags_${idx}" >Sortir:</label>
-                                <input type="hidden" id="detail_tags_${idx}" name="detail_tags_${idx}" />
-                                <select id="detail_select_tags_${idx}" data-index="${idx}" multiple class="form-control select2 sortir-select" style="width:200px">
-                                    @php 
-                                    $optgroup = ''; 
+                                <label for="detail_select_tags_${idx}" >{{__('Tags')}}:</label>
+                                <input type="hidden" id="detail_tags_${idx}" name="detail[${idx}][tags] " />
+                                <select id="detail_select_tags_${idx}" data-index="${idx}" multiple class="form-control select2 sortir-select" >
+                                    @php
+                                    $optgroup = '';
                                     $citem = count($tags);
                                     @endphp
                                     @foreach($tags as $j => $tag)
@@ -359,7 +383,7 @@ $(function () {
                         </div>
                     </div>
                 </li>
-        `;        
+        `;
         $('#detail').append(row);
         $('#detail_length').val(last_idx+2);
         onchange()

@@ -1,7 +1,7 @@
-@php 
+@php
 $type = $journal->is_voucher==1?'vouchers':'journals';
 $title_type = $journal->is_voucher==1?'Voucher':'Jurnal';
-$active_menu=$type; 
+$active_menu=$type;
 $breadcrumbs = array(
     ['label'=>$title_type, 'url'=>route('dcru.index',$type)],
     ['label'=>'Detail '.$title_type],
@@ -44,20 +44,20 @@ $breadcrumbs = array(
             @endif
         </div>
     </div>
-    <div class="card-body pb-1">    
-        <div class="row">    
+    <div class="card-body pb-1">
+        <div class="row">
             <dl class="col-md-4">
                 <dt>Nomor</dt>
                 <dd>{{$journal->trans_no}}</dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>Tanggal</dt>
                 <dd>{{fdate($journal->trans_date)}}</dd>
-            </dl>    
+            </dl>
             <dl class="col-md-4">
                 <dt>Keterangan</dt>
                 <dd>{{$journal->description}}</dd>
-            </dl>    
+            </dl>
         </div>
         <div class="table-responsive mt-4">
             <table class="table table-hover">
@@ -76,7 +76,15 @@ $breadcrumbs = array(
                     <tr>
                         <td><a href="{{route('accounts.view', $detail->account_id)}}">{{$detail->account->account_no}}</a></td>
                         <td><a href="{{route('accounts.view', $detail->account_id)}}">{{$detail->account->account_name}}</a></td>
-                        <td>{{$detail->description}}</td>
+                        <td>{{$detail->description}}
+                            @if(!empty($detail->tags))
+                            <p>
+                                @foreach($detail->getTags() as $tag)
+                                    <span class="badge badge-secondary">{{$tag->item_name}}</span>
+                                @endforeach
+                            </p>
+                            @endif
+                        </td>
                         <td>{{$detail->department!=null?$detail->department->name:'-'}}</td>
                         <td class="text-right">{{fcurrency($detail->debit)}}</td>
                         <td class="text-right">{{fcurrency($detail->credit)}}</td>

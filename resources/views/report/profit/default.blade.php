@@ -42,6 +42,7 @@
         $sum_3 = array();
         $sum_4 = array();
         $sum_5 = array();
+        $sum_6 = array();
         $gross_profit = array();
         $operation_profit = array();
         foreach($columns as $i=>$p){
@@ -49,8 +50,9 @@
             $sum_1[$i]=0;//total income
             $sum_2[$i]=0;//total cogs
             $sum_3[$i]=0;//total expense
-            $sum_4[$i]=0;//total other income
-            $sum_5[$i]=0;//total other expense
+            $sum_4[$i]=0;//total expense
+            $sum_5[$i]=0;//total other income/expense
+            $sum_6[$i]=0;//total tax
             $gross_profit[$i]=0;
             $operation_profit[$i]=0;
         }
@@ -85,11 +87,14 @@
                                 if($dt->account_type_id==15){
                                     $sum_3[$j]=$dt->$total+$sum_3[$j];
                                 }
-                                if($dt->account_type_id==13){
+                                if($dt->account_type_id==16){
                                     $sum_4[$j]=$dt->$total+$sum_4[$j];
                                 }
-                                if($dt->account_type_id==16){
+                                if($dt->account_type_id==17){
                                     $sum_5[$j]=$dt->$total+$sum_5[$j];
+                                }
+                                if($dt->account_type_id==18){
+                                    $sum_6[$j]=$dt->$total+$sum_6[$j];
                                 }
                             }
                         @endphp
@@ -101,13 +106,19 @@
                     @endforeach
                 </tr>
                 @endif
-                @if($i+1==$cdata && ($type==13 || $type==15))
+                @if($i+1==$cdata && (in_array($type, [13,15,16,17,18])))
                     <tr>
                         <td  class="bt-2 bb-1">
                             @if($type==13)
                             Barang Tersedia untuk Dijual
                             @elseif($type==15)
                             Jumlah Harga Pokok
+                            @elseif($type==16)
+                            Jumlah Biaya
+                            @elseif($type==17)
+                            Jumlah Biaya/Pendapatan Lain
+                            @elseif($type==18)
+                            Laba Setelah Pajak
                             @endif
                         </td>
                         @foreach($columns as $j=> $p)
@@ -116,11 +127,17 @@
                                 {{currency($sum_1[$j]+$sum_2[$j])}}
                                 @elseif($type==15)
                                 {{currency($sum_1[$j]+$sum_2[$j]+$sum_3[$j])}}
+                                @elseif($type==16)
+                                {{currency($sum_4[$j])}}
+                                @elseif($type==17)
+                                {{currency($sum_5[$j])}}
+                                @elseif($type==18)
+                                {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                                 @endif
                             </td>
                         @endforeach
                     </tr>
-                @elseif($type==13 || $type==15)
+                @elseif(in_array($type, [13,15,16,17,18]))
                     @if($type!=($income[$i+1])->account_type_id)
                     <tr>
                         <td  class="bt-2 bb-1">
@@ -128,6 +145,12 @@
                             Barang Tersedia untuk Dijual
                             @elseif($type==15)
                             Jumlah Harga Pokok
+                            @elseif($type==16)
+                            Jumlah Biaya
+                            @elseif($type==17)
+                            Jumlah Biaya/Pendapatan Lain
+                            @elseif($type==18)
+                            Laba Setelah Pajak
                             @endif
                         </td>
                         @foreach($columns as $j=> $p)
@@ -136,21 +159,41 @@
                             {{currency($sum_1[$j]+$sum_2[$j])}}
                             @elseif($type==15)
                             {{currency($sum_1[$j]+$sum_2[$j]+$sum_3[$j])}}
+                            @elseif($type==16)
+                            {{currency($sum_4[$j])}}
+                            @elseif($type==17)
+                            {{currency($sum_5[$j])}}
+                            @elseif($type==18)
+                            {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                             @endif
                         </td>
                         @endforeach
                     </tr>
-                    @if($type==15||$type==16)
+                    @if(in_array($type, [15,16,17,18]))
                     <tr>
-                        <td  class="bb-2 ">{{$type==15?'Laba Kotor':'Laba Operasi'}}</td>
+                        <td  class="bb-2 ">
+                            @if($type==15)
+                            Laba Kotor
+                            @elseif($type==16)
+                            Laba Operasi
+                            @elseif($type==17)
+                            Laba Sebelum Pajak
+                            @elseif($type==18)
+                            Laba Setelah Pajak
+                            @endif
+                        </td>
                         @foreach($columns as $j=> $p)
                             <td class="bb-2  text-right">
                             @if($type==15)
-                            {{currency($sum_1[$j]-$sum_2[$j])}}
-                            </td>
+                            {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j])}}
                             @elseif($type==16)
-                            {{currency($sum_1[$j]-$sum_2[$j]-$sum_3[$j])}}
+                            {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j])}}
+                            @elseif($type==17)
+                            {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j])}}
+                            @elseif($type==18)
+                            {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                             @endif
+                            </td>
                         @endforeach
                     </tr>
                     @endif

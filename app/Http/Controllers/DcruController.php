@@ -20,12 +20,12 @@ class DcruController extends Controller
     {
         $this->middleware('auth');
     }
-    
+
     public function index($name){
         $data = dcru_dt($name, 'dtables');
         $config = dcru_config($name);
         $data['title'] = isset($config['title'])?$config['title']:'';
-        
+
         $data['actions'] = isset($config['actions'])?$config['actions']:[];
         $view= 'dcru.index';
         return view($view, $data);
@@ -72,7 +72,7 @@ class DcruController extends Controller
         if(count($filter)>0){
             $query = $query->where(function($q)use($filter){
                 foreach($filter as $fil){
-                    
+
                     if(isset($fil['value']['start']) && isset($fil['value']['end'])){
                         $start = $fil['value']['start'];
                         $end = $fil['value']['end'];
@@ -103,7 +103,7 @@ class DcruController extends Controller
             });
             // $query->dd();
         }
-        
+
         $order_flag = 0;
         // $query = $query->where('company_id', user('company_id'));
         $total = $query->count();
@@ -114,15 +114,15 @@ class DcruController extends Controller
                 if(empty($column_name)){
                     continue;
                 }
-            
-                
+
+
                 if($column['searchable']==true){
                    if(!empty($search['value'])){
                        $q->orWhere($column_name,'like', '%'.$search['value'].'%');
-                   }  
+                   }
                    if(!empty($column['search']['value'])){
                        $q->orWhere($column_name,'like', '%'.$column['search']['value'].'%');
-                    }  
+                    }
                 }
             }
         });
@@ -132,7 +132,7 @@ class DcruController extends Controller
             if(empty($column_name)){
                 continue;
             }
-            
+
             if($column['orderable']==true){
                 foreach($order as $ord){
                     if($ord['column']==$i){
@@ -146,7 +146,7 @@ class DcruController extends Controller
             // $query = $query->orderByRaw("$table_name.updated_at - $table_name.created_at DESC");
             $query = $query->orderByRaw("$table_name.created_at DESC");
         }
-        
+
         $total_filtered = $query->count();
         if($length>-1){
             $query = $query->offset($start)->limit($length);
@@ -257,17 +257,17 @@ class DcruController extends Controller
                             }
                             if(array_key_exists('type', $item)){
                                 if($item['type']=='view'){
-                                    $menu_items.=has_action($name,'view')&&$visible?$view:'';                        
-                                    $count_items+=has_action($name,'view')&&$visible?1:0;                        
+                                    $menu_items.=has_action($name,'view')&&$visible?$view:'';
+                                    $count_items+=has_action($name,'view')&&$visible?1:0;
                                 }else if($item['type']=='edit'){
-                                    $menu_items.=has_action($name,'edit')&&$visible?$edit:'';                        
-                                    $count_items+=has_action($name,'edit')&&$visible?1:0;                        
+                                    $menu_items.=has_action($name,'edit')&&$visible?$edit:'';
+                                    $count_items+=has_action($name,'edit')&&$visible?1:0;
                                 }else if($item['type']=='duplicate'){
-                                    $menu_items.=has_action($name,'create')&&$visible?$duplicate:'';                        
-                                    $count_items+=has_action($name,'create')&&$visible?1:0;                        
+                                    $menu_items.=has_action($name,'create')&&$visible?$duplicate:'';
+                                    $count_items+=has_action($name,'create')&&$visible?1:0;
                                 }else if($item['type']=='delete'){
-                                    $menu_items.=has_action($name, 'delete')&&$visible?$delete:'';                        
-                                    $count_items+=has_action($name,'delete')&&$visible?1:0;                        
+                                    $menu_items.=has_action($name, 'delete')&&$visible?$delete:'';
+                                    $count_items+=has_action($name,'delete')&&$visible?1:0;
                                 }
                             }else{
                                 $label = trans($item['label']);
@@ -288,23 +288,23 @@ class DcruController extends Controller
                                         '.csrf_field().'
                                         <button type="submit" class="dropdown-item">'.$icon.' '.$label.'</button>
                                         </form>
-                                        ':'';     
+                                        ':'';
                                     }
                                 }else{
-                                    $menu_items .= has_action($routes[0], $routes[1]) && $visible?'<a href="'.asset(route($route['name'], $params, false)).'" class="dropdown-item">'.$icon.' '.$label.'</a>':'';            
+                                    $menu_items .= has_action($routes[0], $routes[1]) && $visible?'<a href="'.asset(route($route['name'], $params, false)).'" class="dropdown-item">'.$icon.' '.$label.'</a>':'';
                                 }
-                            }    
+                            }
                         }
                     }else{//if no items, add all default actions
-                        $menu_items.=has_action($name,'view')&&$visible?$view:'';                        
-                        $menu_items.=has_action($name, 'edit')&&$visible?$edit:'';                        
-                        $menu_items.=has_action($name, 'create')&&$visible?$duplicate:'';                        
-                        $menu_items.=has_action($name, 'delete')&&$visible?$delete:'';                        
-                        $count_items+=has_action($name, 'view')&&$visible?1:0;                        
-                        $count_items+=has_action($name, 'edit')&&$visible?1:0;                        
-                        $count_items+=has_action($name, 'view')&&$visible?1:0;                        
-                        $count_items+=has_action($name, 'view')&&$visible?1:0;                        
-                        
+                        $menu_items.=has_action($name,'view')&&$visible?$view:'';
+                        $menu_items.=has_action($name, 'edit')&&$visible?$edit:'';
+                        $menu_items.=has_action($name, 'create')&&$visible?$duplicate:'';
+                        $menu_items.=has_action($name, 'delete')&&$visible?$delete:'';
+                        $count_items+=has_action($name, 'view')&&$visible?1:0;
+                        $count_items+=has_action($name, 'edit')&&$visible?1:0;
+                        $count_items+=has_action($name, 'view')&&$visible?1:0;
+                        $count_items+=has_action($name, 'view')&&$visible?1:0;
+
                     }
                     $menu = '';
                     if($count_items==0){
@@ -313,7 +313,7 @@ class DcruController extends Controller
                         $menu = '
                         <button type="button" class="btn btn-tool" data-toggle="dropdown">
                         <i class="fas fa-ellipsis-v"></i></button>
-                        <div class="dropdown-menu dropdown-menu-right" role="menu">';    
+                        <div class="dropdown-menu dropdown-menu-right" role="menu">';
                         $menu .=$menu_items;
                         $menu .='</div>';
                     }
@@ -389,18 +389,18 @@ class DcruController extends Controller
 
         $form = dcru_config($name, 'form');
         $view = dcru_config($name, 'view');
-        
-        
+
+
         $title = $form['title'];
         $fields = $form['fields'];
         $table = $form['table'];
         $rules = [];
         $attr = [];
-        $values = [];    
+        $values = [];
         $files = [];//to store uploaded filename
         $generate = [];
         $now = date('Y-m-d H:i:s');
-        
+
         foreach($fields as $field){
             $field_name = $field['name'];
             $field_type = $field['type'];
@@ -413,13 +413,13 @@ class DcruController extends Controller
             if($request->input('_'.$field_name.'_')!=null){
                 continue;
             }
-            
+
             if($mode=='edit' && !empty($field['uvalidation'])){
                 $rules[$field_name] = dcru_rules($field['uvalidation'], $id);
             }else if(!empty($field['uvalidation'])){
                 $rules[$field_name] = $field['svalidation'];
             }
-            
+
             if($field_type=='password'){
                 if(!strpos($field_name, '_confirmation')){
                     $values[$field_name] = Hash::make($value);
@@ -504,8 +504,8 @@ class DcruController extends Controller
         Storage::delete($data->$file);
         DB::table($table)->where('id', $id)
         ->update([$file => null]);
-        add_log("Menghapus file");
-        return redirect(route('dcru.edit', ['name'=>$name, 'id'=>$id], false))->with('success', ' File berhasil dihapus.');        
+        // add_log("Menghapus file");
+        return redirect(route('dcru.edit', ['name'=>$name, 'id'=>$id], false))->with('success', ' File berhasil dihapus.');
     }
     public function delete(Request $request, $name, $id){
         $form = dcru_config($name, 'form');
@@ -539,7 +539,7 @@ class DcruController extends Controller
         foreach($files as $file){
             Storage::delete($file);
         }
-        add_log("Menghapus $name");
+        // add_log("Menghapus $name");
         return redirect()->route('dcru.index', ['name'=>$name], false)->with('success', 'Data berhasil dihapus permanen.');
     }
     public function deleteAll(Request $request, $name){
@@ -551,7 +551,7 @@ class DcruController extends Controller
             DB::table($table)->where('id', $id)->delete();
         }
         // add_log("Menghapus masal data $name");
-        return redirect()->route('dcru.index', ['name'=>$name], false)->with('success', 'Data berhasil dihapus.');        
+        return redirect()->route('dcru.index', ['name'=>$name], false)->with('success', 'Data berhasil dihapus.');
     }
 
     public function download(Request $request){
@@ -561,7 +561,7 @@ class DcruController extends Controller
         }
         return Storage::download($file_name);
     }
-    
+
     public function testing(){
         // $name = ['Ahmad', 'Andi', 'Arif', 'Iman', 'Ian', 'Bani', 'Eko', 'Budi',
         // 'Ali', 'Fitri', 'Wulan', 'Diah', 'Imam', 'Yuli', 'Andri', 'Firman', 'Toni', 'Umar',
@@ -569,7 +569,7 @@ class DcruController extends Controller
         // 'Ramzi', 'Romzi', 'Rara', 'Alya', 'Putra', 'Putri', 'Indah', 'Mustofa', 'Fadil', 'Wira',
         // 'Hanif', 'Farid', 'Luqman', 'Imran', 'Hasan', 'Husain'
         // ];
-        
+
         // foreach($name as $nm){
         //     $user['name'] = $nm;
         //     $user['email'] = strtolower($nm).'@sample.id';

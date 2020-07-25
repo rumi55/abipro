@@ -106,67 +106,50 @@ class TransactionController extends Controller
     }
     public function save(Request $request, $type){
         $data = $request->all();
-        // dd($data);
-        $detail_rules = [
-            'detail_account_id'=>'required',
-            'detail_description'=>'required',
-            'detail_tags'=>'nullable|max:255',
-            // 'detail_department_id'=>'required',
-            'detail_amount'=>'required',
-        ];
-        $detail_attr = [
-            'detail_account_id'=>'Akun',
-            'detail_description'=>'Keterangan',
-            // 'detail_department_id'=>'Departemen',
-            'detail_tags'=>'Sortir',
-            'detail_amount'=>'Jumlah'
-        ];
+        $user = Auth::user();
+        $company_id = $user->activeCompany()->id;
 
         $rules = [
             'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
+            'trans_no' => "required|unique:transactions,trans_no,NULL,id,company_id,$company_id",
             'description' => 'nullable|min:3|max:255',
             'account_id' => 'required|exists:accounts,id',
             'contact_id' => 'required|exists:contacts,id',
             'department_id' => 'nullable|exists:departments,id',
+            'detail.*.account_id'=>'required',
+            'detail.*.description'=>'required',
+            'detail.*.tags'=>'nullable|max:255',
+            'detail.*.department_id'=>'nullable|exists:departments,id',
+            'detail.*.amount'=>'required',
         ];
         $attr = [
-            'numbering_id' => 'Grup Transaksi',
-            'trans_no' => 'Nomor',
-            'trans_date' => 'Tanggal',
-            'description' => 'Keterangan',
-            'account_id'=>'Akun',
-            'department_id'=>'Departemen',
-            'contact_id'=>'Kontak'
+            'numbering_id' => trans('Transaction Group'),
+            'trans_no' => trans('Transaction No.'),
+            'trans_date' => trans('Transaction Date'),
+            'description' => trans('Description'),
+            'account_id'=>trans('Account'),
+            'department_id'=>trans('Department'),
+            'contact_id'=>trans('Contact'),
+            'detail.*.account_id'=>trans('Account'),
+            'detail.*.description'=>trans('Description'),
+            'detail.*.department_id'=>trans('Department'),
+            'detail.*.tags'=>trans('Tags'),
+            'detail.*.amount'=>trans('Amount')
         ];
-        $keys = array_keys($data);
-        foreach($keys as $key){
-            $f = substr($key, 0, strripos($key, '_'));
-            if(in_array($f, ['detail_amount'])){
-                $data[$key] = parse_number($data[$key]);
-            }elseif(in_array($key, ['amount'])){
-                $data[$key] = parse_number($data[$key]);
-            }
-            if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];
-            }
-            if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];
-            }
-        }
 
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
+            // dd($data);
             return redirect()->back()->withErrors($validator)->withInput();
         }
         // dd($data);
-        $user = Auth::user();
-        $company_id = $user->activeCompany()->id;
+
         $trans_date = fdate($request->trans_date, 'Y-m-d');
 
         try{
             \DB::beginTransaction();
-            $auto = true;
+            $auto = empty($request->manual)?true:false;
             if($auto){
                 $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
@@ -194,11 +177,12 @@ class TransactionController extends Controller
                             'trans_type'=>$type,
                             'contact_id'=>$data['contact_id'],
                             'status'=>$data['status'],
+                            'numbering_id'=>$data['numbering_id'],
                             'department_id'=>$data['department_id'],
                             // 'tags'=>$request->tags,
                             'description'=>$data['description'],
                             'company_id'=>$company_id,
-                            'amount'=>$data['amount'],
+                            'amount'=>parse_number($data['amount']),
                             'account_id'=>$data['account_id'],
                             'transaction_type_id'=>TransactionType::JOURNAL,
                             'created_by'=>$user->id
@@ -214,25 +198,26 @@ class TransactionController extends Controller
                     'trans_date'=>$trans_date,
                     'trans_type'=>$type,
                     'contact_id'=>$data['contact_id'],
+                    'numbering_id'=>$data['numbering_id'],
                     'department_id'=>$data['department_id'],
                     // 'tags'=>$request->tags,
                     'description'=>$data['description'],
                     'company_id'=>$company_id,
-                    'amount'=>$data['amount'],
+                    'amount'=>parse_number($data['amount']),
                     'account_id'=>$data['account_id'],
                     'transaction_type_id'=>TransactionType::JOURNAL,
                     'created_by'=>$user->id
                 ]);
             }
-            $len = $request->detail_length;
-            for($i=0;$i<$len;$i++){
+            $i=0;
+            foreach($request->detail as $detail){
                 TransactionDetail::create([
                     'sequence'=>$i,
-                    'account_id'=>$data["detail_account_id_$i"],
-                    'amount'=>$data["detail_amount_$i"],
-                    'description'=>$data["detail_description_$i"],
-                    'department_id'=>$data["detail_department_id_$i"],
-                    'tags'=>$data["detail_tags_$i"],
+                    'account_id'=>$detail['account_id'],
+                    'amount'=>parse_number($detail['amount']),
+                    'description'=>$detail['description'],
+                    'department_id'=>isset($detail['department_id'])?$detail['department_id']:null,
+                    'tags'=>isset($detail['tags'])?$detail['tags']:null,
                     'transaction_id'=>$transaction->id,
                     'created_by'=>$user->id
                 ]);
@@ -263,78 +248,60 @@ class TransactionController extends Controller
     public function update(Request $request, $type, $id){
         $transaction = Transaction::findOrFail($id);
         $data = $request->all();
-        // dd($data);
-        $detail_rules = [
-            'detail_account_id'=>'required',
-            'detail_description'=>'required',
-            'detail_tags'=>'nullable|max:255',
-            // 'detail_department_id'=>'required',
-            'detail_amount'=>'required',
-        ];
-        $detail_attr = [
-            'detail_account_id'=>'Akun',
-            'detail_description'=>'Keterangan',
-            // 'detail_department_id'=>'Departemen',
-            'detail_tags'=>'Sortir',
-            'detail_amount'=>'Jumlah'
-        ];
 
+        $user = Auth::user();
+        $company_id = $user->activeCompany()->id;
         $rules = [
             'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
+            'trans_no' => "required|unique:transactions,trans_no,$id,id,company_id,$company_id",
             'description' => 'nullable|min:3|max:255',
             'account_id' => 'required|exists:accounts,id',
             'contact_id' => 'required|exists:contacts,id',
             'department_id' => 'nullable|exists:departments,id',
+            'detail.*.account_id'=>'required',
+            'detail.*.description'=>'required',
+            'detail.*.tags'=>'nullable|max:255',
+            'detail.*.department_id'=>'nullable|exists:departments,id',
+            'detail.*.amount'=>'required',
         ];
         $attr = [
-            'numbering_id' => 'Grup Transaksi',
-            'trans_no' => 'Nomor',
-            'trans_date' => 'Tanggal',
-            'description' => 'Keterangan',
-            'account_id'=>'Akun',
-            'department_id'=>'Departemen',
-            'contact_id'=>'Kontak'
+            'numbering_id' => trans('Transaction Group'),
+            'trans_no' => trans('Transaction No.'),
+            'trans_date' => trans('Transaction Date'),
+            'description' => trans('Description'),
+            'account_id'=>trans('Account'),
+            'department_id'=>trans('Department'),
+            'contact_id'=>trans('Contact'),
+            'detail.*.account_id'=>trans('Account'),
+            'detail.*.description'=>trans('Description'),
+            'detail.*.department_id'=>trans('Department'),
+            'detail.*.tags'=>trans('Tags'),
+            'detail.*.amount'=>trans('Amount')
         ];
-        $keys = array_keys($data);
-        foreach($keys as $key){
-            $f = substr($key, 0, strripos($key, '_'));
-            if(in_array($f, ['detail_amount'])){
-                $data[$key] = parse_number($data[$key]);
-            }elseif(in_array($key, ['amount'])){
-                $data[$key] = parse_number($data[$key]);
-            }
-            if(array_key_exists($f, $detail_rules)){
-                $rules[$key] = $detail_rules[$f];
-            }
-            if(array_key_exists($f, $detail_attr)){
-                $attr[$key] = $detail_attr[$f];
-            }
-        }
 
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        $user = Auth::user();
-        $company_id = $user->activeCompany()->id;
 
         $trans_date = fdate($request->trans_date, 'Y-m-d');
 
         $transaction->trans_date = $trans_date;
         $transaction->account_id = $data['account_id'];
         $transaction->contact_id = $data['contact_id'];
-        $transaction->department_id = $data['department_id'];
-        $transaction->description = $data['description'];
+        $transaction->department_id = isset($data['department_id'])?$data['department_id']:null;
+        $transaction->numbering_id = $data['numbering_id'];
+        $transaction->description = isset($data['description'])?$data['description']:null;
         // $transaction->tags = $request->tags;
-        $transaction->amount = $data['amount'];
+        $transaction->amount = parse_number($data['amount']);
         $transaction->updated_by = $user->id;
 
         try{
             \DB::beginTransaction();
-            $auto = false;//
+            $auto = empty($request->manual)?true:false;
             if($auto){
-                $numbering = Numbering::findOrFail(decode($data['numbering_Id']));
+                $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
                     $period = date('Y');
                 }else if($numbering->counter_reset=='m'){
@@ -361,7 +328,7 @@ class TransactionController extends Controller
                     }
                 }while($check);
             }else{
-                // $trans_no = $request->trans_no;
+                $trans_no = $request->trans_no;
                 $transaction->update();
             }
             //cek id
@@ -370,29 +337,29 @@ class TransactionController extends Controller
                 $old_details[$detail->id] = $detail;
             }
             $transaction_details=array();
-            $len = $request->detail_length;
-            for($i=0;$i<$len;$i++){
-                if($data["detail_id_$i"]==null){
+            $i=0;
+            foreach($request->detail as $detail){
+                if(empty($detail['id'])){
                     $jdetail= TransactionDetail::create([
                         'sequence'=>$i,
-                        'account_id'=>$data["detail_account_id_$i"],
-                        'amount'=>$data["detail_amount_$i"],
-                        'description'=>$data["detail_description_$i"],
-                        'department_id'=>$data["detail_department_id_$i"],
-                        'tags'=>$data["detail_tags_$i"],
+                        'account_id'=>$detail["account_id"],
+                        'amount'=>parse_number($detail["amount"]),
+                        'description'=>$detail["description"],
+                        'department_id'=>isset($detail["department_id"])?$detail["department_id"]:null,
+                        'tags'=>isset($detail["tags"])?$detail["tags"]:null,
                         'transaction_id'=>$transaction->id,
                         'created_by'=>$user->id
                     ]);
                 }else{
-                    $jid = $data["detail_id_$i"];
+                    $jid = $detail['id'];
                     $jdetail = TransactionDetail::findOrFail($jid);
                     $old_sq = $jdetail->sequence;
                     $jdetail->sequence=$i;
-                    $jdetail->account_id=$data["detail_account_id_$i"];
-                    $jdetail->amount=$data["detail_amount_$i"];
-                    $jdetail->description=$data["detail_description_$i"];
-                    $jdetail->department_id=$data["detail_department_id_$i"];
-                    $jdetail->tags=$data["detail_tags_$i"];
+                    $jdetail->account_id=$detail["account_id"];
+                    $jdetail->amount=parse_number($detail["amount"]);
+                    $jdetail->description=$detail["description"];
+                    $jdetail->department_id=isset($detail["department_id"])?$detail["department_id"]:null;
+                    $jdetail->tags=isset($detail["tags"])?$detail["tags"]:null;
                     $jdetail->transaction_id=$transaction->id;
                     $jdetail->updated_by=$user->id;
                     $jdetail->update();

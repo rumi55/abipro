@@ -1,12 +1,12 @@
 @php
 $active_menu='accounts';
 $breadcrumbs = array(
-    ['label'=>'Akun', 'url'=>route('accounts.index')],
-    ['label'=>'Saldo Awal'],
+    ['label'=>trans('Chart of Account'), 'url'=>route('accounts.index')],
+    ['label'=>trans('Opening Balance')],
 );
 @endphp
 @extends('layouts.app')
-@section('title', 'Saldo Awal')
+@section('title', trans('Opening Balance'))
 @section('content')
 
 <div class="card">
@@ -70,7 +70,7 @@ $breadcrumbs = array(
                         <td style="vertical-align:middle;width:60%">{{$account->account_name}}</td>
                         <td class="text-right" style="width:20%">
                             @if($account->has_children==0)
-                            <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{old('balance.'.$account->id, $account->balance)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{empty(old('balance.'.$account->id, $account->balance))?'0':old('balance.'.$account->id, $account->balance)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
 
                             @endif

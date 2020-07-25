@@ -16,7 +16,7 @@ class AccountTypeResource extends JsonResource
     {
         return [
             'id'=>$this->id,
-            'name'=>tt($this,'name'),
+            'name'=>$this->name,
             'group'=>$this->group,
             'debit_sign'=>$this->debit_sign,
             'credit_sign'=>$this->credit_sign,

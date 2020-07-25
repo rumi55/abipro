@@ -14,6 +14,19 @@ class ContactResource extends JsonResource
      */
     public function toArray($request)
     {
+        $type = [];
+        if($this->is_customer){
+            $type[] = trans('Customer');
+        }
+        if($this->is_supplier){
+            $type[] = trans('Supplier');
+        }
+        if($this->is_employee){
+            $type[] = trans('Employee');
+        }
+        if($this->is_others){
+            $type[] = trans('Others');
+        }
         return [
             'id'=>encode($this->id),
             'custom_id'=>$this->custom_id,
@@ -30,6 +43,7 @@ class ContactResource extends JsonResource
             'is_supplier'=>$this->is_supplier,
             'is_employee'=>$this->is_employee,
             'is_others'=>$this->is_others,
+            'type'=>implode(', ', $type)
         ];
     }
 }

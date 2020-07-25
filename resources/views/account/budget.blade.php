@@ -1,5 +1,5 @@
-@php 
-$active_menu='accounts'; 
+@php
+$active_menu='accounts';
 $breadcrumbs = array(
     ['label'=>__('Accounts'), 'url'=>route('accounts.index')],
     ['label'=>__('Budget')],
@@ -18,13 +18,13 @@ $breadcrumbs = array(
                     <label for="account_type" >{{__('Account Type')}}</label>
                     <select id="account_type" name="account_type_id" class="form-control select2"></select>
                 </div>
-            </div>  
+            </div>
             <div class="col">
                 <div class="form-group">
                     <label for="department_id" >{{__('Department')}}</label>
                     <select id="department_id" name="department_id" class="form-control select2"></select>
                 </div>
-            </div>  
+            </div>
             <div class="col">
                 <div class="form-group">
                     <label for="budget_year" >{{__('Year')}}</label>
@@ -34,16 +34,16 @@ $breadcrumbs = array(
                         @endfor
                     </select>
                 </div>
-            </div>  
+            </div>
             <div class="col">
                 <div class="form-group">
                     <button type="submit" class="btn btn-info mt-4">Filter</button>
                 </div>
-            </div>  
-        </div>   
-    </form> 
-    </div>    
-</div>    
+            </div>
+        </div>
+    </form>
+    </div>
+</div>
 <form id="balance-form" action="{{route('accounts.budgets.save')}}" method="POST">
 @csrf
 <div class="card">
@@ -77,7 +77,7 @@ $breadcrumbs = array(
                 @foreach($accounts as $account)
                     @if($type!=$account->account_type_id)
                     @php $type = $account->account_type_id; @endphp
-                    
+
                     @endif
                     <tr id="row-{{$account->id}}" class="tr-row" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
                         @if($account->tree_level==1)
@@ -89,81 +89,81 @@ $breadcrumbs = array(
                         @endif
                         <td style="vertical-align:middle;">{{$account->account_name}}</td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jan]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}"  type="text" id="balance_{{$account->id}}_jan" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.jan', $account->jan)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jan]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}"  type="text" id="balance_{{$account->id}}_jan" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jan', $account->jan))?'0':old('balance.'.$account->id.'.jan', $account->jan)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][feb]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_feb" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.feb', $account->feb)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][feb]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_feb" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.feb', $account->feb))?'0':old('balance.'.$account->id.'.feb', $account->feb)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][mar]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_mar" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.mar', $account->mar)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][mar]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_mar" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.mar', $account->mar))?'0':old('balance.'.$account->id.'.mar', $account->mar)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][apr]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_apr" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.apr', $account->apr)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][apr]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_apr" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.apr', $account->apr))?'0':old('balance.'.$account->id.'.apr', $account->apr)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][may]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_may" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.may', $account->may)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][may]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_may" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.may', $account->may))?'0':old('balance.'.$account->id.'.may', $account->may)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jun]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jun" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.jun', $account->jun)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jun]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jun" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jun', $account->jun))?'0':old('balance.'.$account->id.'.jun', $account->jun)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jul]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jul" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.jul', $account->jul)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jul]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jul" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jul', $account->jul))?'0':old('balance.'.$account->id.'.jul', $account->jul)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][aug]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_aug" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.aug', $account->aug)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][aug]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_aug" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.aug', $account->aug))?'0':old('balance.'.$account->id.'.aug', $account->aug)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][sep]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_sep" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.sep', $account->sep)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][sep]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_sep" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.sep', $account->sep))?'0':old('balance.'.$account->id.'.sep', $account->sep)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][oct]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_oct" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.oct', $account->oct)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][oct]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_oct" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.oct', $account->oct))?'0':old('balance.'.$account->id.'.oct', $account->oct)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][nov]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_nov" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.nov', $account->nov)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][nov]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_nov" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.nov', $account->nov))?'0':old('balance.'.$account->id.'.nov', $account->nov)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][dec]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_dec" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{old('balance.'.$account->id.'.dec', $account->dec)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][dec]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_dec" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.dec', $account->dec))?'0':old('balance.'.$account->id.'.dec', $account->dec)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
+                            @if($account->has_children==0)
                             <input style="width:150px" readonly @if($account->has_children==0) name="budget[{{$account->id}}][total]"@endif type="text" id="balance_{{$account->id}}_total" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':''}}" value= "{{old('balance.'.$account->id.'.total', $account->total)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
-                            @if($account->has_children==0)
-                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror                                
+                            @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                     </tr>
@@ -228,7 +228,7 @@ $(function(){
       dom:"<'row mb-2'<'col-sm-12 col-md-6'><'col-sm-12 col-md-6 text-right hide'B>>"+
         "<'row'<'col-sm-12'tr>>"+
         "<'row'<'col-sm-12 col-md-4'l><'col-sm-12 col-md-4 text-center'i><'col-sm-12 col-md-4'p>>",
-      
+
       language: {
           "emptyTable": "Tidak ada data",
           "info": "_START_ - _END_ dari _TOTAL_ baris",
@@ -253,7 +253,7 @@ $(function(){
         })
         $('#balance_'+idx+'_total').val(total);
     })
-    
+
     $('.currency').inputmask({ 'alias': 'currency' })
     $('[data-mask]').inputmask();
     $(".select2").select2({theme: 'bootstrap4'})

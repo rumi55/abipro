@@ -10,7 +10,7 @@ class Journal extends Model
     // use SoftDeletes;
 
     protected $fillable = [
-        'journal_id', 'trans_no', 'trans_date', 'description', 'total', 
+        'journal_id', 'trans_no', 'trans_date', 'description', 'total', 'numbering_id',
         'transaction_id', 'transaction_type_id', 'company_id', 'is_voucher', 'is_single_entry',
         'is_locked', 'status','tags', 'department_id', 'created_by', 'updated_by', 'contact_id'
     ];

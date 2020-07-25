@@ -50,8 +50,11 @@
     "User":"Pengguna",
     "Users":"Pengguna",
     "Dashboard":"Dasbor",
-    "Tags":"Sortir",
     "Profile":"Profil",
+    "Tags":"Sortir",
+    "Tag ID":"Kode Item",
+    "Tag Name":"Nama Item",
+    "Tag Group":"Jenis Sortir",
 
     "User Activities":"Aktivitas Pengguna",
     "Activity":"Aktivitas",
@@ -111,6 +114,7 @@
     "Group":"Grup",
     "Account Mapping":"Pemetaan Akun",
 
+    "Detail Transaction":"Detail Transaksi",
 
     "Report":"Laporan",
     "Reports":"Laporan",
@@ -239,6 +243,8 @@
     "Changes have been saved.":"Perubahan telah disimpan.",
     "Item has been deleted.":"Item telah dihapus.",
     ":attr has been deleted.":":attr telah dihapus.",
+    ":attr have been saved successfully.":":attr telah disimpan.",
+
     "Are you sure want to delete the selected item?":"Apakah Anda yakin ingin menghapus item terpilih?",
     "Are you sure want to delete the selected items?":"Apakah Anda yakin ingin menghapus item terpilih?",
     "Are you sure want to approve this voucher?":"Apakah Anda yakin ingin menyetujui voucher ini?",
