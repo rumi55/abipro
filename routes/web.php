@@ -53,6 +53,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/contacts/create', 'ContactController@create')->name('contacts.create');
     Route::post('/contacts', 'ContactController@save')->name('contacts.create.save');
     Route::get('/contacts/{id}/edit', 'ContactController@edit')->name('contacts.edit');
+    Route::get('/contacts/{id}/duplicate', 'ContactController@duplicate')->name('contacts.create.duplicate');
     Route::get('/contacts/{id}', 'ContactController@view')->name('contacts.view');
     Route::put('/contacts/{id}/update', 'ContactController@update')->name('contacts.edit.update');
     Route::delete('/contacts/{id}', 'ContactController@delete')->name('contacts.delete');

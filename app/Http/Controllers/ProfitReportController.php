@@ -27,8 +27,8 @@ class ProfitReportController extends Controller
 
         $title = trans('Profit & Loss');
         $view = 'report.profit.default';
-        $period = fdate($params['end_date'], 'd M Y');
-        $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');
+        // $period = fdate($params['end_date'], 'd M Y');
+        // $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');
         $departments = Department::whereIn('id', $params['department_id'])->get();
 
         $data = array(
@@ -78,7 +78,8 @@ class ProfitReportController extends Controller
         $select = [
             DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
         ];
-        $cutoff_date = $params['cutoff_date'];
+        // $cutoff_date = $params['cutoff_date'];
+        // dd($cutoff_date);
         foreach($params['columns'] as $i=>$column){
             $start_date = $column['start_date'];
             $end_date = $column['end_date'];
@@ -116,7 +117,7 @@ class ProfitReportController extends Controller
     private function query2($params, $company){
 
         $select = [
-            DB::raw('a.id, a.account_no, a.sequence, a.account_type, a.account_type_id, a.account_group, a.account_name, a.tree_level')
+            DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
         ];
 
         foreach($params['columns'] as $i=>$header){
@@ -228,8 +229,65 @@ class ProfitReportController extends Controller
         return $balance;
     }
 
-
     private function getParams(Request $request, $company_id){
+        $departments = $request->query('departments', []);
+        $compare = $request->compare??'period';
+        $year = $request->year??date('Y');
+        $start_month = $request->start_month??date('m');
+        $end_month = $request->end_month??date('m');
+        $total_year = filter_var($request->total_year, FILTER_VALIDATE_BOOLEAN);
+        $total_last_year = filter_var($request->total_last_year, FILTER_VALIDATE_BOOLEAN);
+        $cumulative = filter_var($request->cumulative, FILTER_VALIDATE_BOOLEAN);
+        $subaccount = $request->subaccount??0;
+        $columns = array();
+        if($compare=='department'){
+            if(!empty($departments)){
+                $columns = Department::where('company_id', $company_id)->whereIn('id', $departments)->get();
+            }else{
+                $columns = Department::where('company_id', $company_id)->get();
+                $columns->push(new Department());
+                $all = new Department();
+                $all->name = 'Jumlah';
+                $columns->push($all);
+            }
+        }else{
+            if($total_last_year){
+                $columns[] = [
+                    'start_date'=>($year-1).'-01-01',
+                    'end_date'=>($year-1).'-12-31',
+                    'label'=>$year-1,
+                ];
+            }
+            for($month=$start_month;$month<=$end_month;$month++){
+                $columns[] = [
+                    'start_date'=>$year.'-'.$month.'-01',
+                    'end_date'=>$year.'-'.$month.'-31',
+                    'label'=>fmonth($year.'-'.$month.'-01'),
+                ];
+            }
+            if($total_year){
+                $columns[] = [
+                    'start_date'=>$year.'-01-01',
+                    'end_date'=>$year.'-12-31',
+                    'label'=>$year,
+                ];
+            }
+        }
+
+        $params = [
+            'department_id'=>$departments,
+            'cumulative'=>$cumulative,
+            'year'=>$year,
+            'start_month'=>$start_month,
+            'end_month'=>$end_month,
+            'compare'=>$compare,
+            'columns'=>$columns,
+            'subaccount'=>$subaccount,
+        ];
+        return $params;
+    }
+
+    private function getParamsOld(Request $request, $company_id){
         $departments = $request->query('departments', []);
         $compare = $request->query('compare', 'period');
         $period = $request->query('period', 'monthly');
@@ -298,7 +356,7 @@ class ProfitReportController extends Controller
             $edate = $end_date;
             $loop = $cumulative?($compare_period+1)*2:$compare_period+1;
             $loop = $cumulative?($compare_period+1)*2:$compare_period+1;
-
+            $cdate = '';//cutoff date in start date and end date range
             if($period=='daily'){
                 for($i=0;$i<$loop;$i++){
                     if($cumulative){
@@ -369,6 +427,7 @@ class ProfitReportController extends Controller
             // 'params'=>$paramsString,
             'department_id'=>$departments,
             'cutoff_date'=>$cutoff_date,
+            'cumulative'=>$cumulative,
             'start_date'=>$start_date,
             'end_date'=>$end_date,
             'compare'=>$compare,
@@ -376,7 +435,6 @@ class ProfitReportController extends Controller
             'period'=>$period,
             'columns'=>$columns,
             'zero'=>$zero,
-            'cumulative'=>$cumulative,
             'subaccount'=>$subaccount
         ];
         // dd($columns);

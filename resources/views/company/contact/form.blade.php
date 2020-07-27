@@ -1,5 +1,5 @@
-@php 
-$active_menu='$company'; 
+@php
+$active_menu='$company';
 $mode_title = $mode=='create'?trans('Add'):trans('Edit');
 $breadcrumbs = array(
     ['label'=>trans('Company'), 'url'=>route('company.profile')],
@@ -21,8 +21,8 @@ $breadcrumbs = array(
         'btn_label'=>$mode=='create'?trans('Create'):trans('Save'),
 
     ])
-      @slot('title') 
-      <a href="{{route('contacts.index')}}"><i class="fas fa-chevron-left"></i></a> {{$mode_title}} {{__('Contact')}} 
+      @slot('title')
+      <a href="{{route('contacts.index')}}"><i class="fas fa-chevron-left"></i></a> {{$mode_title}} {{__('Contact')}}
       @endslot
         <div class="form-group row">
             <label for="custom_id" class="col-sm-2 col-form-label">{{__('ID')}}</label>
@@ -54,7 +54,7 @@ $breadcrumbs = array(
             @error('name') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>
-        
+
         <div class="form-group row">
             <label for="is_customer" class="col-sm-2 col-form-label">{{__('Contact Type')}}</label>
             <div class="col-md-10 col-sm-10">
@@ -104,6 +104,28 @@ $breadcrumbs = array(
                 @error('address') <small class="text-danger">{!! $message !!}</small> @enderror
             </div>
         </div>
+        <div class="form-group row">
+            <label for="account_payable" class="col-sm-2 col-form-label">{{__('Account Payable')}}</label>
+            <div class="col-md-6 col-sm-10">
+                <select class="form-control account @error('account_payable') is-invalid @enderror " name="account_payable" id="account_payable" data-value="{{old('account_payable', $model->account_payable)}}"></select>
+                @error('account_payable') <small class="text-danger">{!! $message !!}</small> @enderror
+            </div>
+            <label for="opening_balance_ap" class="col-sm-2 col-form-label">{{__('Opening Balance')}}</label>
+            <div class="col-md-2 col-sm-10">
+                <input name="opening_balance_ap" type="text" id="opening_balance_ap" class="form-control number @error('opening_balance_ap') is-invalid @enderror" value="{{old('opening_balance_ap', empty($model->opening_balance_ap)?'0,00':$model->opening_balance_ap)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+            </div>
+        </div>
+        <div class="form-group row">
+            <label for="account_receivable" class="col-sm-2 col-form-label">{{__('Account Receivable')}}</label>
+            <div class="col-md-6 col-sm-10">
+            <select class="form-control account @error('account_receivable') is-invalid @enderror " name="account_receivable" id="account_receivable" data-value="{{old('account_receivable', $model->account_receivable)}}"></select>
+            @error('account_receivable') <small class="text-danger">{!! $message !!}</small> @enderror
+            </div>
+            <label for="opening_balance_ar" class="col-sm-2 col-form-label">{{__('Opening Balance')}}</label>
+            <div class="col-md-2 col-sm-10">
+                <input name="opening_balance_ar" type="text" id="opening_balance_ar" class="form-control number @error('opening_balance_ar') is-invalid @enderror" value="{{old('opening_balance_ar', empty($model->opening_balance_ar)?'0,00':$model->opening_balance_ar)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+            </div>
+        </div>
     @endcomponent
   </div>
 </div>
@@ -115,9 +137,13 @@ $breadcrumbs = array(
 @endpush
 @push('js')
 <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
+<script src="{{asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js')}}"></script>
+<script src="{{asset('js/select.js')}}"></script>
 <script type="text/javascript">
 $(function(){
-    $(".select2").select2({theme: 'bootstrap4'});
+    loadSelect();
+    $('.currency').inputmask({ 'alias': 'currency' })
+    $('[data-mask]').inputmask();
     $('#numbering_id').change(function(){
         if($(this).val()==''){
             $('#custom_id').prop('disabled', false);

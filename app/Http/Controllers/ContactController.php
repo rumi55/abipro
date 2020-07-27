@@ -20,7 +20,7 @@ class ContactController extends Controller
         $dtsupplier = dcru_dt('contacts', 'dtsupplier');
         $dtemployee = dcru_dt('contacts', 'dtemployee');
         $dtothers = dcru_dt('contacts', 'dtothers');
-        return view('company.contact.index', ['dtcustomer'=>$dtcustomer, 
+        return view('company.contact.index', ['dtcustomer'=>$dtcustomer,
         'dtsupplier'=>$dtsupplier,
         'dtemployee'=>$dtemployee,
         'dtothers'=>$dtothers,
@@ -28,8 +28,8 @@ class ContactController extends Controller
     }
 
     public function create(){
-        $company_id = company('id');
         $model = new Contact;
+        $company_id = company('id');
         $mode = 'create';
         $numberings = \App\Numbering::where('company_id', $company_id)
         ->where('transaction_type_id', \App\TransactionType::CONTACT)->get();
@@ -49,18 +49,30 @@ class ContactController extends Controller
         $next_id = $next!=null?$next->id:'';
         return view('company.contact.view', compact('contact', 'next_id', 'prev_id'));
     }
+    public function duplicate($id){
+        $model = Contact::findOrFail($id);
+        $company_id = company('id');
+        $mode = 'create';
+        $numberings = \App\Numbering::where('company_id', $company_id)
+        ->where('transaction_type_id', \App\TransactionType::CONTACT)->get();
+        return view('company.contact.form', compact('model', 'mode', 'numberings'));
+    }
     public function edit($id){
         $model = Contact::findOrFail($id);
+        $company_id = company('id');
         $mode = 'edit';
-        return view('company.contact.form', compact('model', 'mode'));
+        $numberings = \App\Numbering::where('company_id', $company_id)
+        ->where('transaction_type_id', \App\TransactionType::CONTACT)->get();
+        return view('company.contact.form', compact('model', 'mode', 'numberings'));
     }
-    
+
     public function save(Request $request){
         $user = Auth::user();
         $company = $user->activeCompany();
 
         $data = $request->all();
-        
+        $data['opening_balance_ar'] = parse_number($request->opening_balance_ar);
+        $data['opening_balance_ap'] = parse_number($request->opening_balance_ap);
         $rules = [
             'custom_id' => 'nullable|max:16|unique:contacts,custom_id,NULL,id,company_id,'.$company->id,
             'name' => 'required|max:128',
@@ -70,7 +82,7 @@ class ContactController extends Controller
             'address' => 'max:128'
         ];
         if(empty($data['numbering_id'])){
-            $rules['custom_id'] = 'required|max:16|unique:contacts,custom_id,NULL,id,company_id,'.$company->id;                
+            $rules['custom_id'] = 'required|max:16|unique:contacts,custom_id,NULL,id,company_id,'.$company->id;
         }else{
             $data['custom_id']=null;
         }
@@ -101,13 +113,13 @@ class ContactController extends Controller
             $counter = Counter::firstOrCreate(
                 ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company->id],
                 ['counter'=>$numbering->counter_start-1]
-            );        
-                
+            );
+
             $check = true;
             do{
                 $counter->getNumber();
                 $custom_id = $counter->last_number;
-                $exists = Contact::where('custom_id', $custom_id)->where('company_id', $company->id)->exists(); 
+                $exists = Contact::where('custom_id', $custom_id)->where('company_id', $company->id)->exists();
                 if(!$exists){
                     $counter->save();
                     $data['custom_id']=$custom_id;
@@ -115,7 +127,8 @@ class ContactController extends Controller
                 }
             }while($check);
         }
-        $data = array_merge($data,['company_id'=>$company->id]);    
+        $data = array_merge($data,['company_id'=>$company->id]);
+        dd($data);
         $contact = Contact::create($data);
         add_log('contacts', 'create', '');
         return redirect()->route('contacts.index')->with('success', trans('New :attr has been created.', ['attr'=>strtolower(trans('Contact'))]));
@@ -144,7 +157,7 @@ class ContactController extends Controller
         $validator = \Validator::make($data, $rules)->setAttributeNames($attr);
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
-        }    
+        }
         $contact = Contact::findOrFail($id);
         $contact->name = $request->name;
         $contact->email = $request->email;
@@ -155,13 +168,16 @@ class ContactController extends Controller
         $contact->is_employee = $request->is_employee??false;
         $contact->is_others = $request->is_others??false;
         $contact->is_others = empty($request->is_customer.$request->is_supplier.$request->is_employee)?true:$contact->is_others;
-        
+        $contact->account_receivable = $request->account_receivable;
+        $contact->account_payable = $request->account_payable;
+        $contact->opening_balance_ar = parse_number($request->opening_balance_ar);
+        $contact->opening_balance_ap = parse_number($request->opening_balance_ap);
         $contact->address = $request->address;
         $contact->save();
         add_log('contacts', 'edit', '');
         return redirect()->route('contacts.index')->with('success', trans('Changes have been saved.'));
     }
-    
+
     public function delete($id)
     {
         $id = decode($id);
