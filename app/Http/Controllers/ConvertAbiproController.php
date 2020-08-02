@@ -124,15 +124,15 @@ class ConvertAbiproController extends Controller
     public function gltype($company_id, $data)
     {
         $newdata = array();
-
-        $seq = array();
         foreach ($data as $dt) {
+            if(empty($dt['account_no']) || empty($dt['account_name']) || empty($dt['account_type_id'])){
+                continue;
+            }
             $account_type = intval($dt['account_type_id']);
             $dt['company_id'] = $company_id;
             $dt['tree_level'] = 0;
             $dt['has_children'] = 0;
             $dt['sequence'] = $account_type . '-' . $dt['account_no'];
-
             $newdata[] = $dt;
         }
         \DB::table('accounts')->where('company_id', $company_id)->delete();
@@ -143,30 +143,35 @@ class ConvertAbiproController extends Controller
     public function glnama($company_id, $data)
     {
         $newdata = array();
-        $seq = array();
-        foreach ($data as $dt) {
-            $dt['company_id'] = $company_id;
-            $parent_no = $dt['account_parent_id'];
-            $parent = Account::where('company_id', $company_id)->where('account_no', $parent_no)->first();
-            if ($parent != null) { //jika parent ada
-                $parent->has_children = true;
-                $parent->save();
-                $parent_id = $parent->id;
-                $tree_level = $parent->tree_level + 1;
-                $account_type = $parent->account_type_id; //tipe akun sama dengan parent
-                $dt['account_parent_id'] = $parent_id;
-                $dt['sequence'] = $parent->sequence . '-' . $dt['account_no'];
-                $dt['account_type_id'] = $account_type;
-                $dt['tree_level'] = 1;
-                $dt['has_children'] = 0;
-            } else {
+        try{
+            \DB::beginTransaction();
+            foreach ($data as $dt) {
+                if(empty($dt['account_no']) || empty($dt['account_name']) || empty($dt['account_parent_id'])){
+                    continue;
+                }
+                $dt['company_id'] = $company_id;
+                $parent_no = $dt['account_parent_id'];
+                $parent = Account::where('company_id', $company_id)->where('account_no', $parent_no)->first();
+                if ($parent != null) { //jika parent ada
+                    $parent->has_children = true;
+                    $parent->save();
+                    $parent_id = $parent->id;
+                    $tree_level = $parent->tree_level + 1;
+                    $account_type = $parent->account_type_id; //tipe akun sama dengan parent
+                    $dt['account_parent_id'] = $parent_id;
+                    $dt['sequence'] = $parent->sequence . '-' . $dt['account_no'];
+                    $dt['account_type_id'] = $account_type;
+                    $dt['tree_level'] = $tree_level;
+                    $dt['has_children'] = 0;
+                }
+                $newdata[] = $dt;
             }
-
-            $newdata[] = $dt;
+            \DB::table('accounts')->insert($newdata);
+            \DB::commit();
+        }catch(Exception $e){
+            \DB::rollback();
         }
-        \DB::table('accounts')->insert($newdata);
         return response()->json(['status' => 'success', 'message' => 'glnama converted successfully']);
-        // return redirect()->route('convert.accounts', ['step'=>4])->with('success', 'Gltype conversion successfully.');
     }
     public function glmast($company_id, $data)
     {
@@ -216,7 +221,6 @@ class ConvertAbiproController extends Controller
         \DB::table('budgets')->where('company_id', $company_id)->delete();
         \DB::table('budgets')->insert($budgets);
         return response()->json(['status' => 'success', 'message' => 'glmast converted successfully']);
-        // return redirect()->route('accounts.index')->with('success', 'Gltype conversion successfully.');
     }
 
     public function gldept($company_id, $data)
