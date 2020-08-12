@@ -63,7 +63,7 @@ class CompanyController extends Controller
             'website' => 'nullable|url',
             'logo' => 'nullable|image|mimes:jpeg,bmp,png,jpg|max:256'
         ];
-        
+
         $attr = [
             'name' => 'Nama',
             'email' => 'Email',
@@ -77,7 +77,7 @@ class CompanyController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         $filename = \Str::slug($request->name.' '.date('Y m d H i s').' '.time(),'-');
-        $filename = upload_file('logo', $filename, 'public/company');        
+        $filename = upload_file('logo', $filename, 'public/company');
         $old_photo = '';
         if(!empty($filename)){
             $old_photo = $company->photo;
@@ -91,17 +91,17 @@ class CompanyController extends Controller
         $company->shipping_address = $request->shipping_address??null;
         $company->save();
         if(!empty($old_photo)){
-            \Storage::delete($old_photo);    
+            \Storage::delete($old_photo);
         }
         return redirect()->route('company.profile')->with('success', 'Profil perusahaan telah diubah.');
     }
 
-    
+
     public function register(Request $request){
         $types = \App\CompanyType::all();
         return view('company.register', compact('types'));
     }
-    
+
     public function create(Request $request){
         validate($request->all(), [
             'name' => 'required|string',
@@ -144,6 +144,11 @@ class CompanyController extends Controller
             // JournalType::createDefault($company->id);
             // Account::createDefaultAccount($company->id, $user->id);
             // Account::createDefaultAccountType($company->id, $user->id);
+            //company setings
+            DB::table('company_settings')->insert([
+                ['key'=>'voucher_approval', 'value'=>true, 'company_id'=>$company->id, 'created_at'=>date('Y-m-d H:i:s')],
+                ['key'=>'process_journal', 'value'=>'on_approve', 'company_id'=>$company->id, 'created_at'=>date('Y-m-d H:i:s')],
+            ]);
             DB::commit();
         }catch(Exception $e){
             DB::rollBack();
@@ -163,7 +168,7 @@ class CompanyController extends Controller
     }
 
     public function update(Request $request){
-        
+
         $user = Auth::user();
         $company = $user->activeCompany();
         validate($request->all(), [
@@ -188,19 +193,19 @@ class CompanyController extends Controller
         return new CompanyResource($company);
     }
 
-    
+
 
     public function upload(Request $request){
         $user = Auth::user();
         $company = $user->activeCompany();
-        
+
         $filename = Str::slug($company->name.' '.date('Y m d H i s').' '.time(),'-');
-        $filename = upload_file('logo', $filename, 'public/company');        
+        $filename = upload_file('logo', $filename, 'public/company');
         $company->logo = $filename;
         $company->save();
         return new CompanyResource($company);
     }
-    
+
     public function getCompanyTypes(){
         $types = CompanyType::all();
         return CompanyTypeResource::collection($types);
@@ -273,7 +278,7 @@ class CompanyController extends Controller
         $results = array();
         foreach($data as $key => $value){
             $filename = Str::slug($company->name.' '.$key,'-');
-            $filename = upload_file($key, $filename, 'public/dbf');  
+            $filename = upload_file($key, $filename, 'public/dbf');
             $dbf_path = storage_path("/app/$filename");
             $import = \App\ImportData::updateOrCreate(
                 ['company_id' => $company->id, 'target'=>$key],

@@ -15,6 +15,48 @@ function loadSelect(){
     $(".select2").change(function(){
         $(this).attr('data-value', $(this).val())
     })
+    var type = $('#numbering_id').attr('data-numbering-type')
+    $("#numbering_id").select2({
+        theme: 'bootstrap4',
+        placeholder: 'Select numbering format',
+        ajax: {
+        delay:0,
+        url: BASE_URL+'/json/numberings',
+        dataType: 'json',
+        data: function (params) {
+          return {
+            q: params.term,
+            type: type
+          };
+        },
+        processResults: function (res) {
+          return {
+            results:  $.map(res, function (item) {
+              return {
+                text: item.name,
+                format: item.format,
+                id: item.id
+              }
+            })
+          };
+        },
+        cache: true
+        },
+        templateResult: function(res){
+            if (!res.id) {
+                return res.text;
+            }
+            if(res.loading){
+                return $('<i class="fas fa-loading fa-spin"></i> Searching...')
+            }
+            return $(`
+            <div class="row">
+                <div class="col">${res.text}</div>
+                <div class="col text-right">${res.format}</div>
+            </div>
+            `);
+        },
+      })
     $(".account").select2({
         theme: 'bootstrap4',
         placeholder: 'Select account',
@@ -56,8 +98,8 @@ function loadSelect(){
             }
             return $(`
             <div class="row">
-                <div class="col">${res.account_no}</div>
-                <div class="col text-right">${res.account_name}</div>
+                <div class="col">${res.account_name}</div>
+                <div class="col text-right">${res.account_no}</div>
             </div>
             <div class="row">
                 <div class="col">${res.account_parent_name==null?'':res.account_parent_name}</div>

@@ -19,6 +19,29 @@
     </table>
     <table class="table-report">
         <thead>
+            @if($compare=='budget')
+            <tr>
+                <th rowspan="2" ></th>
+                @foreach($columns as $i =>$column)
+                    <th colspan="3" class=" text-center">
+                    {{$column['label']}}
+                    </th>
+                @endforeach
+            </tr>
+            <tr>
+                @foreach($columns as $i =>$column)
+                    <th class="text-center">
+                    Anggaran
+                    </th>
+                    <th class="text-center">
+                    Realisasi
+                    </th>
+                    <th class="text-center">
+                    Selisih
+                    </th>
+                @endforeach
+            </tr>
+            @else
             <tr>
                 <th ></th>
                 @foreach($columns as $i =>$column)
@@ -31,6 +54,7 @@
                     </th>
                 @endforeach
             </tr>
+            @endif
         </thead>
         <tbody>
         @php
@@ -43,6 +67,12 @@
         $sum_4 = array();
         $sum_5 = array();
         $sum_6 = array();
+        $sum_budget_1 = array();
+        $sum_budget_2 = array();
+        $sum_budget_3 = array();
+        $sum_budget_4 = array();
+        $sum_budget_5 = array();
+        $sum_budget_6 = array();
         $gross_profit = array();
         $operation_profit = array();
         foreach($columns as $i=>$p){
@@ -53,6 +83,13 @@
             $sum_4[$i]=0;//total expense
             $sum_5[$i]=0;//total other income/expense
             $sum_6[$i]=0;//total tax
+            $sum_budget_0[$i]=0;
+            $sum_budget_1[$i]=0;
+            $sum_budget_2[$i]=0;
+            $sum_budget_3[$i]=0;
+            $sum_budget_4[$i]=0;
+            $sum_budget_5[$i]=0;
+            $sum_budget_6[$i]=0;
             $gross_profit[$i]=0;
             $operation_profit[$i]=0;
         }
@@ -72,37 +109,73 @@
                         </a>
                     </td>
                     @foreach($columns as $j=> $p)
-                        @php $total = 'total_'.$j; @endphp
-                        @php
+                        @php $total = 'total_'.$j;
+                        $budget = 'budget_'.$j;
+
                             if($dt->tree_level==0){
                                 if($dt->account_type_id==10){
                                     $sum_0[$j]=$dt->$total+$sum_0[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_0[$j]=$dt->$budget+$sum_budget_0[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==12){
                                     $sum_1[$j]=$dt->$total+$sum_1[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_1[$j]=$dt->$budget+$sum_budget_1[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==13){
                                     $sum_2[$j]=$dt->$total+$sum_2[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_2[$j]=$dt->$budget+$sum_budget_2[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==15){
                                     $sum_3[$j]=$dt->$total+$sum_3[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_3[$j]=$dt->$budget+$sum_budget_3[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==16){
                                     $sum_4[$j]=$dt->$total+$sum_4[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_4[$j]=$dt->$budget+$sum_budget_4[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==17){
                                     $sum_5[$j]=$dt->$total+$sum_5[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_5[$j]=$dt->$budget+$sum_budget_5[$j];
+                                    }
                                 }
                                 if($dt->account_type_id==18){
                                     $sum_6[$j]=$dt->$total+$sum_6[$j];
+                                    if($compare=='budget'){
+                                        $sum_budget_6[$j]=$dt->$budget+$sum_budget_6[$j];
+                                    }
                                 }
                             }
                         @endphp
-                    <td class="text-right">
-                        <a href="{{route('accounts.view', $dt->id)}}?ft_dtables_trans_date_start={{fdate($p['start_date'])}}&ft_dtables_trans_date_end={{fdate($p['end_date'])}}&filter=show">
-                            {{currency($dt->$total)}}
-                        </a>
-                    </td>
+                        @if($compare=='budget')
+                            <td class="text-right">
+                                {{currency($dt->$budget)}}
+                            </td>
+                            <td class="text-right">
+                                <a href="{{route('accounts.view', $dt->id)}}?ft_dtables_trans_date_start={{fdate($p['start_date'])}}&ft_dtables_trans_date_end={{fdate($p['end_date'])}}&filter=show">
+                                    {{currency($dt->$total)}}
+                                </a>
+                            </td>
+                            <td class="text-right">
+                                {{currency($dt->$budget-$dt->$total)}}
+                            </td>
+                        @else
+                        <td class="text-right">
+                            <a href="{{route('accounts.view', $dt->id)}}?ft_dtables_trans_date_start={{fdate($p['start_date'])}}&ft_dtables_trans_date_end={{fdate($p['end_date'])}}&filter=show">
+                                {{currency($dt->$total)}}
+                            </a>
+                        </td>
+                        @endif
                     @endforeach
                 </tr>
                 @endif
@@ -135,6 +208,34 @@
                                 {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                                 @endif
                             </td>
+                            @if($compare=='budget')
+                            <td class="bt-2 bb-1 text-right">
+                                @if($type==13)
+                                {{currency($sum_budget_1[$j]+$sum_budget_2[$j])}}
+                                @elseif($type==15)
+                                {{currency($sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j])}}
+                                @elseif($type==16)
+                                {{currency(($sum_4[$j])-($sum_budget_4[$j]))}}
+                                @elseif($type==17)
+                                {{currency(($sum_5[$j])-($sum_budget_5[$j]))}}
+                                @elseif($type==18)
+                                {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j]))}}
+                                @endif
+                            </td>
+                            <td class="bt-2 bb-1 text-right">
+                                @if($type==13)
+                                {{currency(($sum_1[$j]+$sum_2[$j])-($sum_budget_1[$j]+$sum_budget_2[$j]))}}
+                                @elseif($type==15)
+                                {{currency(($sum_1[$j]+$sum_2[$j]+$sum_3[$j])-($sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]))}}
+                                @elseif($type==16)
+                                {{currency($sum_budget_4[$j])}}
+                                @elseif($type==17)
+                                {{currency($sum_budget_5[$j])}}
+                                @elseif($type==18)
+                                {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j])}}
+                                @endif
+                            </td>
+                            @endif
                         @endforeach
                     </tr>
                 @elseif(in_array($type, [13,15,16,17,18]))
@@ -167,6 +268,34 @@
                             {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                             @endif
                         </td>
+                        @if($compare=='budget')
+                        <td class="bt-2 bb-1 text-right">
+                            @if($type==13)
+                            {{currency($sum_budget_1[$j]+$sum_budget_2[$j])}}
+                            @elseif($type==15)
+                            {{currency($sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j])}}
+                            @elseif($type==16)
+                            {{currency($sum_budget_4[$j])}}
+                            @elseif($type==17)
+                            {{currency(($sum_4[$j])-($sum_budget_5[$j]))}}
+                            @elseif($type==18)
+                            {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j]))}}
+                            @endif
+                        </td>
+                        <td class="bt-2 bb-1 text-right">
+                            @if($type==13)
+                            {{currency(($sum_1[$j]+$sum_2[$j])-($sum_budget_1[$j]+$sum_budget_2[$j]))}}
+                            @elseif($type==15)
+                            {{currency(($sum_1[$j]+$sum_2[$j]+$sum_3[$j])-($sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]))}}
+                            @elseif($type==16)
+                            {{currency($sum_budget_4[$j])}}
+                            @elseif($type==17)
+                            {{currency($sum_budget_5[$j])}}
+                            @elseif($type==18)
+                            {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j])}}
+                            @endif
+                        </td>
+                        @endif
                         @endforeach
                     </tr>
                     @if(in_array($type, [15,16,17,18]))
@@ -194,6 +323,30 @@
                             {{currency($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])}}
                             @endif
                             </td>
+                            @if($compare=='budget')
+                            <td class="bb-2  text-right">
+                            @if($type==15)
+                            {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j])}}
+                            @elseif($type==16)
+                            {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j])}}
+                            @elseif($type==17)
+                            {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j])}}
+                            @elseif($type==18)
+                            {{currency($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j])}}
+                            @endif
+                            </td>
+                            <td class="bb-2  text-right">
+                            @if($type==15)
+                            {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]))}}
+                            @elseif($type==16)
+                            {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]))}}
+                            @elseif($type==17)
+                            {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]))}}
+                            @elseif($type==18)
+                            {{currency(($sum_0[$j]+$sum_1[$j]+$sum_2[$j]+$sum_3[$j]-$sum_4[$j]+$sum_5[$j]-$sum_6[$j])-($sum_budget_0[$j]+$sum_budget_1[$j]+$sum_budget_2[$j]+$sum_budget_3[$j]-$sum_budget_4[$j]+$sum_budget_5[$j]-$sum_budget_6[$j]))}}
+                            @endif
+                            </td>
+                            @endif
                         @endforeach
                     </tr>
                     @endif

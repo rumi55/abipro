@@ -9,6 +9,21 @@ class SettingController extends Controller
     public function index(){
         return view('setting.index');
     }
+    public function indexSave(Request $request){
+        $settings = $request->all();
+        $company_id=company('id');
+        foreach($settings as $key =>$value){
+            if($key=='_token'){
+                continue;
+            }
+            \DB::table('company_settings')->updateOrInsert([
+                'key'=>$key, 'company_id'=>$company_id
+            ], [
+                'value'=>$value
+            ]);
+        }
+        return redirect()->back()->with('success', __('General settings have been saved.'));
+    }
     public function accountMapping(){
         $mappings = \App\AccountMapping::orderBy('id')->get();
         $account_mappings = \App\Account::where('company_id', company('id'))->whereNotNull('account_mapping')->pluck('id','account_mapping')->toArray();

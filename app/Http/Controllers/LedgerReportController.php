@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Company;
-use App\Http\Resources\LedgerReportResource;
+use App\Department;
+use App\User;
+use App\Account;
 use DB;
 use Auth;
 
@@ -24,14 +25,20 @@ class LedgerReportController extends Controller
         }
         $period = ($params['start_date']==$params['end_date'])?fdate($params['start_date'], 'd M Y'):fdate($params['start_date'], 'd M Y').' s.d '.fdate($params['end_date'], 'd M Y');
         $balance_date = \Carbon\Carbon::parse($params['start_date'])->subDay()->format('d-m-Y');
+        $departments = Department::whereIn('id', $params['department_id'])->get();
+        $users = User::whereIn('id', $params['created_by'])->get();
+        $accounts = Account::whereIn('id', $params['account_id'])->get();
         $data = array(
             'report'=>'ledger',
             'title'=>$title,
             'company'=>$company,
+            'accounts'=>$accounts,
+            'departments'=>$departments,
+            'users'=>$users,
             'period'=>$period,
             'columns'=>$params['columns'],
             'tags'=>$request->tags,
-            'accounts'=>$data[0],
+            // 'accounts'=>$data[0],
             'ledgers'=>$data[1],
             'balance_date'=>$balance_date,
             'view'=>$view
@@ -261,9 +268,10 @@ class LedgerReportController extends Controller
 
     private function getParams(Request $request, $company_id){
         $accounts = $request->accounts??[];
-        $tags = $request->tags??[];
+        $tags = $request->sortirs??[];
         $tag_opt = $request->query('tag_opt', 'or');
         $departments = $request->departments??[];
+        $created_by = $request->created_by??[];
         $columns = ['tags'=>false, 'created_by'=>false, 'department'=>false];
 
 
@@ -279,9 +287,9 @@ class LedgerReportController extends Controller
             $end_date = $max_date;
         }
 
-        $columns = ['tags'=>empty($request->tags)?false:true,
+        $columns = ['tags'=>empty($request->col_tags)?false:true,
         'description'=>empty($request->description)?false:true,
-        'created_by'=>empty($request->created_by)?false:true,
+        'created_by'=>empty($request->col_created_by)?false:true,
         'department'=>empty($request->department)?false:true,];
 
         $start_date = fdate($start_date, 'Y-m-d');
@@ -290,6 +298,7 @@ class LedgerReportController extends Controller
         $params = [
             'columns'=>$columns,
             'account_id'=>$accounts,
+            'created_by'=>$created_by,
             'tags'=>$tags,
             'tag_opt'=>$tag_opt,
             'department_id'=>$departments,

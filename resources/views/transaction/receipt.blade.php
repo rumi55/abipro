@@ -1,5 +1,4 @@
-<h2  class="text-center" >{{$title}}
-</h2>
+<h2  class="text-center" >Kuitansi</h2>
 <small>Nomor: {{$data->trans_no}}</small>
 <table class="table-report">
     <thead>
@@ -12,15 +11,11 @@
     <tbody>
     @php $no=1;$total=0; @endphp
     @foreach($data->details as $detail)
-        @if($detail->debit>0)
             <tr>
                 <td>{{$no++}}</td>
                 <td>{{$detail->description}}</td>
-                <td class="text-right">{{format_number($detail->debit)}}</td>
+                <td class="text-right">{{format_number($detail->amount)}}</td>
             </tr>
-        @else
-        @php $total += $detail->credit; @endphp
-        @endif
     @endforeach
     </tbody>
     <tfoot>

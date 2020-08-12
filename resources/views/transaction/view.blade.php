@@ -21,20 +21,23 @@ $breadcrumbs = array(
         </button>
         <div class="dropdown-menu dropdown-menu-right" role="menu">
             @if(has_action('vouchers', 'print') && $transaction->status=='approved')
-            <a href="{{route('vouchers.report', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print')}}</a>
-            <form action="{{route('vouchers.tojournal', ['id'=>$transaction->id])}}" method="POST">
+            <a href="{{route('vouchers.receipt', $transaction->journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Receipt')}}</a>
+            <a href="{{route('vouchers.voucher', $transaction->journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Voucher')}}</a>
+            @endif
+            @if(has_action('vouchers', 'tojournal') && $transaction->status=='approved')
+            <form action="{{route('vouchers.tojournal', ['id'=>$transaction->journal->id])}}" method="POST">
             @csrf
-            <button class="dropdown-item" ><i class="fas fa-exchange-alt"></i> {{__('Transfer to Journal')}}</button>
+            <button class="dropdown-item" ><i class="fas fa-exchange-alt"></i> {{__('Process to Journal')}}</button>
             </form>
             @endif
-            @if(has_action('vouchers', 'edit'))
-            <a href="{{route('vouchers.edit', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
+            @if(has_action('vouchers', 'edit') && ($transaction->status=='draft' || $transaction->status=='rejected'))
+            <a href="{{route('vouchers.edit.single', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
             @endif
             @if(has_action('vouchers', 'create'))
-            <a href="{{route('vouchers.create.duplicate', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
+            <a href="{{route('vouchers.create.single.duplicate', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
             @endif
-            @if(has_action('vouchers', 'delete'))
-            <form action="{{route('dcru.delete', ['name'=>'journals', 'id'=>$transaction->id])}}" method="POST">
+            @if(has_action('vouchers', 'delete') && ($transaction->status=='draft' || $transaction->status=='rejected'))
+            <form action="{{route('vouchers.delete', ['id'=>$transaction->journal->id])}}" method="POST">
                 @csrf
                 @method('DELETE')
             <a href="#" class="dropdown-item btn-delete text-danger" ><i class="fas fa-trash"></i> {{__('Delete')}}</a>
@@ -119,11 +122,11 @@ $breadcrumbs = array(
                 @endif
             </div>
             <div class="col-sm-4 text-center">
-                @if($transaction->status=='rejected')
+                @if($transaction->status=='rejected' && !empty($transaction->approved_by))
                 <small><b>{{__('Rejected by')}}</b> <a href="{{route('users.view',$transaction->approved_by)}}">{{$transaction->approvedBy->name}}</a> {{__('at')}} {{fdatetime($transaction->approved_at)}}</small><br>
-                <small><b>{{__('Rejection Note')}}:</b> {{$transaction->rejection_note}}}}</small>
+                <small><b>{{__('Rejection Note')}}:</b> {{$transaction->rejection_note}}</small>
                 @endif
-                @if($transaction->status=='approved')
+                @if($transaction->status=='approved' && !empty($transaction->approved_by))
                 <small><b>{{__('Approved by')}}</b> <a href="{{route('users.view',$transaction->approved_by)}}">{{$transaction->approvedBy->name}}</a> {{__('at')}} {{fdatetime($transaction->updated_at)}}</small>
                 @endif
             </div>
@@ -143,7 +146,7 @@ $breadcrumbs = array(
             </div>
             <div class="col-sm-8 text-center">
             @if($transaction->status=='submitted' && has_action('vouchers', 'approve'))
-            <form action="{{route('vouchers.approve', $transaction->id)}}" method="POST">
+            <form action="{{route('vouchers.approve.transaction', $transaction->id)}}" method="POST">
             @csrf
             <input id="rejection-note" type="hidden" name="rejection_note" />
             <input id="status" type="hidden" name="status" />
@@ -152,7 +155,7 @@ $breadcrumbs = array(
             </form>
             @endif
             @if($transaction->status=='draft' && has_action('vouchers', 'create') && user('id')==$transaction->created_by)
-            <form action="{{route('vouchers.create.submit', $transaction->id)}}" method="POST">
+            <form action="{{route('vouchers.create.submit.transaction', $transaction->id)}}" method="POST">
             @csrf
             <input id="status" type="hidden" name="status" value="submitted" />
             <button type="submit" class="btn btn-success">{{__('Submit')}}</button>

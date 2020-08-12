@@ -1,4 +1,4 @@
-<table style="width:100%;">
+<table style="width:100%;margin-bottom:50px;">
 	@if(!empty(company('logo')))
 	<tr>
 		<td class="text-center">

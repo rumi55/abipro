@@ -129,8 +129,24 @@
         ],
         "bulk_actions":[
             {
-                "label": "Proses ke Jurnal",
-                "confirm":"Apakah Anda yakin akan memproses ke jurnal item terpilih?",
+                "label": "Kunci Jurnal",
+                "icon": "fas fa-lock",
+                "route": {
+                    "name":"journals.lock.batch",
+                    "params":{"locked":1}
+                }
+            },
+            {
+                "label": "Buka Kunci Jurnal",
+                "icon": "fas fa-unlock",
+                "route": {
+                    "name":"journals.lock.batch",
+                    "params":{"locked":0}
+                }
+            },
+            {
+                "label": "Back to Voucher",
+                "confirm":"Are you sure want to rollback journal to voucher?",
                 "icon": "fas fa-exchange-alt",
                 "route": {
                     "name":"journals.tovoucher.batch"
@@ -168,7 +184,7 @@
                 }
             ],
             "where":{
-                "condition": "journals.is_voucher=0 AND journals.company_id=?",
+                "condition": "journals.is_processed=1 AND journals.company_id=?",
                 "params":["user:company_id"]
             }
         }

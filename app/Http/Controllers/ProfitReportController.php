@@ -18,17 +18,15 @@ class ProfitReportController extends Controller
         $params = $this->getParams($request, $company_id);
 
         if($params['compare']=='department'){
-            $accounts = $this->query2($params, $company);
+            $income = $this->query2($params, $company);
         }else if($params['compare']=='budget'){
-            $accounts = $this->query3($params, $company);
+            $income = $this->query3($params, $company);
         }else{
             $income = $this->query($params, $company);
         }
 
         $title = trans('Profit & Loss');
         $view = 'report.profit.default';
-        // $period = fdate($params['end_date'], 'd M Y');
-        // $balance_date = \Carbon\Carbon::parse($params['end_date'])->subDay()->format('d-m-Y');
         $departments = Department::whereIn('id', $params['department_id'])->get();
 
         $data = array(
@@ -120,44 +118,92 @@ class ProfitReportController extends Controller
             DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
         ];
 
+        $start_date=($params['year']).'-'.($params['start_month']).'-01';
+        $end_date=($params['year']).'-'.($params['end_month']).'-31';
         foreach($params['columns'] as $i=>$header){
-            $end_date= $params['end_date'];
-            $start_date= $params['start_date'];
             $id = $header->id;
             if($id===null & $header->name==null){//tanpa department
-                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
-                FROM vw_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date' AND  tb.company_id=a.company_id
-                and a.id=tb.account_id AND department_id IS NULL) as total_$i");
+                $select[] = DB::raw (
+                    "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+                    FROM vw_transaction_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date'
+                    AND  (tb.account_id=a.id OR tb.account_parent_id=a.id)  AND department_id IS NULL
+                    ) as total_$i");
             }else if($id===null & $header->name!=null){//total
-                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
-                FROM vw_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date' AND  tb.company_id=a.company_id
-                and a.id=tb.account_id) as total_$i");
+                $select[] = DB::raw (
+                    "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+                    FROM vw_transaction_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date'
+                    AND  (tb.account_id=a.id OR tb.account_parent_id=a.id)
+                    ) as total_$i");
             }else{
-                $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
-                FROM vw_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date' AND  tb.company_id=a.company_id
-                and a.id=tb.account_id AND department_id=$id) as total_$i");
+                $select[] = DB::raw (
+                    "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+                    FROM vw_transaction_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date'
+                    AND  (tb.account_id=a.id OR tb.account_parent_id=a.id) AND department_id=$id
+                    ) as total_$i");
             }
         }
-        $income = DB::table(DB::raw('vw_accounts a'))
+        $income = DB::table(DB::raw('accounts a'))
         ->select($select)
-        ->whereRaw("a.company_id=$company->id AND (a.type IS NULL OR a.type<>'tax')")
-        ->whereIn('a.account_type_id',[12,14,15])
-        ->distinct()
-        ->orderBy(DB::raw('a.account_type_id, a.sequence'))->get();
-        $other_income = DB::table(DB::raw('vw_accounts a'))
-        ->select($select)
+        ->join('account_types', 'account_types.id','=','account_type_id')
+        ->leftJoin('vw_opening_balance', function($join){
+            $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereNull('department_id');
+        })
         ->whereRaw("a.company_id='$company->id'")
-        ->whereIn('a.account_type_id', [13, 16])
+        ->whereIn('account_types.id',[10,12,13,15, 16,17,18])
         ->distinct()
-        ->orderBy(DB::raw('a.account_type_id, a.sequence'))->get();
-        $income_tax = DB::table(DB::raw('vw_accounts a'))
-        ->select($select)
-        ->whereRaw("a.company_id='$company->id' AND a.type='income_tax'")
-        ->distinct()
-        ->orderBy(DB::raw('a.account_type_id, a.sequence'))->get();
-        return [$income, $other_income, $income_tax];
+        ->orderBy('a.sequence')->get();
+        return $income;
     }
     private function query3($params, $company){
+        $select = [
+            DB::raw('a.id,  a.sequence, a.account_no, account_types.name as account_type, a.account_type_id, account_types.group AS account_group, a.account_name, a.tree_level')
+        ];
+        // $cutoff_date = $params['cutoff_date'];
+        // dd($cutoff_date);
+        $month_name = ['total', 'jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
+        foreach($params['columns'] as $i=>$column){
+            $start_date = $column['start_date'];
+            $end_date = $column['end_date'];
+            $month = intval(fdate($start_date, 'm'));
+            $year = fdate($start_date, 'Y');
+            $departments = '';
+            if(!empty($params['department_id'])){
+                $dept_id = implode(',',$params['department_id']);
+                $departments = " AND tb.department_id IN ($dept_id) ";
+            }
+            if($start_date==null){//kumulative
+                $select[] = DB::raw (
+                    "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+                    FROM vw_transaction_balance tb WHERE tb.`trans_date`<='$end_date' AND  (tb.account_id=a.id OR tb.account_parent_id=a.id) $departments
+                    ) as total_$i");
+                $select[] = DB::raw (
+                    "(SELECT total
+                    FROM vw_budgets tb WHERE budget_year=$year AND tb.account_id=a.id $departments
+                    ) as budget_$i");
+            }else{
+                $select[] = DB::raw (
+                    "(SELECT IF(SUM(tb.total) iS NULL, 0, SUM(tb.total))
+                    FROM vw_transaction_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date' AND  (tb.account_id=a.id OR tb.account_parent_id=a.id) $departments
+                    ) as total_$i");
+                $select[] = DB::raw (
+                    "(SELECT $month_name[$month]
+                    FROM vw_budgets tb WHERE budget_year=$year AND tb.account_id=a.id $departments
+                    ) as budget_$i");
+            }
+        }
+        $income = DB::table(DB::raw('accounts a'))
+        ->select($select)
+        ->join('account_types', 'account_types.id','=','account_type_id')
+        ->leftJoin('vw_opening_balance', function($join){
+            $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereNull('department_id');
+        })
+        ->whereRaw("a.company_id='$company->id'")
+        ->whereIn('account_types.id',[10,12,13,15, 16,17,18])
+        ->distinct()
+        ->orderBy('a.sequence')->get();
+        return $income;
+    }
+    private function query4($params, $company){
         $select = [
             DB::raw('a.id, a.account_no,a.sequence, a.account_type, a.account_type_id, a.account_group, a.account_name, a.tree_level')
         ];
@@ -199,34 +245,6 @@ class ProfitReportController extends Controller
         ->distinct()
         ->orderBy(DB::raw('a.account_type_id, a.sequence'))->get();
         return [$income, $other_income, $income_tax];
-    }
-
-    private function queryChart($params, $company){
-        $select = [
-            DB::raw('a.id')
-        ];
-        foreach($params['columns'] as $i=>$column){
-            $start_date = $column['start_date'];
-            $end_date = $column['end_date'];
-            $departments = '';
-            if(!empty($params['department_id'])){
-                $dept_id = implode(',',$params['department_id']);
-                $departments = " AND tb.department_id IN ($dept_id) ";
-                $plus = '';
-            }
-            $select[] = DB::raw ("(SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
-            FROM vw_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date'
-            and tb.account_type_id=12)-
-            (SELECT IF(SUM(tb.total) IS NULL, 0,SUM(tb.total))
-            FROM vw_balance tb WHERE tb.`trans_date`>='$start_date' AND tb.`trans_date`<='$end_date'
-            and tb.account_type_id=14 and tb.company_id='$company->id')
-            as total_$i");
-        }
-        $balance = DB::table(DB::raw('companies a'))
-        ->select($select)
-        ->where('a.id', $company->id)
-        ->distinct()->first();
-        return $balance;
     }
 
     private function getParams(Request $request, $company_id){

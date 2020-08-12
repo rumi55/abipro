@@ -58,7 +58,7 @@ class Account extends Model
                     'budget'=>$budget->budget
                 );
             }
-            $current_month = $current_month->addMonth();  
+            $current_month = $current_month->addMonth();
         }
         return $budgets;
     }
@@ -71,7 +71,7 @@ class Account extends Model
     }
     public function isLocked(){
         if(!$this->has_children){
-            return JournalDetail::where('account_id', $this->id)->exists();
+            return JournalDetail::where('account_id', $this->id)->exists() || \App\Transaction::where('account_id', $this->id)->exists() || \App\TransactionDetail::where('account_id', $this->id)->exists()  || \App\Contact::where('account_receivable', $this->id)->exists() || \App\Contact::where('account_payable', $this->id)->exists();
         }else{
             return $this->checkTransaction($this->id);
         }

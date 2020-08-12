@@ -248,12 +248,18 @@ class DcruController extends Controller
                         foreach($items as $item){
                             $visible = true;
                             if(isset($item['visible'])){
+                                // $vis = explode('==', $item['visible']);
+                                // if(count($vis)==2){
+                                //     $o = $vis[0];
+                                //     $p = $vis[1];
+                                //     $visible = $dat->$o==$p;
+                                // }
                                 $vis = explode('==', $item['visible']);
                                 if(count($vis)==2){
                                     $o = $vis[0];
                                     $p = $vis[1];
-                                    $visible = $dat->$o==$p;
                                 }
+                                $visible = dcru_evaluate($dat,$item['visible']);
                             }
                             if(array_key_exists('type', $item)){
                                 if($item['type']=='view'){

@@ -10,80 +10,61 @@ $breadcrumbs = array(
 @extends('layouts.app')
 @section('title', ($mode=='edit'?__('Edit '.$type):__('New '.$type)))
 @section('content')
-<form method="POST" action="{{$mode=='edit'?route('vouchers.edit.single.update', ['id'=>$transaction->id]):route('vouchers.create.single.save', ['type'=>$transaction->trans_type])}}">
+<form method="POST" action="{{$mode=='edit'?route('vouchers.edit.single.update', ['type'=>$transaction->trans_type, 'id'=>$transaction->id]):route('vouchers.create.single.save', ['type'=>$transaction->trans_type])}}">
 @csrf
 @if($mode=='edit')
 @method('PUT')
 @endif
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">
-            @if($mode=='create')
-            {{trans('New Voucher')}}
-            @else
-            {{trans('Voucher ').'#'.$transaction->trans_no}}
-            @php $status =['draft'=>'secondary', 'submitted'=>'warning', 'approved'=>'success', 'rejected'=>'danger']; @endphp
-            <span class="badge badge-{{$status[$transaction->status]}}">{{$transaction->status}}</span>
-
-            @endif
-        </h5>
+        <h5 class="card-title">{{$mode=='create'?trans('New Voucher'):trans('Voucher ').'#'.$transaction->trans_no}}</h5>
     </div>
     <div class="card-body pb-1">
-        @if($transaction->status=='rejected')
-        <div class="callout callout-danger">
-        <p>{{$transaction->rejection_note}}</p>
-          </div>
-          @endif
-          <div class="row">
-            @if($mode=='create')
-            <div class="col-md-4">
+        <div class="row">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_no" >{{__('Transaction Group')}}</label>
-                    <div class="input-group">
-                        <select id="numbering_id" name="numbering_id" data-numbering-type="journal" data-value="{{old('numbering_id', $transaction->numbering_id)}}" class="form-control numbering_id @error('numbering_id') is-invalid @enderror">
-
-                        </select>
-                    </div>
-                    <small class="text-muted" style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}">{{__('Select numbering format. Transaction number will be generated automatically based on selected numbering format.')}}</small>
+                    <input name="auto" value="1" type="hidden">
+                    <select name="numbering_id" data-value="{{old('numbering_id', $transaction->numbering_id)}}" class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
+                        @foreach($numberings as $numbering)
+                        <option {{$numbering->id==old('numbering_id', $transaction->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
+                        @endforeach
+                    </select>
                     @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            @endif
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_no" >{{__('Transaction No.')}}</label>
-                    @if($mode=='create')
-                    <div class="input-group">
-                        <div class="input-group-prepend">
+                    <div class="input-group mb-3">
+                        <input id="trans_no" {{($mode=='edit' || old('manual', 0)==1)?'':'readonly'}} name="trans_no" type="text" class="form-control" value="@if($mode=='edit' || old('manual', 0)==1) {{old('trans_no',$transaction->trans_no)}} @else [Automatic] @endif" >
+
+                        <div class="input-group-append">
                             <div class="input-group-text">
-                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual')==1)?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
+                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual', 0)==1)==1?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
                           </div>
                         </div>
-                        <input  id="trans_no_auto" readonly style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}" name="trans_no_auto" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_auto',$transaction->trans_no)}} @endif" >
-                        <input  id="trans_no_manual" style="{{($mode=='edit' || old('manual')==1)?'':'display:none'}}" name="trans_no_manual" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_manual',$transaction->trans_no)}} @endif" >
-                    </div>
-                    @error('trans_no_manual')<br/><small class="text-danger">{!!$message!!}</small>@enderror
-                    @error('trans_no_auto')<br/><small class="text-danger">{!!$message!!}</small>@enderror
-                    @else
-                    <input readonly name="trans_no" type="text" class="form-control" value="{{old('trans_no',$transaction->trans_no)}}" >
-                    @endif
+                      </div>
+                      @error('trans_no')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_date">{{__('Transaction Date')}}</label>
                     <input id="trans_date" name="trans_date" type="text" class="form-control date @error('trans_date') is-invalid @enderror" value="{{fdate(old('trans_date',$transaction->trans_date))}}" >
                     @error('trans_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label>{{$transaction->trans_type=='receipt'?__('Payer'):__('Beneficiary')}}</label>
                     <select name="contact_id" class="form-control select2 contact" data-value="{{old('contact_id', $transaction->contact_id)}}"></select>
                     @error('contact_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col-md-4">
+        </div>
+        <div class="row">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label>{{__('Account')}}</label>
                     <select name="account_id" data-value="{{old('account_id', $transaction->account_id)}}" class="form-control select2 account">
@@ -92,7 +73,7 @@ $breadcrumbs = array(
                     @error('account_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label>{{__('Department')}}</label>
                     <select name="department_id" data-value="{{old('department_id', $transaction->department_id)}}" class="form-control select2">
@@ -103,7 +84,7 @@ $breadcrumbs = array(
                     @error('department_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col-md-5">
+            <div class="col-md-6">
                 <div class="form-group">
                     <label>{{__('Description')}}</label>
                     <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"  rows="1" cols="100">{{old('description',$transaction->description)}}</textarea >
@@ -157,7 +138,7 @@ $breadcrumbs = array(
                             <div class="col-md-4 col-sm-6">
                                 <div class="form-group">
                                     <label for="detail_amount_{{$i}}" >{{__('Total')}}:</label>
-                                    <input name="detail[{{$i}}][amount]" data-index="{{$i}}" required type="text" id="detail_amount_{{$i}}" class="form-control amount @error('detail.'.$i.'.amount') is-invalid @enderror" value="{{fcurrency(old('detail.'.$i.'.amount', $detail!=null?$detail->amount:''))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                    <input name="detail[{{$i}}][amount]" data-index="{{$i}}" required type="text" id="detail_amount_{{$i}}" class="form-control amount @error('detail.'.$i.'.amount') is-invalid @enderror" value="{{old('detail.'.$i.'.amount', $detail!=null?$detail->amount:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail.'.$i.'.amount')<small class="text-danger">{!!$message!!}</small>@enderror
                                 </div>
                             </div>
@@ -212,7 +193,7 @@ $breadcrumbs = array(
                 </div>
                 <div class="col text-right">
                     <small class="text-muted">Total</small><br>
-                    <input name="amount" type="text" class="total form-control-plaintext text-success text-bold" readonly id="amount" value="{{fcurrency(old('amount', $transaction->amount))}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
+                    <input name="amount" type="text" class="total form-control-plaintext text-success text-bold" readonly id="amount" value="{{old('amount', $transaction->amount)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('amount')<small class="text-danger">{!! $message !!}</small>@enderror
                     <input id="detail_length" type="hidden" name="detail_length" value="{{$row_count}}" />
                 </div>
@@ -222,20 +203,11 @@ $breadcrumbs = array(
     <div class="card-footer">
         <div class="row">
             <div class="col-sm-6">
-            @if(company_setting('voucher_approval'))
             @if($mode=='edit')
-            @if($transaction->status=='rejected')
-            <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Submit Voucher')}}</button>
-            <button id="btn-save" type="submit" name="status" value="draft" class="btn btn-primary" >{{trans('Save as Draft')}}</button>
+                <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Save')}}</button>
             @else
-            <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Save')}}</button>
-            @endif
-            @else
-            <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Submit Voucher')}}</button>
-            <button id="btn-save" type="submit" name="status" value="draft" class="btn btn-primary" >{{trans('Save as Draft')}}</button>
-            @endif
-            @else
-            <button id="btn-save" type="submit" name="status" value="approved" class="btn btn-primary" >{{trans('Submit Voucher')}}</button>
+                <button id="btn-save" type="submit" name="status" value="submitted" class="btn btn-primary" >{{trans('Submit Voucher')}}</button>
+                <button id="btn-save" type="submit" name="status" value="draft" class="btn btn-primary" >{{trans('Save as Draft')}}</button>
             @endif
             </div>
             <div class="col-sm-6 text-right">
@@ -264,24 +236,13 @@ $(function () {
     $('input[name=manual]').change(function(){
         var manual = $(this).prop('checked');
         if(manual){
-            $('#trans_no_manual').show();
-            $('#trans_no_manual').focus();
-            $('#trans_no_auto').hide();
+            $('#trans_no').prop('readonly', false)
+            $('#trans_no').val("{{($mode=='edit' || old('manual', 0)==1)?old('trans_no',$transaction->trans_no):''}}");
+            $('#trans_no').focus();
         }else{
-            $('#trans_no_manual').hide();
-            $('#trans_no_auto').show();
+            $('#trans_no').prop('readonly', true)
+            $('#trans_no').val('[Automatic]');
         }
-    })
-
-    $('#numbering_id').change(function(){
-        var id = $(this).val();
-        $.ajax({
-            url: BASE_URL+'/json/numberings/'+id+'/voucher',
-            method: 'GET',
-            success: function(res){
-                $('#trans_no_auto').val(res.trans_no)
-            }
-        })
     })
     $('.date').daterangepicker({
       timePicker: false,
@@ -325,7 +286,7 @@ $(function () {
                 <div class="col-md-4 col-sm-6">
                     <div class="form-group">
                         <label for="detail_amount_${idx}" >{{__('Total')}}:</label>
-                        <input name="detail[${idx}][amount]" data-index="${idx}" required type="text" id="detail_amount_${idx}" class="form-control amount @error('detail_amount_'.$i) is-invalid @enderror" value="{{old('detail_amount_'.$i, $detail!=null?$detail->amount:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                        <input name="detail[${idx}][amount]" data-index="${idx}" required type="text" id="detail_amount_${idx}" class="form-control amount @error('detail_amount_'.$i) is-invalid @enderror" value="{{old('detail_amount_'.$i, $detail!=null?$detail->amount:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
                     </div>
                 </div>
                 <div class="col-md-4 col-sm-6">
@@ -384,7 +345,7 @@ function validate(){
 }
 function onchange(){
     var amount = sum('.amount');
-    $('#amount').val(amount==0?'0,00':amount);
+    $('#amount').val(amount);
 }
 function sum(selector){
     var total = 0;
@@ -392,7 +353,7 @@ function sum(selector){
       var val = $(this).val();
       if(val==''||val==null){
         val = 0;
-        $(this).val('0,00')
+        $(this).val(val)
       }
       var n = parseNumber(val);
       total=total+n;
@@ -401,7 +362,7 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join('').split(',').join('.'));
+    return parseInt(val.split('.').join(''));
 }
 function  init(){
     loadSelect();
@@ -438,9 +399,6 @@ function reindexing(){
         $(this).attr('id', 'row_'+index);
         $('#no_'+i).html(index+1);
         $('#no_'+i).attr('id', 'no_'+index);
-        $('#detail_id_'+i).attr('data-index', index)
-        $('#detail_id_'+i).attr('name', 'detail['+index+'][id]')
-        $('#detail_id_'+i).attr('id', 'detail_id_'+index)
         $('#detail_account_id_'+i).attr('data-index', index)
         $('#detail_account_id_'+i).attr('name', 'detail['+index+'][account_id]')
         $('#detail_account_id_'+i).attr('id', 'detail_account_id_'+index)

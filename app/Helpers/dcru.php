@@ -34,7 +34,7 @@ if (! function_exists('dcru_query')) {
         if(empty($query['table'])){
             return null;
         }
-        
+
         $db = DB::table($query['table']);
         if(!empty($query['joins'])){
             foreach($query['joins'] as $join){
@@ -64,7 +64,7 @@ if (! function_exists('dcru_query')) {
             }else{
                 $db = $db->selectRaw($query['select']);
             }
-            
+
         }
         if(!empty($query['where'])){
             $condition = $query['where']['condition'];
@@ -92,7 +92,7 @@ if (! function_exists('dcru_query')) {
                 }
             }
             $db = $db->whereRaw($condition);
-            
+
         }
         if(!empty($query['group'])){
             $db = $db->groupBy($query['group']);
@@ -113,12 +113,12 @@ if (! function_exists('dcru_query')) {
         if(!empty($query['having'])){
             $db = $db->having($query['order']);
         }
-        
+
         return $db;
     }
 }
 /**
- * Modify unique rule 
+ * Modify unique rule
  */
 if (! function_exists('dcru_rules')) {
     function dcru_rules($rules, $id=null){
@@ -215,11 +215,11 @@ if (!function_exists('dcru_dt')) {
             $dtcolumns[]=$dt;
         }
         return [
-            'dt_title'=>$dt_title, 
+            'dt_title'=>$dt_title,
             'columns'=>$columns,
-            'dtname'=>$dtname, 
-            'name'=>$name, 
-            'dtcolumns'=>$dtcolumns, 
+            'dtname'=>$dtname,
+            'name'=>$name,
+            'dtcolumns'=>$dtcolumns,
             'bulk_actions'=>$bulk_actions,
             'filter'=>$filter
         ];
@@ -235,5 +235,31 @@ if (!function_exists('dcru_hiddenval')) {
             }
         }
         return $val;
+    }
+}
+if (!function_exists('dcru_evaluate')) {
+    function dcru_evaluate($data, $exp){
+        $result = false;
+        if(strpos($exp, '||')){
+            $splits = explode('||', $exp);
+            foreach($splits as $split){
+                $result = $result || dcru_evaluate($data, $split);
+            }
+            return $result;
+        }else if(strpos($exp, '&&')){
+            $splits = explode('&&', $exp);
+            foreach($splits as $split){
+                $result = $result && dcru_evaluate($data, $split);
+            }
+            return $result;
+        }else if(strpos($exp, '==')){
+            $splits = explode('==', $exp);
+            if(count($splits)==2){
+                $o = trim($splits[0]);
+                $p = trim($splits[1]);
+                $result = $data->$o==$p;
+            }
+            return $result;
+        }
     }
 }

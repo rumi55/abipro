@@ -51,12 +51,22 @@ class JournalController extends Controller
     public function view($id){
         // $id = decode($id);
         $journal = Journal::findOrFail($id);
-        $prev=Journal::where('company_id', $journal->company_id)
-        ->where('id','<', $journal->id)->orderBy('id', 'desc')->first();
-        $next=Journal::where('company_id', $journal->company_id)
-        ->where('id','>', $journal->id)->orderBy('id', 'asc')->first();
-        $prev_id = $prev!=null?encode($prev->id):'';
-        $next_id = $next!=null?encode($next->id):'';
+        if($journal->is_voucher && $journal->is_processed==0){
+            if(!empty($journal->transaction_id)){
+                return redirect()->route('vouchers.view.transaction', ['id'=>$journal->transaction_id]);
+            }
+            $prev=Journal::where('company_id', $journal->company_id)->where('is_voucher', 1)->where('is_processed', 0)
+            ->where('id','<', $journal->id)->orderBy('id', 'desc')->first();
+            $next=Journal::where('company_id', $journal->company_id)->where('is_voucher', 1)->where('is_processed', 0)
+            ->where('id','>', $journal->id)->orderBy('id', 'asc')->first();
+        }else{
+            $prev=Journal::where('company_id', $journal->company_id)
+            ->where('id','<', $journal->id)->orderBy('id', 'desc')->first();
+            $next=Journal::where('company_id', $journal->company_id)
+            ->where('id','>', $journal->id)->orderBy('id', 'asc')->first();
+        }
+        $prev_id = $prev!=null?$prev->id:'';
+        $next_id = $next!=null?$next->id:'';
         // $journal = new JournalResource($journal);
         return view('journal.view', compact('journal', 'next_id', 'prev_id'));
     }
@@ -87,7 +97,7 @@ class JournalController extends Controller
         $journal = Journal::findOrFail($id);
 
         //redirect jika single entry
-        if($journal->is_voucher==1 && $journal->is_single_entry==1){
+        if($journal->is_voucher==1 && $journal->is_processed==0 && !empty($journal->transaction_id)){
             $trans = \App\Transaction::findOrFail($journal->transaction_id);
             return redirect()->route('vouchers.create.single.duplicate', ['type'=>$trans->trans_type, 'id'=>$trans->id]);
         }
@@ -104,7 +114,7 @@ class JournalController extends Controller
     public function edit($id){
         $company_id = \Auth::user()->activeCompany()->id;
         $journal = Journal::findOrFail($id);
-        if($journal->is_voucher==1 && $journal->is_single_entry==1){
+        if($journal->is_voucher==1 && $journal->is_processed==0 && !empty($journal->transaction_id)){
             $trans = \App\Transaction::findOrFail($journal->transaction_id);
             return redirect()->route('vouchers.edit.single', ['id'=>$journal->transaction_id, 'type'=>$trans->trans_type]);
         }
@@ -135,24 +145,45 @@ class JournalController extends Controller
         }
         return view('report.viewer', $data);
     }
+    public function voucher(Request $request, $id){
+        $output = $request->query('output', 'html');
+        $journal = Journal::findOrFail($id);
+        $title = $journal->is_voucher==1?'Voucher':'Jurnal';
+        $view = 'print.voucher.voucher';
+        $data = ['data'=>$journal, 'title'=>$title, 'report'=>'print_journal', 'view'=>$view];
+        if($output=='pdf'){
+            $pdf = app('dompdf.wrapper');
+            $pdf->getDomPDF()->set_option("enable_php", true);
+            $pdf->loadView('print.pdf', $data);
+            return $pdf->download('voucher.pdf');
+        }elseif($output=='print'){
+            return view('report.print', $data);
+        }
+        return view('print.viewer', $data);
+    }
     public function receipt(Request $request, $id){
         $output = $request->query('output', 'html');
-        $voucher = Journal::findOrFail($id);
-        if(!$voucher->is_voucher){
+        $journal = Journal::findOrFail($id);
+        if(!$journal->is_voucher){
             abort(404);
         }
+        if(!empty($journal->transaction_id)){
+            $voucher = \App\Transaction::find($journal->transaction_id);
+        }else{
+
+        }
         $title = 'Kuitansi';
-        $view = 'transaction.receipt';
+        $view = 'print.voucher.receipt';
         $data = ['data'=>$voucher, 'title'=>$title, 'report'=>'print_receipt', 'view'=>$view];
         if($output=='pdf'){
             $pdf = app('dompdf.wrapper');
             $pdf->getDomPDF()->set_option("enable_php", true);
-            $pdf->loadView('report.pdf', $data);
+            $pdf->loadView('print.pdf', $data);
             return $pdf->download('receipt.pdf');
         }elseif($output=='print'){
             return view('report.print', $data);
         }
-        return view('report.viewer', $data);
+        return view('print.viewer', $data);
     }
 
     public function save(Request $request){
@@ -160,9 +191,9 @@ class JournalController extends Controller
         $user = Auth::user();
         $company_id = company('id');
         // dd($data);
+        $manual = !empty($request->manual)&&$request->manual==1?true:false;
+
         $rules = [
-            'trans_no' => "required|unique:journals,trans_no,NULL,id,company_id,$company_id",
-            'numbering_id' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
             'description' => 'required',
             'total_debit' => 'same:total_credit',
@@ -173,9 +204,15 @@ class JournalController extends Controller
             'detail.*.debit'=>'required',
             'detail.*.credit'=>'required',
         ];
+        if($manual){
+            $rules['trans_no_manual'] = "required|unique:journals,trans_no,NULL,id,company_id,$company_id";
+        }else{
+            $rules['numbering_id'] = 'required|exists:numberings,id';
+        }
         $attr = [
-            'trans_no' => trans('Number'),
-            'trans_date' => trans('Date'),
+            'trans_no_manual' => trans('Transaction Number'),
+            'trans_no_auto' => trans('Transaction Number'),
+            'trans_date' => trans('Transaction Date'),
             'description' => trans('Description'),
             'total_debit' => trans('Total Debit'),
             'total_credit' => trans('Total Credit'),
@@ -195,10 +232,11 @@ class JournalController extends Controller
 
         $trans_date = fdate($request->trans_date, 'Y-m-d');
         $total = parse_number($request->total);
+        $trans_no = $manual?$request->trans_no_manual:$request->trans_no_auto;
+
         try{
             \DB::beginTransaction();
-            $auto = empty($request->manual)?true:false;
-            if($auto){
+            if($manual==false){
                 $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
                     $period = date('Y');
@@ -216,10 +254,7 @@ class JournalController extends Controller
 
                 $check = true;
                 do{
-                    $counter->getNumber();
-                    $trans_no = $counter->last_number;
                     $c = Journal::where('trans_no', $trans_no)->where('company_id', $company_id)->count();
-
                     if($c==0){
                         $journal = Journal::create([
                             'journal_id'=>$trans_no,
@@ -227,8 +262,10 @@ class JournalController extends Controller
                             'trans_date'=>$trans_date,
                             'description'=>$request->description,
                             'company_id'=>$company_id,
-                            // 'contact_id'=>$request->contact_id,
+                            'contact_id'=>$request->contact_id??null,
                             'is_voucher'=>$is_voucher,
+                            'is_processed'=>$is_voucher?0:1,
+                            'status'=>$request->status,
                             'numbering_id'=>$request->numbering_id,
                             'total'=>$total,
                             'transaction_type_id'=>TransactionType::JOURNAL,
@@ -237,9 +274,10 @@ class JournalController extends Controller
                         $counter->save();
                         $check = false;
                     }
+                    $counter->getNumber();
+                    $trans_no = $counter->last_number;
                 }while($check);
             }else{
-                $trans_no = $request->trans_no;
                 $journal = Journal::create([
                     'journal_id'=>$trans_no,
                     'trans_no'=>$trans_no,
@@ -247,8 +285,10 @@ class JournalController extends Controller
                     'description'=>$request->description,
                     'numbering_id'=>$request->numbering_id,
                     'company_id'=>$company_id,
-                    'contact_id'=>$request->contact_id,
+                    'contact_id'=>$request->contact_id??null,
                     'is_voucher'=>$is_voucher,
+                    'is_processed'=>$is_voucher?0:1,
+                    'status'=>$request->status,
                     'numbering_id'=>$request->numbering_id,
                     'total'=>$total,
                     'transaction_type_id'=>TransactionType::JOURNAL,
@@ -276,40 +316,35 @@ class JournalController extends Controller
                     'created_by'=>$user->id
                 ]);
             }
+
             \DB::commit();
+            $reference =[
+                'id'=>$journal->id,
+                'Transaction No.'=>$journal->trans_no,
+                'Total'=>$journal->total
+            ];
+            add_log($is_voucher?'vouchers':'journals', 'create', json_encode($reference));
+            return redirect()->route('journals.view', $journal->id)->with('success', trans(':attr have been created successfully.',['attr'=>trans($journal->is_voucher?'Voucher':'Journal')]));
         }catch(Exception $e){
             \DB::rollback();
+            return redirect()->route('journals.view', $journal->id)->with('error', 'Terjadi kesalahan');
         }
-        $reference =[
-            'id'=>$journal->id,
-            'Transaction No.'=>$journal->trans_no,
-            'Total'=>$journal->total
-        ];
-
-        add_log($is_voucher?'vouchers':'journals', 'create', json_encode($reference));
-        return redirect()->route('journals.view', $journal->id)->with('success', 'Jurnal berhasil dibuat');
     }
 
     public function update(Request $request, $id){
         $data = $request->all();
-
         $company_id = company('id');
-        // dd($data);
         $rules = [
-            'trans_no' => "required|unique:journals,trans_no,$id,id,company_id,$company_id",
-            'numbering_id' => 'required',
             'trans_date' => 'required|date_format:d-m-Y',
             'description' => 'required',
             'total_debit' => 'same:total_credit',
             'total_credit' => 'same:total_debit',
             'detail.*.account_id'=>'required',
             'detail.*.description'=>'required',
-            // 'detail_department_id'=>'required',
             'detail.*.debit'=>'required',
             'detail.*.credit'=>'required',
         ];
         $attr = [
-            'trans_no' => trans('Number'),
             'trans_date' => trans('Date'),
             'description' => trans('Description'),
             'total_debit' => trans('Total Debit'),
@@ -326,53 +361,25 @@ class JournalController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
         $journal = Journal::findOrFail($id);
+        if($company_id!=$journal->company_id){
+            abort(404);
+        }
         $old_total = $journal->total;
         $user = Auth::user();
-        $company_id = $user->activeCompany()->id;
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-
-        $journal->trans_date = $trans_date;
-        $journal->description = $request->description;
-        $journal->numbering_id = $request->numbering_id;
-        // $journal->contact_id = $request->contact_id;
-        $journal->total = parse_number($request->total);
-        $journal->updated_by = $user->id;
 
         try{
             \DB::beginTransaction();
-            $auto = empty($request->manual)?true:false;
-            if($auto){
-                $numbering = Numbering::findOrFail($request->numbering_id);
-                if($numbering->counter_reset=='y'){
-                    $period = date('Y');
-                }else if($numbering->counter_reset=='m'){
-                    $period = date('Y-m');
-                }else if($numbering->counter_reset=='d'){
-                    $period = date('Y-m-d');
-                }else{
-                    $period  = null;
-                }
-                $counter = Counter::firstOrCreate(
-                    ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
-                    ['counter'=>$numbering->counter_start-1]
-                );
-                $check = true;
-                do{
-                    $counter->getNumber();
-                    $trans_no = $counter->last_number;
-                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
-                    if($c==0){
-                        $journal->journal_id = $trans_no;
-                        $journal->trans_no = $trans_no;
-                        $journal->update();
-                        $counter->save();
-                        $check = false;
-                    }
-                }while($check);
-            }else{
-                $trans_no = $request->trans_no;
-                $journal->update();
+            $journal->trans_date = $trans_date;
+            $journal->description = $request->description;
+            $journal->numbering_id = $request->numbering_id;
+            $journal->contact_id = $request->contact_id??null;
+            $journal->total = parse_number($request->total);
+            $journal->updated_by = $user->id;
+            if(!empty($request->status)){
+                $journal->status = $request->status;
             }
+            $journal->update();
             //cek id
             $old_details = array();
 
@@ -441,46 +448,50 @@ class JournalController extends Controller
             ]
         ];
         add_log($journal->is_voucher?'vouchers':'journals', 'edit', json_encode($reference));
-        return redirect()->route('journals.view', $journal->id)->with('success', 'Jurnal berhasil dibuat');
+        return redirect()->route('journals.view', $journal->id)->with('success', trans(':attr have been saved successfully.',['attr'=>trans($journal->is_voucher?'Voucher':'Journal')]));
     }
-    public function patch(Request $request){
-        $id = $request->id;
-        $ids = array();
-        foreach($id as $i){
-            $ids[] = decode($i);
-        }
-        validate($request->all(), [
-            'name' => 'required',
-            'value' => 'required',
-        ]);
-        $name = $request->name;
-        $value = $request->value;
-        Journal::whereIn('id', $ids)->update([$name=>$value]);
-        return JournalResource::collection(Journal::whereIn('id', $ids)->get());
-    }
-
     public function delete($id)
     {
         $journal = Journal::findOrFail($id);
+        if($journal->is_locked){
+            return redirect()->route('dcru.index', 'journals')->with('success', trans("Journal is locked, cannot be deleted."));
+        }
+        $voucher = 'Journal';
+        $vouchers = 'journals';
+        if($journal->is_voucher && $journal->is_processed==0){
+            $voucher = 'Voucher';
+            $vouchers = 'vouchers';
+            if(!empty($journal->transaction_id)){
+                $trans = \App\Transaction::find($journal->transaction_id);
+                if($trans!=null){
+                    $trans->delete();
+                }
+            }
+        }
         $reference =[
             'id'=>$journal->id,
             'Transaction No.'=>$journal->trans_no,
             'Total'=>$journal->total
         ];
-        $trans_no = $journal->trans_no;
         $journal->delete();
-        add_log('journals', 'delete', json_encode($reference));
-        return redirect()->route('dcru.index', 'journals')->with('success', "Jurnal #$trans_no telah dihapus");
+        add_log($vouchers, 'delete', json_encode($reference));
+        return redirect()->route('dcru.index', $vouchers)->with('success', trans(":attr has been deleted.", ['attr'=>$voucher]));
     }
-
-    public function batchDelete(Request $request){
+    public function deleteBatch(Request $request){
         $id = $request->id;
-        $ids = array();
         foreach($id as $i){
-            $ids[] = decode($i);
+            $journal = Journal::find($i);
+            if($journal!=null){
+                if($journal->is_voucher && !empty($journal->transaction_id)){
+                    $trans = \App\Transaction::find($journal->transaction_id);
+                    if($trans!=null){
+                        $trans->delete();
+                    }
+                }
+                $journal->delete();
+            }
         }
-        Journal::destroy($ids);
-        return response()->json(null, 204);
+        return redirect()->back()->with('success', 'Data deleted');
     }
 
     public function lockJournal(Request $request, $id){
@@ -503,40 +514,86 @@ class JournalController extends Controller
     }
 
     public function toJournal($id){
-        $id = decode($id);
         $journal = Journal::findOrFail($id);
-        $journal->is_voucher=false;
+        $journal->is_processed=true;
         $journal->save();
-        return redirect()->back();
+        return redirect()->route('dcru.index', 'journals')->with('success', 'Voucher have been transfered to journal successfully.');
     }
 
     public function toVoucher($id){
-        $id = decode($id);
         $journal = Journal::findOrFail($id);
-        $journal->is_voucher=true;
-        $journal->save();
-        return redirect()->back();
+        if($journal->is_voucher){
+            $journal->is_processed = 0;
+            $journal->save();
+            return redirect()->route('dcru.index', 'vouchers');
+        }else{
+            return redirect()->back()->with('error', 'Journal is not processed from voucher before.');
+        }
     }
 
     public function toJournalBatch(Request $request){
         $id = $request->id;
-        $ids = array();
-        foreach($id as $i){
-            $ids[] = decode($i);
-        }
-        Journal::whereIn('id', $ids)->update(['is_voucher'=>false]);
-        return redirect()->back();
+        Journal::whereIn('id', $id)->where('is_voucher', true)->where('status', 'approved')->update(['is_processed'=>true]);
+        return redirect()->back()->with('success', 'Voucher have been transfered to journal successfully.');
     }
 
     public function toVoucherBatch(Request $request){
         $id = $request->id;
-        $ids = array();
-        foreach($id as $i){
-            $ids[] = decode($i);
-        }
-        Journal::whereIn('id', $ids)->update(['is_voucher'=>true]);
+        Journal::whereIn('id', $id)->update(['is_processed'=>false, 'is_voucher'=>true]);
         return redirect()->back();
     }
+
+
+    public function approve(Request $request, $id){
+        $company_id = company('id');
+        $user = \Auth::user();
+
+        $journal = Journal::findOrFail($id);
+        if($journal->company_id!=$company_id || !(in_array($request->status, ['approved', 'rejected', 'submitted'])) ){
+            abort(401);
+        }
+        if($request->status=='submitted' && $user->id!=$journal->created_by){
+            abort(401);
+        }
+        $journal->status = $request->status;
+        $journal->approved_at = date('Y-m-d H:i:s');
+        $journal->approved_by = user('id');
+        $journal->rejection_note = $request->rejection_note;
+        $journal->update();
+        if(!empty($journal->transaction_id) && $journal->is_voucher && $journal->is_processed==false){
+            $transaction = \App\Transaction::find($journal->transaction_id);
+            if($transaction !=null){
+                $transaction->status = $request->status;
+                $transaction->approved_at = date('Y-m-d H:i:s');
+                $transaction->approved_by = user('id');
+                $transaction->rejection_note = $request->rejection_note;
+                $transaction->update();
+            }
+        }
+        $msg = ''; $msg_en='';
+        if($journal->status=='approved'){
+            //$this->addToJournal($transaction);
+            $msg = $user->name.' menyetujui voucher #'.$journal->trans_no;
+            $msg_en = $user->name.' approved voucher #'.$journal->trans_no;
+        }else
+        if($journal->status=='rejected'){
+            $msg = $user->name.' menolak voucher #'.$journal->trans_no;
+            $msg_en = $user->name.' rejected voucher #'.$journal->trans_no;
+        }else{
+            $msg = $user->name.' mengirim voucher #'.$journal->trans_no;
+            $msg_en = $user->name.' submitted voucher #'.$journal->trans_no;
+        }
+        notify([
+            'url'=>route('vouchers.view', $journal->id),
+            'message_en'=>$msg_en,
+            'message'=>$msg,
+            'users'=>[$journal->created_by]
+        ]);
+
+        $msg = $journal->status=='submitted'?trans('Voucher submitted!'):($journal->status=='approved'?trans('Voucher approved!'):trans('Voucher rejected!'));
+        return redirect()->route('vouchers.view', $journal->id)->with('success', $msg);
+    }
+
 
     public function journalType(){
         $data = dcru_dt('journal_types', 'dtables');

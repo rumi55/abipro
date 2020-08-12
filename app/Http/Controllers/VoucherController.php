@@ -16,57 +16,17 @@ use PDF;
 
 class VoucherController extends Controller
 {
-    public function getAll(Request $request){
-        return $this->query($request);
+    public function index(){
+        $dtvoucher = dcru_dt('vouchers', 'dtvoucher');
+        $dtpayment = dcru_dt('vouchers', 'dtpayment');
+        $dtreceipt = dcru_dt('vouchers', 'dtreceipt');
+        return view('transaction.index', [
+            'dtvoucher'=>$dtvoucher,
+            'dtpayment'=>$dtpayment,
+            'dtreceipt'=>$dtreceipt
+        ]);
     }
-    public function getAllJournal(Request $request){
-        return $this->query($request, 1);
-    }
-    
-    public function query(Request $request, $is_journal=0){
-        $company_id = Auth::user()->activeCompany()->id;
-        $journal = Journal::where('company_id', '=', $company_id)
-        ->where('transaction_type_id', '=', 'voucher');
-        $page_size = $request->query('page_size', $journal->count());
-        $sort_key = $request->query('sort_key');
-        $sort_order = $request->query('sort_order', 'asc');
-        $search = $request->query('search');
-        $filter = $request->query('filter');
-        if(isset($filter)){
-            foreach($filter as $column => $value){
-                $journal = $journal->where($column,'like', "%$value%");
-            }
-        }
-        if(!empty($search)){
-            $journal = $journal->where(function ($query) use($search){
-                $query->where('trans_no','like', "%$search%")
-                ->orWhere('trans_date','like', "%$search%")
-                ->orWhere('description','like', "%$search%");
-            });
-        }
 
-        $sort = $request->query('sort');
-        if(!empty($sort)){
-            $sort = explode('-',$sort);
-            $sort_key=$sort[0];
-            $sort_order=count($sort)==2?(substr($sort[1], 0, 3)=='asc'?'asc':'desc'):'asc';
-            $journal = $journal->orderBy($sort_key, $sort_order);
-        }    
-        
-        if(!empty($sort_key)){
-            $journal = $journal->orderBy($sort_key, $sort_order);
-        }
-        if(empty($sort_key) && empty($sort)){
-            $journal = $journal->orderBy('trans_date', 'desc');
-        }
-        $journal = $journal->paginate($page_size)->appends($request->query());
-        return JournalResource::collection($journal);
-    }
-    public function get($id){
-        $id = decode($id);
-        return new JournalResource(Journal::findOrFail($id));
-    }
-    
     public function create(Request $request){
         // return $request->description;
         validate($request->all(), [
@@ -94,12 +54,12 @@ class VoucherController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
+                );
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count(); 
+                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
                     if($c==0){
                         $journal = Journal::create([
                             'journal_id'=>$trans_no,
@@ -114,7 +74,7 @@ class VoucherController extends Controller
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 $trans_no = $request->trans_no;
                 $journal = Journal::create([
@@ -138,9 +98,9 @@ class VoucherController extends Controller
                     'credit'=>$detail['credit'],
                     'journal_id'=>$journal->id,
                     'created_by'=>$user->id
-                ]);    
+                ]);
             }
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
@@ -162,12 +122,12 @@ class VoucherController extends Controller
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-        
+
         $journal->trans_date = $trans_date;
         $journal->description = $request->description;
         $journal->total = $request->total;
         $journal->updated_by = $user->id;
-        
+
         try{
             \DB::beginTransaction();
             if($request->auto){
@@ -184,25 +144,25 @@ class VoucherController extends Controller
                 $counter = Counter::firstOrCreate(
                     ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
                     ['counter'=>$numbering->counter_start-1]
-                );        
+                );
                 $check = true;
                 do{
                     $counter->getNumber();
                     $trans_no = $counter->last_number;
-                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count(); 
-                    if($c==0){                
+                    $c = Journal::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
+                    if($c==0){
                         $journal->journal_id = $trans_no;
                         $journal->trans_no = $trans_no;
                         $journal->update();
                         $counter->save();
                         $check = false;
                     }
-                }while($check);                
+                }while($check);
             }else{
                 $trans_no = $request->trans_no;
                 $journal->update();
             }
-            //cek id 
+            //cek id
             $old_details = array();
 
             foreach($journal->details as $detail){
@@ -219,7 +179,7 @@ class VoucherController extends Controller
                         'credit'=>$detail['credit'],
                         'journal_id'=>$journal->id,
                         'created_by'=>$user->id
-                    ]);    
+                    ]);
                 }else{
                     $jid = decode($detail['id']);
                     $jdetail = JournalDetail::findOrFail($jid);
@@ -233,17 +193,17 @@ class VoucherController extends Controller
                     $jdetail->updated_by=$user->id;
                     $jdetail->update();
                     if(array_key_exists($jid, $old_details)){
-                       unset($old_details[$jid]); 
+                       unset($old_details[$jid]);
                     }
                 }
             }
             foreach($old_details as $detail){
                 $detail->delete();
             }
-            \DB::commit();        
+            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
-        }        
+        }
         return new JournalResource($journal);
     }
     public function patch(Request $request, $id){
@@ -268,7 +228,7 @@ class VoucherController extends Controller
         $journal->delete();
         return response()->json(null, 204);
     }
-    
+
 
     public function batchDelete(Request $request){
         $id = $request->id;
@@ -314,5 +274,5 @@ class VoucherController extends Controller
         Journal::whereIn('id', $ids)->where('balance','=', 0)->update(['is_journal'=>false, 'journal_transfer_at'=>null]);
         return JournalResource::collection(Journal::whereIn('id', $ids)->get());
     }
-    
+
 }

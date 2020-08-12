@@ -1,8 +1,8 @@
-@component('components.card_form',['id'=>'filter-form', 'btn_label'=>'Filter', 'method'=>'GET', 'action'=>route('reports.ledgers')])
+@component('components.card_form',['id'=>'filter-form', 'btn_label'=>'Filter', 'method'=>'GET', 'action'=>route('reports.vouchers')])
 <div class="row">
     <div class="col-md-4">
       <div class="form-group">
-        <label>{{__('Transaction Date')}}</label>
+      <label>{{__('Transaction Date')}}</label>
         <div class="input-group">
             <div class="input-group-prepend">
               <span class="input-group-text">
@@ -12,7 +12,7 @@
             <input type="text" value="{{request('start_date')}}" class="form-control datepicker" name="start_date" id="start_date">
             <div class="input-group-prepend">
             <span class="input-group-text">
-            s.d
+                s.d
             </span>
             </div>
             <input type="text" value="{{request('end_date')}}" class="form-control datepicker" name="end_date" id="end_date">
@@ -23,9 +23,9 @@
     </div>
     <div class="col-md-4">
       <div class="form-group">
-      @php $val = request('accounts',[]); $val = implode(',', $val); @endphp
-      <label>{{__('Account')}}</label>
-        <select id="select-account" data-selected="{{$val}}" name="accounts[]" class="select2" multiple></select>
+      @php $val = request('journals',[]); $val = implode(',', $val); @endphp
+      <label>{{__('Transaction No.')}}</label>
+        <select id="select-journal" data-selected="{{$val}}" name="journals[]" class="select2" multiple></select>
       </div>
     </div>
     <div class="col-md-4">
@@ -37,37 +37,23 @@
     </div>
     <div class="col-md-4">
       <div class="form-group">
-      @php $val = request('sortirs',[]); $val = implode(',', $val); @endphp
-        <label>{{__('Tags')}}</label>
-        <select id="select-sortir" data-selected="{{$val}}" name="sortirs[]" class="select2" multiple></select>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="form-group">
-      @php $val = request('created_by',[]); $val = implode(',', $val); @endphp
-        <label>{{__('Created by')}}</label>
-        <select id="select-created_by" data-selected="{{$val}}" name="created_by[]" class="select2" multiple></select>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="form-group">
-        <label>{{'Order'}}</label>
+      <label>{{'Order'}}</label>
         <select class="select2" name="sort_key">
-            <option {{request('sort_key')=='trans_date'?'selected':''}} value="trans_date">{{__('Transaction Date')}}</option>
-            <option {{request('sort_key')=='trans_no'?'selected':''}} value="trans_no">{{__('Transaction No.')}}</option>
-              <option {{request('sort_key')=='created_at'?'selected':''}} value="created_at">{{__('Created Date')}}</option>
+          <option {{request('sort_key')=='trans_date'?'selected':''}} value="trans_date">{{__('Transaction Date')}}</option>
+          <option {{request('sort_key')=='trans_no'?'selected':''}} value="trans_no">{{__('Transaction No.')}}</option>
+            <option {{request('sort_key')=='created_at'?'selected':''}} value="created_at">{{__('Created Date')}}</option>
         </select>
         <div class="mt-1">
           <div class="icheck-success d-inline">
             <input type="radio" name="sort_order" value="asc" id="sort_order_asc"  {{request('sort_order')!='desc'?'checked':''}}>
             <label for="sort_order_asc">
-                {{__('Ascending')}}
+              {{__('Ascending')}}
             </label>
           </div>
           <div class="icheck-success d-inline">
             <input type="radio" name="sort_order" value="desc" id="sort_order_desc"  {{request('sort_order')=='desc'?'checked':''}}>
             <label for="sort_order_desc">
-                {{__('Descending')}}
+              {{__('Descending')}}
             </label>
           </div>
         </div>
@@ -75,30 +61,30 @@
     </div>
     <div class="col-md-6">
       <div class="form-group">
-        <label>{{__('Show Columns')}}</label>
+      <label>{{__('Show Columns')}}</label>
         <div class="mt-2">
           <div class="icheck-success d-inline">
             <input type="checkbox" name="department" value="1" id="department"  {{request('department')=='1'?'checked':''}} >
             <label for="department">
-                {{__('Department')}}
+              {{__('Department')}}
             </label>
           </div>
           <div class="icheck-success d-inline">
             <input type="checkbox" name="description" value="1" id="description" {{request('description')=='1'?'checked':''}} >
             <label for="description">
-                {{__('Description')}}
+              {{__('Description')}}
             </label>
           </div>
           <div class="icheck-success d-inline">
-            <input type="checkbox" name="col_tags" value="1" id="col_tags" {{request('col_tags')=='1'?'checked':''}} >
-            <label for="col_tags">
-                {{__('Tags')}}
+            <input type="checkbox" name="tags" value="1" id="tags" {{request('tags')=='1'?'checked':''}} >
+            <label for="tags">
+              {{__('Tags')}}
             </label>
           </div>
           <div class="icheck-success d-inline">
-            <input type="checkbox" name="col_created_by" value="1" id="col_created_by" {{request('col_created_by')=='1'?'checked':''}} >
-            <label for="col_created_by">
-                {{__('Created by')}}
+            <input type="checkbox" name="created_by" value="1" id="created_by" {{request('created_by')=='1'?'checked':''}} >
+            <label for="created_by">
+              {{__('Created by')}}
             </label>
           </div>
         </div>
@@ -116,12 +102,25 @@
 <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
 <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script type="text/javascript">
-function select2Load(selector, url, data={}){$.ajax({url: url,data:data,dataType: 'json',success: function(res){$(selector).select2({theme: 'bootstrap4',data:res});var val = $(selector).attr('data-selected');if($(selector).prop('multiple') && val!=""){$(selector).val(val.split(','));}else{$(selector).val(val);}$(selector).trigger('change');}})}
+function select2Load(selector, url){
+  $.ajax({
+    url: url,
+      dataType: 'json',
+      success: function(res){
+        $(selector).select2({theme: 'bootstrap4',data:res});
+        var val = $(selector).attr('data-selected');
+        if($(selector).prop('multiple') && val!=""){
+          $(selector).val(val.split(','));
+        }else{
+          $(selector).val(val);
+        }
+        $(selector).trigger('change');
+      }
+  })
+}
 $(function () {
-  select2Load('#select-account', "{{route('select2', ['name'=>'accounts'])}}", {has_children:0})
+  select2Load('#select-journal', "{{route('select2', ['name'=>'vouchers'])}}")
   select2Load('#select-department', "{{route('select2', ['name'=>'departments'])}}")
-  select2Load('#select-sortir', "{{route('select2', ['name'=>'sortirs'])}}")
-  select2Load('#select-created_by', "{{route('select2', ['name'=>'users'])}}")
 
   $('.select2').select2({theme: 'bootstrap4'});
     $('.datepicker').daterangepicker({

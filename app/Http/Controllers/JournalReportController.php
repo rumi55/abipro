@@ -21,13 +21,13 @@ class JournalReportController extends Controller
     public function index(Request $request, $company_id, $is_voucher=0){
         $company = Company::findOrFail(decode($company_id));
         $company_id = $company->id;
-        $params = $this->getParams($request, $company_id);
+        $params = $this->getParams($request, $company_id, $is_voucher);
         $data = $this->query($params, $company, $is_voucher);
         $title = 'Laporan '.($is_voucher?'Voucher':'Jurnal');
         $view = 'report.journal.'.($params['layout']=='detail'?'default':'summary');
         $period = ($params['start_date']==$params['end_date'])?fdate($params['start_date'], 'd M Y'):fdate($params['start_date'], 'd M Y').' s.d '.fdate($params['end_date'], 'd M Y');
         $data = array(
-            'report'=>'journal',
+            'report'=>$is_voucher?'voucher':'journal',
             'title'=>$title,
             'company'=>$company,
             'period'=>$period,
@@ -68,7 +68,7 @@ class JournalReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        $table = $is_voucher?'vw_voucher':'vw_journals';
+        $table = $is_voucher==1?'vw_voucher':'vw_journals';
 
         // DB::enableQueryLog();
         $journal = DB::table($table)
@@ -105,9 +105,15 @@ class JournalReportController extends Controller
         return $journal;
     }
 
-    private function getParams(Request $request, $company_id){
+    private function getParams(Request $request, $company_id, $is_voucher=0){
         $layout = $request->query('layout', 'detail');
         $journals = $request->journals??[];
+        if(!empty($request->id)){
+            $journals = $request->id??[];
+            if(!is_array($journals)){
+                $journals = [$journals];
+            }
+        }
         $departments = $request->departments??[];
         $opt_columns = $request->columns;
         $sort_key = $request->sort_key;
@@ -124,8 +130,9 @@ class JournalReportController extends Controller
         $period = $request->period;
         $start_date = fdate($request->start_date, 'Y-m-d');
         $end_date = fdate($request->end_date, 'Y-m-d');
+        $table = $is_voucher==1?'vw_voucher':'vw_journals';
         if(empty($start_date)  && empty($end_date)){
-            $max_date = DB::table('vw_journals')
+            $max_date = DB::table($table)
             ->where('company_id', $company_id)->max('trans_date');
             if($max_date==null){
                 $max_date = date('Y-m-d');
@@ -135,11 +142,11 @@ class JournalReportController extends Controller
         }
 
         if(count($journals)>0){
-            $end_date = DB::table('vw_journals')
+            $end_date = DB::table($table)
             ->where('company_id', $company_id)
             ->whereIn('journal_id', $journals)
             ->max('trans_date');
-            $start_date = DB::table('vw_journals')
+            $start_date = DB::table($table)
             ->where('company_id', $company_id)
             ->whereIn('journal_id', $journals)
             ->min('trans_date');

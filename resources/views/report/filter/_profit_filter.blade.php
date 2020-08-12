@@ -4,9 +4,9 @@
       <div class="form-group">
         <label>Jenis Perbandingan</label>
         <select id="compare" class="select2" name="compare">
-          <option {{request('compare', 'period')=='period'?'selected':''}} value="period">Periode</option>
-          <option {{request('compare')=='department'?'selected':''}} value="department">Departemen</option>
-          <option {{request('compare')=='ratio'?'selected':''}} value="ratio">Analisis Rasio</option>
+        <option {{request('compare', 'period')=='period'?'selected':''}} value="period">{{__('Period')}}</option>
+        <option {{request('compare')=='department'?'selected':''}} value="department">{{__('Department')}}</option>
+        <option {{request('compare')=='budget'?'selected':''}} value="budget">{{__('Budget')}}</option>
         </select>
       </div>
     </div>

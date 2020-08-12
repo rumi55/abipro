@@ -58,6 +58,12 @@ if (!function_exists('company')) {
         return empty($company->$attribute) && $attribute!='logo'?'-':$company->$attribute;
     }
 }
+//depend on company function
+if (!function_exists('company_setting')) {
+    function company_setting($key){
+        return DB::table('company_settings')->where('key', $key)->where('company_id', company('id'))->value('value');
+    }
+}
 if (!function_exists('user')) {
     function user($attribute){
         $user = Auth::user();
@@ -193,7 +199,7 @@ if (!function_exists('fmonth')) {
 if (!function_exists('fcurrency')) {
     function fcurrency($value){
         $value = parse_number($value);
-        if(empty($value))return 0;
+        if(empty($value))return '0,00';
         return number_format($value, 2, ',', '.');
     }
 }

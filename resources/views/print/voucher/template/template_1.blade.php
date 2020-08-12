@@ -1,20 +1,14 @@
-<!DOCTYPE html>
 <html>
+
 <head>
     <style type="text/css">
         html {
             font-family: sans-serif;
-            font-size: 9pt;
             line-height: 1.15;
             -webkit-text-size-adjust: 100%;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         }
-        h1,h2,h3,h4{
-            font-size: 12pt;
-        }
-        .text-bold{
-            font-weight: bold;
-        }
+
         table {
             border-collapse: collapse;
             width: 100%;
@@ -171,8 +165,10 @@
 
     </style>
 </head>
+
 <body>
     @include('report._header_pdf')
-    @include($view)
+    @yield('content')
 </body>
+
 </html>

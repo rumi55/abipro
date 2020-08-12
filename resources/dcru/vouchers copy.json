@@ -33,7 +33,7 @@
                 "type":"detail",
                 "filter":{
                     "type":"unique",
-                    "table":"journals",
+                    "table":"transactions",
                     "column":"trans_no"
                 },
                 "detail_id":"id",
@@ -51,14 +51,14 @@
                 "title":"Transaction Type"
             },
             {
-                "data":"total",
-                "name":"total",
+                "data":"amount",
+                "name":"amount",
                 "type":"currency",
-                "title":"Total"
+                "title":"Amount"
             },
             {
                 "data":"status",
-                "name":"journals.status",
+                "name":"status",
                 "type":"badge",
                 "badge":{
                     "draft":{"color":"secondary", "text":"draft"},
@@ -92,14 +92,6 @@
                         "type": "view"
                     },
                     {
-                        "label": "View Report",
-                        "icon": "fas fa-chart-line",
-                        "visible":"status==approved",
-                        "route": {
-                            "name":"reports.vouchers"
-                        }
-                    },
-                    {
                         "label": "Print Receipt",
                         "icon": "fas fa-print",
                         "visible":"status==approved",
@@ -116,18 +108,9 @@
                         }
                     },
                     {
-                        "label": "Process to Journal",
-                        "icon": "fas fa-exchange-alt",
-                        "visible":"status==approved",
-                        "route": {
-                            "name":"vouchers.tojournal",
-                            "method":"POST"
-                        }
-                    },
-                    {
                         "label": "Edit",
                         "type": "edit",
-                        "visible":"status==draft || status==submitted || status==rejected"
+                        "visible":"status==draft || status==rejected"
                     },
                     {
                         "label": "Gandakan",
@@ -136,23 +119,15 @@
                     {
                         "label": "Hapus",
                         "type": "delete",
-                        "visible":"status==draft || status==submitted || status==rejected"
+                        "visible":"status==draft || status==rejected"
                     }
                 ]
             }
         ],
         "bulk_actions":[
             {
-                "label": "View Report",
-                "icon": "fas fa-chart-line",
-                "route": {
-                    "name":"reports.vouchers",
-                    "method":"GET"
-                }
-            },
-            {
                 "label": "Process to Journal",
-                "confirm":"Are you sure want to process to journal? Only approved voucher will be processed.",
+                "confirm":"Are you sure want to process to journal?",
                 "icon": "fas fa-exchange-alt",
                 "route": {
                     "name":"vouchers.tojournal.batch"
@@ -171,22 +146,17 @@
             }
         ],
         "query":{
-            "table":"journals",
-            "select":"journals.*,trans_type, users.name as created_name",
+            "table":"transactions",
+            "select":"transactions.*, users.name as created_name",
             "joins":[
                 {
                     "join":"left",
-                    "table":"transactions",
-                    "on":"transactions.id=journals.transaction_id"
-                },
-                {
-                    "join":"left",
                     "table":"users",
-                    "on":"users.id=journals.created_by"
+                    "on":"users.id=transactions.created_by"
                 }
             ],
             "where":{
-                "condition": "journals.company_id=? AND is_voucher=1 AND is_processed=0",
+                "condition": "transactions.company_id=?",
                 "params":["user:company_id"]
             }
         }

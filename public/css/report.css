@@ -2,7 +2,7 @@ table {
     border-collapse: collapse;
     width: 100%;
 }
-  
+
 .table-report {
     border-collapse: collapse !important;
     width: 100%;
@@ -11,7 +11,7 @@ table {
     background-color: transparent;
     /* max-width: 970px; */
 }
-  
+
 .table-report th{
     padding: 0.3rem;
     vertical-align: top;
@@ -25,7 +25,7 @@ table {
     word-wrap:break-word;
     max-width: 200px;
 }
-  
+
 .table-report thead th {
     vertical-align: bottom;
     background-color: #d6d8db !important;
@@ -39,7 +39,7 @@ table {
 .table-report tbody td {
     border: none;
 }
-  
+
 .table-report tbody + tbody {
     border-top: 2px solid #d6d8db;
 }
@@ -91,7 +91,7 @@ table {
 .text-nowrap {
   white-space: nowrap !important;
 }
-  
+
 .text-truncate {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -105,7 +105,7 @@ table {
 .text-right {
   text-align: right !important;
 }
-  
+
 .text-center {
   text-align: center !important;
 }
@@ -118,6 +118,12 @@ table {
   border: none;
 }
 
+.table-report tbody td.br-1{
+  border-right: 1px solid #d6d8db;
+}
+.table-report tbody td.bl-1{
+  border-left: 1px solid #d6d8db;
+}
 .table-report tbody td.bt-1{
   border-top: 1px solid #d6d8db;
 }

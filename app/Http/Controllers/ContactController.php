@@ -128,7 +128,7 @@ class ContactController extends Controller
             }while($check);
         }
         $data = array_merge($data,['company_id'=>$company->id]);
-        dd($data);
+        // dd($data);
         $contact = Contact::create($data);
         add_log('contacts', 'create', '');
         return redirect()->route('contacts.index')->with('success', trans('New :attr has been created.', ['attr'=>strtolower(trans('Contact'))]));

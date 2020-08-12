@@ -15,7 +15,7 @@ class Select2OutputController extends Controller
         $company_id = \Auth::user()->activeCompany()->id;
         $query = \DB::table('journals')->where('company_id', '=', $company_id)
         ->selectRaw('id, trans_no as text')
-        ->where('is_voucher', 0)->orderBy('trans_date', 'desc');
+        ->where('is_processed', 0)->orderBy('trans_date', 'desc');
         if(isset($request->search)){
             $q = $request->search;
             $query = $query->whereRaw("trans_no like '%$q%'");
@@ -26,7 +26,7 @@ class Select2OutputController extends Controller
         $company_id = \Auth::user()->activeCompany()->id;
         $query = \DB::table('journals')->where('company_id', '=', $company_id)
         ->selectRaw('id, trans_no as text')
-        ->where('is_voucher', 1)->orderBy('trans_date', 'desc');
+        ->where('is_voucher', 1)->where('is_processed', 0)->where('status', 'approved')->orderBy('trans_date', 'desc');
         if(isset($request->search)){
             $q = $request->search;
             $query = $query->whereRaw("trans_no like '%$q%'");
@@ -63,6 +63,17 @@ class Select2OutputController extends Controller
         ->orderBy('name');
         return $query->get();
     }
+    public function users(Request $request){
+        $company_id = \Auth::user()->activeCompany()->id;
+        $query = \DB::table('company_users')->join('users', 'users.id', '=', 'user_id')->where('company_id', '=', $company_id)
+        ->selectRaw('users.id as id, name as text')
+        ->orderBy('name');
+        $users = $query->get();
+        $owner = \DB::table('companies')->join('users', 'users.id', '=', 'companies.owner_id')->where('companies.id', '=', $company_id)
+        ->selectRaw('users.id as id, users.name as text')
+        ->orderBy('users.name')->get();
+        return array_merge($owner->toArray(), $users->toArray());
+    }
     public function sortirs(Request $request){
         $company_id = \Auth::user()->activeCompany()->id;
         $grouped = empty($request->grouped)?true:filter_var($request->grouped, FILTER_VALIDATE_BOOLEAN);
@@ -83,9 +94,9 @@ class Select2OutputController extends Controller
         }else{
             $query = $query->selectRaw('id, `group` as grup, item_name as text');
         }
-        
+
         $results = $query->orderByRaw('`group`')->distinct()->get();
-        
+
         if($grouped){
             $options = [];
             $group = null;
@@ -110,6 +121,6 @@ class Select2OutputController extends Controller
             return $options;
         }
         return $results;
-        
+
     }
 }

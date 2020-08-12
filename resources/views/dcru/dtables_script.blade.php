@@ -11,7 +11,7 @@
                   @if($column['type']=='checkbox')
                   <th style="width:20px" scope="col" class="noexport"><input type="checkbox" class="check-all"/></th>
                   @elseif($column['type']=='menu')
-                  <th style="width:20px" scope="col" class="noexport"></th>  
+                  <th style="width:20px" scope="col" class="noexport"></th>
                   @elseif(!(isset($column['visible']) && $column['visible']==false))
                     <th scope="col" >{{__($column['title'])}}</th>
                   @endif
@@ -22,7 +22,7 @@
   </table>
 </div>
 
-<?php 
+<?php
 $cb_actions = 0;
 $bactions = '';
 foreach($bulk_actions as $act){
@@ -33,7 +33,8 @@ foreach($bulk_actions as $act){
     $routes = explode('.', $act['route']['name']);
     if(has_action($routes[0], $routes[1])){
       $params = isset($act['route']['params'])?$act['route']['params']:[];
-      $bactions .= '<form action="'.asset(route($act['route']['name'], $params, false)).'" method="POST" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="'.(isset($act['confirm'])?true:false).'" '.(isset($act['confirm'])?('data-confirm-text="'.$act['confirm'].'"'):'').' class="dropdown-item bulk-btn">'.(isset($act['icon'])?('<i class="'.$act['icon'].'"></i> '):'') .$act['label'].'</button></form>';
+      $method = isset($act['route']['method'])?$act['route']['method']:'POST';
+      $bactions .= '<form action="'.asset(route($act['route']['name'], $params, false)).'" method="'.$method.'" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="'.(isset($act['confirm'])?true:false).'" '.(isset($act['confirm'])?('data-confirm-text="'.$act['confirm'].'"'):'').' class="dropdown-item bulk-btn">'.(isset($act['icon'])?('<i class="'.$act['icon'].'"></i> '):'') .$act['label'].'</button></form>';
       $cb_actions++;
     }
   }
@@ -42,7 +43,7 @@ foreach($bulk_actions as $act){
 
 
 @push('js')
-<?php 
+<?php
 //get parameters
 $route = Route::current();
 $parameters = $route->parameters();
@@ -63,7 +64,7 @@ foreach($parameters as $key=>$param){
       columns:[
         @foreach($dtcolumns as $dt)
           @if(!($dt['type']=='checkbox' && $cb_actions==0))
-          { 
+          {
             data:"{{$dt['data']}}",
             name:"{{$dt['name']}}",
             @if(isset($dt['class']))
@@ -82,7 +83,7 @@ foreach($parameters as $key=>$param){
             @else
             searchable:{{$dt['searchable']==1?'true':'false'}},
             orderable:{{$dt['orderable']==1?'true':'false'}},
-            visible:{{$dt['visible']==true?'true':'false'}}            
+            visible:{{$dt['visible']==true?'true':'false'}}
             @endif
           },
           @endif
@@ -223,7 +224,7 @@ foreach($parameters as $key=>$param){
       $('#dt-btn-print-{{$dtname}}').click(function(){$('.buttons-print[aria-controls={{$dtname}}]').trigger('click')})
       $('#dt-btn-copy-{{$dtname}}').click(function(){$('.buttons-copy[aria-controls={{$dtname}}]').trigger('click')})
       $('#dt-btn-csv-{{$dtname}}').click(function(){$('.buttons-csv[aria-controls={{$dtname}}]').trigger('click')})
-      
+
       $('.bulk-actions-wrapper-{{$dtname}}').append(
         `
         <button id="toggle-columns-{{$dtname}}" class="btn btn-sm btn-secondary"  data-toggle="collapse" data-target="#columns-{{$dtname}}" aria-expanded="false" aria-controls="columns"  ><i class="fas fa-th"></i> {{__("Column")}}</button>
@@ -238,7 +239,7 @@ foreach($parameters as $key=>$param){
       $('.toggle-vis').on( 'click', function (e) {
         $('#{{$dtname}}').DataTable().column($(this).val()).visible($(this).prop('checked'));
       });
-      
+
         $('.bulk-actions-wrapper-{{$dtname}}').append(
           `
           <button id="toggle-filter-{{$dtname}}" class="btn btn-sm btn-secondary"  data-toggle="collapse" data-target="#filter-{{$dtname}}" aria-expanded="false" aria-controls="filter"  ><i class="fas fa-filter"></i> {{__("Filter")}}</button>
@@ -253,12 +254,12 @@ foreach($parameters as $key=>$param){
         $('#filter-{{$dtname}}').on('show.bs.collapse', function () {
           $('#toggle-filter-{{$dtname}}').addClass('active')
         })
-      
+
       @if($cb_actions>0)
       $('.bulk-actions-wrapper-{{$dtname}}').append(
         '<div id="{{$dtname}}-dt-selected-id" style="display:inline"></div>'+
         '<div class="dropdown" style="display:inline;margin-left:5px">'+
-        '<button id="bulk-actions-{{$dtname}}" style="display:none" type="button" class="btn btn-sm btn-danger dropdown-toggle" data-toggle="dropdown">{{__("Bulk Actions")}}</button>'+        
+        '<button id="bulk-actions-{{$dtname}}" style="display:none" type="button" class="btn btn-sm btn-danger dropdown-toggle" data-toggle="dropdown">{{__("Bulk Actions")}}</button>'+
         '<div class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="bulk-actions-{{$dtname}}">'+
         '{!! $bactions !!}'+
         '</div>'+
@@ -297,7 +298,7 @@ foreach($parameters as $key=>$param){
           }
         })
       });
-      
+
       @if($cb_actions>0)
       $('.bulk-btn').click(function(e){
         e.preventDefault();
@@ -306,7 +307,7 @@ foreach($parameters as $key=>$param){
         if(confirm==1){
         var confirm_text = $(this).attr('data-confirm-text');
           Swal.fire({
-            title: 'Konfirmasi',
+            title: '{{__("Confirmation")}}',
             icon: 'warning',
             html: confirm_text,
             showCloseButton: false,
@@ -320,9 +321,11 @@ foreach($parameters as $key=>$param){
             }
           })
         }else{
+              var id = $('#{{$dtname}}-dt-selected-id').html();
+              form.append(id);
           form.submit();
         }
-        
+
       });
       @endif
 
@@ -334,8 +337,8 @@ foreach($parameters as $key=>$param){
             if(this.checked){
                 $('#{{$dtname}}-dt-selected-id').append('<input id="id-'+id+'" name="id[]" type="hidden" value="'+id+'" >')
             }else{
-                $('#id-'+id).remove();
-            }   
+                $('##{{$dtname}}-id-'+id).remove();
+            }
           });
           if(this.checked){
             $('#bulk-actions-{{$dtname}}').show();

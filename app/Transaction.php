@@ -24,6 +24,7 @@ class Transaction extends Model
     public function account(){
         return $this->belongsTo('App\Account');
     }
+
     public function contact(){
         return $this->belongsTo('App\Contact');
     }
@@ -35,8 +36,7 @@ class Transaction extends Model
     }
 
     public function journal(){
-        return Journal::where('transaction_type_id', $this->transaction_type_id)
-        ->where('transaction_id', $this->transaction_id)->first();
+        return $this->hasOne('App\Journal', 'transaction_id', 'id');
     }
     public function tags(){
         $tag_id= explode(',', $this->tags);

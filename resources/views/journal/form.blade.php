@@ -20,35 +20,48 @@ $breadcrumbs = array(
         <h3 class="card-title">{{$mode=='create'?__('New '.$title_type): __($title_type).'#'.$journal->trans_no}}</h3>
     </div>
     <div class="card-body pb-1">
+        @if($journal->status=='rejected')
+        <div class="callout callout-danger">
+        <p>{{$journal->rejection_note}}</p>
+          </div>
+          @endif
+
         <div class="row">
-            <div class="col">
+            @if($mode=='create')
+            <div class="col-md-4">
                 <div class="form-group">
-                    <label for="trans_no" >{{__('Transaction Group')}}:</label>
-                    <input name="auto" value="1" type="hidden">
-                    <select name="numbering_id" data-value="{{old('numbering_id', $journal->numbering_id)}}" required class="form-control select2 @error('numbering_id') is-invalid @enderror" style="width:100%">
-                        @foreach($numberings as $numbering)
-                        <option {{$numbering->id==old('numbering_id', $journal->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
-                        @endforeach
-                    </select>
+                    <label for="trans_no" >{{__('Transaction Group')}}</label>
+                    <div class="input-group">
+                        <select id="numbering_id" name="numbering_id" data-numbering-type="journal" data-value="{{old('numbering_id', $journal->numbering_id)}}" class="form-control numbering_id @error('numbering_id') is-invalid @enderror">
+
+                        </select>
+                    </div>
+                    <small class="text-muted" style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}">{{__('Select numbering format. Transaction number will be generated automatically based on selected numbering format.')}}</small>
                     @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            <div class="col">
+            @endif
+            <div class="col-md-4">
                 <div class="form-group">
-                    <label for="trans_no" >{{__('Transaction No.')}}:</label>
-                    <div class="input-group mb-3">
-                        <input id="trans_no" {{($mode=='edit' || old('manual', 0)==1)?'':'readonly'}} name="trans_no" type="text" class="form-control" value="@if($mode=='edit' || old('manual', 0)==1) {{old('trans_no',$journal->trans_no)}} @else [Automatic] @endif" >
-
-                        <div class="input-group-append">
+                    <label for="trans_no" >{{__('Transaction No.')}}</label>
+                    @if($mode=='create')
+                    <div class="input-group">
+                        <div class="input-group-prepend">
                             <div class="input-group-text">
-                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual', 0)==1)==1?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
+                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual')==1)?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
                           </div>
                         </div>
-                      </div>
-                      @error('trans_no')<small class="text-danger">{!!$message!!}</small>@enderror
+                        <input  id="trans_no_auto" readonly style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}" name="trans_no_auto" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_auto',$journal->trans_no)}} @endif" >
+                        <input  id="trans_no_manual" style="{{($mode=='edit' || old('manual')==1)?'':'display:none'}}" name="trans_no_manual" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_manual',$journal->trans_no)}} @endif" >
+                    </div>
+                    @error('trans_no_manual')<br/><small class="text-danger">{!!$message!!}</small>@enderror
+                    @error('trans_no_auto')<br/><small class="text-danger">{!!$message!!}</small>@enderror
+                    @else
+                    <input readonly name="trans_no" type="text" class="form-control" value="{{old('trans_no',$journal->trans_no)}}" >
+                    @endif
                 </div>
             </div>
-            <div class="col">
+            <div class="col-md-3">
                 <div class="form-group">
                     <label for="trans_date">{{__('Transaction Date')}}:</label>
                     <div class="input-group">
@@ -62,10 +75,16 @@ $breadcrumbs = array(
                     @error('trans_date')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
+            @if($journal->is_voucher)
+            <div class="col-md-4">
+                <div class="form-group">
+                    <label>{{__('Contact')}}</label>
+                    <select name="contact_id" class="form-control select2 contact" data-value="{{old('contact_id', $journal->contact_id)}}"></select>
+                    @error('contact_id')<small class="text-danger">{!!$message!!}</small>@enderror
+                </div>
+            </div>
+    @endif
+            <div class="col-md-8">
                 <div class="form-group">
                     <label>{{__('Description')}}:</label>
                     <textarea id="description" name="description" class="form-control @error('description') is-invalid @enderror"  rows="1">{{old('description',$journal->description)}}</textarea >
@@ -93,7 +112,7 @@ $breadcrumbs = array(
                     $detail = $details[$i] ;
                 }
                 @endphp
-                <li class="list-group-item d-item" id="row_{{$i}}" data-row-index="{{$i}}" data-index="{{$i}}">
+                <li class="list-group-item d-item" id="row_{{$i}}" data-index="{{$i}}">
                     <div class="row">
                         <div id="no_{{$i}}" class="col">{{$i+1}}</div>
                         <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="{{$i}}"><i class="fas fa-times"></i></button></div>
@@ -102,26 +121,27 @@ $breadcrumbs = array(
                         <div class="col-md-6 col-sm-12">
                             <div class="form-group">
                                 <label for="detail_account_id_{{$i}}" >{{__('Account')}}:</label>
-                                <select id="detail_account_id_{{$i}}" required data-value="{{old('detail.'.$i.'.account_id', $detail->account_id)}}" name="detail[{{$i}}][account_id]" class="form-control select2 account">
+                                <select id="detail_account_id_{{$i}}" data-index="{{$i}}" required data-value="{{old('detail.'.$i.'.account_id', $detail->account_id)}}" name="detail[{{$i}}][account_id]" class="form-control select2 account">
 
                                 </select>
                                 @error('detail_account_id_'.$i)<small class="text-danger">{!!$message!!}</small>@enderror
+
                                 @if($mode=='edit')
-                                <input type="hidden" name="detail[{{$i}}][id]" value="{{$detail->id}}"/>
-                                @endif
+                                    <input type="hidden" data-index="{{$i}}" id="detail_id_{{$i}}" name="detail[{{$i}}][id]" value="{{$detail->id}}"/>
+                                    @endif
                             </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_debit_{{$i}}" >{{__('Debit')}}:</label>
-                                <input name="detail[{{$i}}][debit]" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail.'.$i.'.debit') is-invalid @enderror" value="{{old('detail.'.$i.'.debit', $detail!=null?$detail->debit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[{{$i}}][debit]" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail.'.$i.'.debit') is-invalid @enderror" value="{{empty(old('detail.'.$i.'.debit', $detail!=null?$detail->debit:''))?'0,00':old('detail.'.$i.'.debit', $detail!=null?$detail->debit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail.'.$i.'.debit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_credit_{{$i}}" >{{__('Credit')}}:</label>
-                                <input name="detail[{{$i}}][credit]" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail.'.$i.'.credit') is-invalid @enderror" value="{{old('detail.'.$i.'.credit', $detail!=null?$detail->credit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[{{$i}}][credit]" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail.'.$i.'.credit') is-invalid @enderror" value="{{empty(old('detail.'.$i.'.credit', $detail!=null?$detail->credit:''))?'0,00':old('detail.'.$i.'.credit', $detail!=null?$detail->credit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail.'.$i.'.credit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
@@ -183,12 +203,12 @@ $breadcrumbs = array(
                 </div>
                 <div class="col text-right">
                     <small class="text-muted">{{__('Total Debit')}}</small><br>
-                    <input name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="{{old('total_debit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
+                    <input name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="{{empty(old('total_debit', $journal->total))?'0,00':old('total_debit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_debit')<small class="text-danger">{!! $message !!}</small>@enderror
                 </div>
                 <div class="col text-right">
                 <small class="text-muted">{{__('Total Credit')}}</small><br>
-                    <input name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="{{old('total_credit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask/>
+                    <input name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="{{empty(old('total_credit', $journal->total))?'0,00':old('total_credit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_credit')<small class="text-danger">{!! $message !!}</small>@enderror
                     <input type="hidden" id="total" name="total" value="{{old('total', $journal->total)}}" />
                     <input type="hidden" name="is_voucher" value="{{old('is_voucher', $journal->is_voucher)}}" />
@@ -200,7 +220,25 @@ $breadcrumbs = array(
     <div class="card-footer">
         <div class="row">
             <div class="col-sm-6">
-                <button id="btn-save" type="submit" class="btn btn-primary" >{{$mode=='edit'?__('Save'):__('Create').$title_type}}</button>
+            @if($journal->is_voucher)
+                @if(company_setting('voucher_approval'))
+                    @if($mode=='edit')
+                        @if($journal->status=='rejected')
+                            <button type="submit" name="status" value="submitted" class="btn btn-primary btn-save" >{{trans('Submit Voucher')}}</button>
+                            <button type="submit" name="status" value="draft" class="btn btn-primary btn-save" >{{trans('Save as Draft')}}</button>
+                        @else
+                            <button type="submit" name="status" value="submitted" class="btn btn-primary btn-save" >{{trans('Save')}}</button>
+                        @endif
+                    @else
+                        <button type="submit" name="status" value="submitted" class="btn btn-primary btn-save" >{{trans('Submit Voucher')}}</button>
+                        <button type="submit" name="status" value="draft" class="btn btn-primary btn-save" >{{trans('Save as Draft')}}</button>
+                    @endif
+                @else
+                    <button type="submit" name="status" value="approved" class="btn btn-primary btn-save" >{{trans('Submit Voucher')}}</button>
+                @endif
+            @else
+                <button type="submit" class="btn btn-primary" >{{$mode=='edit'?__('Save'):__('Create').' '.$title_type}}</button>
+            @endif
             </div>
             <div class="col-sm-6 text-right">
             <a href="{{route('dcru.index', 'journals')}}" class="btn btn-default" >{{__('Cancel')}}</a>
@@ -225,17 +263,30 @@ $breadcrumbs = array(
 <script type="text/javascript">
 function  init(){
     loadSelect();
+    //$("#numbering_id").select2({theme: 'bootstrap4', placeholder:'Select Numbering Format'});
     $('input[name=manual]').change(function(){
         var manual = $(this).prop('checked');
         if(manual){
-            $('#trans_no').prop('readonly', false)
-            $('#trans_no').val("{{($mode=='edit' || old('manual', 0)==1)?old('trans_no',$journal->trans_no):''}}");
-            $('#trans_no').focus();
+            $('#trans_no_manual').show();
+            $('#trans_no_manual').focus();
+            $('#trans_no_auto').hide();
         }else{
-            $('#trans_no').prop('readonly', true)
-            $('#trans_no').val('[Automatic]');
+            $('#trans_no_manual').hide();
+            $('#trans_no_auto').show();
         }
     })
+
+    $('#numbering_id').change(function(){
+        var id = $(this).val();
+        $.ajax({
+            url: BASE_URL+'/json/numberings/'+id+'/journal',
+            method: 'GET',
+            success: function(res){
+                $('#trans_no_auto').val(res.trans_no)
+            }
+        })
+    })
+
     $('.date').daterangepicker({
       timePicker: false,
       singleDatePicker:true,
@@ -257,8 +308,8 @@ function  init(){
         if($('#detail_length').val()>2){
             $(this).parent().parent().parent().remove();
         }else{
-            $('#detail_debit_'+idx).val(0);
-            $('#detail_credit_'+idx).val(0);
+            $('#detail_debit_'+idx).val('0,00');
+            $('#detail_credit_'+idx).val('0,00');
             $('#detail_description_'+idx).val('');
         }
         onchange();
@@ -274,15 +325,22 @@ function reindexing(){
         $(this).attr('id', 'row_'+index);
         $('#no_'+i).html(index+1);
         $('#no_'+i).attr('id', 'no_'+index);
+        $('#detail_id_'+i).attr('data-index', index)
+        $('#detail_id_'+i).attr('name', 'detail['+index+'][id]')
+        $('#detail_id_'+i).attr('id', 'detail_id_'+index)
+
         $('#detail_account_id_'+i).attr('data-index', index)
         $('#detail_account_id_'+i).attr('name', 'detail['+index+'][account_id]')
         $('#detail_account_id_'+i).attr('id', 'detail_account_id_'+index)
+
         $('#detail_debit_'+i).attr('data-index', index)
         $('#detail_debit_'+i).attr('name', 'detail['+index+'][debit]')
-        $('#detail_debit_'+i).attr('id', 'detail_debit_id_'+index)
+        $('#detail_debit_'+i).attr('id', 'detail_debit_'+index)
+
         $('#detail_credit_'+i).attr('data-index', index)
         $('#detail_credit_'+i).attr('name', 'detail['+index+'][credit]')
-        $('#detail_credit_'+i).attr('id', 'detail_credit_id_'+index)
+        $('#detail_credit_'+i).attr('id', 'detail_credit_'+index)
+
         $('#detail_description_'+i).attr('data-index', index)
         $('#detail_description_'+i).attr('name', 'detail['+index+'][description]')
         $('#detail_description_'+i).attr('id', 'detail_description_'+index)
@@ -293,8 +351,8 @@ function reindexing(){
         $('#detail_tags_'+i).attr('name', 'detail['+index+'][tags]')
         $('#detail_tags_'+i).attr('id', 'detail_tags_'+index)
         $('button[data-index='+i+']').attr('data-index', index)
-        $('#detail_length').val(index+1);
     });
+    $('#detail_length').val(count);
 }
 function changeIndex(oldIndex, index){
     $('#row_'+oldIndex).attr('id', 'row_'+index);
@@ -313,7 +371,7 @@ $(function () {
         var last_idx = parseInt(idx)-1;
         var no = parseInt(idx)+1;
         var row = `
-                <li class="list-group-item d-item" id="row_${idx}" data-row-index="${idx}" data-index="${idx}">
+                <li class="list-group-item d-item" id="row_${idx}"  data-index="${idx}">
                     <div class="row">
                         <div id="no_${idx}" class="col">${no}</div>
                         <div class="col text-right"><button type="button" class="btn btn-link btn-sm text-danger btn-remove" data-index="${idx}"><i class="fas fa-times"></i></button></div>
@@ -331,13 +389,13 @@ $(function () {
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_debit_${idx}" >{{__('Debit')}}:</label>
-                                <input name="detail[${idx}][debit]" data-index="${idx}" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[${idx}][debit]" data-index="${idx}" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_credit_${idx}" >{{__('Credit')}}:</label>
-                                <input name="detail[${idx}][credit]" data-index="${idx}" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[${idx}][credit]" data-index="${idx}" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
@@ -393,7 +451,7 @@ $(function () {
         var idx = $(this).attr('data-index');
         var val = parseNumber($(this).val());
         if(val>0){
-            $('#detail_credit_'+idx).val(0);
+            $('#detail_credit_'+idx).val('0,00');
         }
         onchange()
     })
@@ -401,7 +459,7 @@ $(function () {
         var idx = $(this).attr('data-index');
         var val = parseNumber($(this).val());
         if(val>0){
-            $('#detail_debit_'+idx).val(0);
+            $('#detail_debit_'+idx).val('0,00');
         }
         onchange()
     })
@@ -412,17 +470,17 @@ function validate(){
 function onchange(){
     var debit = sum('.debit');
     var credit = sum('.credit');
-    $('#total_debit').val(debit);
-    $('#total_credit').val(credit);
+    $('#total_debit').val(debit==0?'0,00':debit);
+    $('#total_credit').val(credit==0?'0,00':credit);
     if(debit==credit){
         $('.total').addClass('text-success');
         $('.total').removeClass('text-danger');
         $('#total').val(debit);
-        $('#btn-save').prop('disabled', false);
+        $('.btn-save').prop('disabled', false);
     }else{
         $('.total').addClass('text-danger');
         $('.total').removeClass('text-success');
-        $('#btn-save').prop('disabled', true);
+        $('.btn-save').prop('disabled', true);
     }
 }
 function sum(selector){
@@ -431,7 +489,7 @@ function sum(selector){
       var val = $(this).val();
       if(val==''||val==null){
         val = 0;
-        $(this).val(val)
+        $(this).val('0,00')
       }
       var n = parseNumber(val);
       total=total+n;
@@ -440,7 +498,7 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join(''));
+    return parseInt(val.split('.').join('').split(',').join('.'));
 }
 </script>
 @endpush

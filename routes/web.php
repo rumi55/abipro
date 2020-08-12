@@ -1,5 +1,4 @@
 <?php
-
 Auth::routes();
 
 Route::group(['middleware'=>['auth', 'owner']],function(){
@@ -9,6 +8,7 @@ Route::group(['middleware'=>['auth', 'owner']],function(){
 
 Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/', 'HomeController@index')->name('home');
+    Route::get('/print', 'PrintController@index')->name('print');
     //
 
 
@@ -94,18 +94,29 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/vouchers/create/{type}', 'TransactionController@create')->name('vouchers.create.single');
     Route::post('/vouchers/create/{type}', 'TransactionController@save')->name('vouchers.create.single.save');
     Route::post('/vouchers', 'JournalController@save')->name('vouchers.create.save');
-    Route::post('/vouchers/{id}/approve', 'TransactionController@approve')->name('vouchers.approve');
-    Route::post('/vouchers/{id}/submit', 'TransactionController@approve')->name('vouchers.create.submit');
-    Route::get('/vouchers/{id}/edit', 'TransactionController@edit')->name('vouchers.edit');
-    Route::get('/vouchers/{id}/duplicate', 'TransactionController@duplicate')->name('vouchers.create.duplicate');
-    Route::get('/vouchers/{type}/{id}/edit', 'TransactionController@edit')->name('vouchers.edit.single');
-    Route::put('/vouchers/{type}/{id}/edit', 'TransactionController@update')->name('vouchers.edit.single.update');
-    Route::delete('/vouchers/{id}', 'TransactionController@delete')->name('vouchers.delete');
+
+    Route::post('/vouchers/{id}/approve', 'JournalController@approve')->name('vouchers.approve');
+    Route::post('/vouchers/{id}/submit', 'JournalController@approve')->name('vouchers.create.submit');
+    Route::post('/vouchers/transaction/{id}/approve', 'TransactionController@approve')->name('vouchers.approve.transaction');
+    Route::post('/vouchers/transaction/{id}/submit', 'TransactionController@approve')->name('vouchers.create.submit.transaction');
+
+    Route::get('/vouchers/{id}/edit', 'JournalController@edit')->name('vouchers.edit');
+    Route::delete('/vouchers/{id}', 'JournalController@delete')->name('vouchers.delete');
+    Route::post('/vouchers/delete/all', 'JournalController@deleteBatch')->name('vouchers.delete.batch');
+    Route::get('/vouchers/{id}', 'JournalController@view')->name('vouchers.view');
     Route::put('/vouchers/{id}', 'JournalController@update')->name('vouchers.edit.update');
-    // Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicate')->name('vouchers.create.duplicate');
-    Route::get('/vouchers/{id}', 'TransactionController@view')->name('vouchers.view');
-    Route::get('/vouchers/{id}/report', 'JournalController@report')->name('vouchers.report');
+    Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicate')->name('vouchers.create.duplicate');
+
+    Route::get('/vouchers/transaction/{id}/edit', 'TransactionController@edit')->name('vouchers.edit.single');
+    Route::put('/vouchers/transaction/{id}/edit', 'TransactionController@update')->name('vouchers.edit.single.update');
+    Route::get('/vouchers/transaction/{id}/duplicate', 'TransactionController@duplicate')->name('vouchers.create.single.duplicate');
+    Route::get('/vouchers/transaction/{id}', 'TransactionController@view')->name('vouchers.view.transaction');
+
+    Route::get('/vouchers/{id}/voucher', 'JournalController@voucher')->name('vouchers.voucher');
     Route::get('/vouchers/{id}/receipt', 'JournalController@receipt')->name('vouchers.receipt');
+    // Route::get('/vouchers/{id}/report', 'TransactionController@report')->name('vouchers.report');
+
+    // Route::get('/vouchers/{id}/receipt', 'JournalController@receipt')->name('vouchers.receipt');
     Route::post('/vouchers/{id}/journal', 'JournalController@toJournal')->name('vouchers.tojournal');
     Route::post('/vouchers/journals', 'JournalController@toJournalBatch')->name('vouchers.tojournal.batch');
 
@@ -114,7 +125,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     // Route::post('/transactions', 'TransactionController@save')->name('transactions.create.save');
     // Route::get('/transactions/{id}/edit', 'TransactionController@edit')->name('transactions.edit');
     // Route::put('/transactions/{id}', 'TransactionController@update')->name('transactions.edit.update');
-    // Route::get('/transactions/{id}/duplicate', 'TransactionController@duplicate')->name('transactions.create.duplicate');
+    Route::get('/transactions/{id}/duplicate', 'TransactionController@duplicate')->name('transactions.create.duplicate');
     // Route::get('/transactions/{id}', 'TransactionController@view')->name('transactions.view');
     // Route::get('/transactions/{id}/report', 'TransactionController@report')->name('transactions.report');
     // Route::post('/transactions/{id}/lock', 'TransactionController@lockJournal')->name('transactions.lock');
@@ -161,6 +172,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/journals/{id}', 'JournalController@view')->name('journals.view');
     Route::get('/journals/{id}/report', 'JournalController@report')->name('journals.report');
     Route::post('/journals/{id}/lock', 'JournalController@lockJournal')->name('journals.lock');
+    Route::post('/journals/lock', 'JournalController@lockJournalBatch')->name('journals.lock.batch');
     Route::post('/journals/{id}/voucher', 'JournalController@toVoucher')->name('journals.tovoucher');
     Route::post('/journals/vouchers', 'JournalController@toVoucherBatch')->name('journals.tovoucher.batch');
 
@@ -181,6 +193,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
 
     //settings
     Route::get('/settings', 'SettingController@index')->name('settings.index');
+    Route::post('/settings', 'SettingController@indexSave')->name('settings.index.save');
     Route::get('/settings/account_mapping', 'SettingController@accountMapping')->name('settings.account_mapping');
     Route::post('/settings/account_mapping', 'SettingController@accountMappingSave')->name('settings.account_mapping.save');
 
@@ -239,6 +252,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/select2/{name}', 'Select2OutputController@get')->name('select2');
     //JSON Output
     Route::get('/json/{name}', 'JSONOutputController@index')->name('json.output');
+    Route::get('/json/numberings/{id}/{type}', 'JSONOutputController@getTransactionNumber')->name('json.numberings');
 
     Route::get('/notifications', 'NotificationController@latest')->name('notifications.latest');
     Route::get('/notifications/{id}', 'NotificationController@read')->name('notifications.read');

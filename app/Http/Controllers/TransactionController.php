@@ -39,22 +39,39 @@ class TransactionController extends Controller
         return view('transaction.view', compact('transaction', 'next_id', 'prev_id'));
     }
 
-    public function reportTransaction(Request $request){
-        $data = $this->query($request, 1);
-        // return view('pdf.Transaction.report', array('Transactions'=>$data));
-        $pdf = PDF::loadView('pdf.Transaction.report', array('Transactions'=>$data, 'title'=>'Laporan Jurnal'));
-        return $pdf->download('Transaction.pdf');
-        // return $pdf->stream('Transaction.pdf');
-    }
+    public function voucher($id){
+        $company_id = company('id');
+        $transaction = Transaction::findOrFail($id);
+        if($transaction->company_id!=$company_id){
+            abort(404);
+        }
+        $data = Journal::where('company_id', $company_id)->where('transaction_type_id', 'journal')->where('transaction_id', $id)->first();
 
-    public function report(Request $request){
-        $data = $this->query($request);
-        // $period_start = $request->query('period_end');
-        // $period_end = $request->query('period_start');
-        // return view('pdf.Transaction.report', array('Transactions'=>$data, 'title'=>'Laporan Transaction'));
-        $pdf = PDF::loadView('pdf.Transaction.report', array('Transactions'=>$data, 'title'=>'Laporan Transaction'));
-        return $pdf->download('Transactions.pdf');
-        // return $pdf->stream('Transaction.pdf');
+        $pdf = \PDF::loadView('report.voucher.voucher', array('data'=>$data));
+        return $pdf->stream('receipt.pdf');
+        return $pdf->stream('Transaction.pdf');
+    }
+    public function receipt($id){
+        $company_id = company('id');
+        $transaction = Transaction::findOrFail($id);
+        if($transaction->company_id!=$company_id){
+            abort(404);
+        }
+
+        $pdf = \PDF::loadView('report.voucher.receipt', array('data'=>$transaction));
+        return $pdf->stream('receipt.pdf');
+    }
+    public function report($id){
+        $company_id = company('id');
+        $transaction = Transaction::findOrFail($id);
+
+        if($transaction->company_id!=$company_id){
+            abort(404);
+        }
+
+        $pdf = \PDF::loadView('report.voucher.receipt', array('data'=>$transaction, 'title'=>'Laporan Transaction'));
+        return $pdf->stream('receipt.pdf');
+        return $pdf->stream('Transaction.pdf');
     }
 
     public function create(Request $request, $type){
@@ -108,11 +125,10 @@ class TransactionController extends Controller
         $data = $request->all();
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
+        $manual = !empty($request->manual)&&$request->manual==1?true:false;
 
         $rules = [
-            'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
-            'trans_no' => "required|unique:transactions,trans_no,NULL,id,company_id,$company_id",
             'description' => 'nullable|min:3|max:255',
             'account_id' => 'required|exists:accounts,id',
             'contact_id' => 'required|exists:contacts,id',
@@ -123,8 +139,15 @@ class TransactionController extends Controller
             'detail.*.department_id'=>'nullable|exists:departments,id',
             'detail.*.amount'=>'required',
         ];
+        if($manual){
+            $rules['trans_no_manual'] = "required|unique:transactions,trans_no,NULL,id,company_id,$company_id";
+        }else{
+            $rules['numbering_id'] = 'required|exists:numberings,id';
+        }
         $attr = [
             'numbering_id' => trans('Transaction Group'),
+            'trans_no_auto' => trans('Transaction No.'),
+            'trans_no_manual' => trans('Transaction No.'),
             'trans_no' => trans('Transaction No.'),
             'trans_date' => trans('Transaction Date'),
             'description' => trans('Description'),
@@ -146,11 +169,12 @@ class TransactionController extends Controller
         // dd($data);
 
         $trans_date = fdate($request->trans_date, 'Y-m-d');
+        $trans_no = $manual?$request->trans_no_manual:$request->trans_no_auto;
 
         try{
             \DB::beginTransaction();
-            $auto = empty($request->manual)?true:false;
-            if($auto){
+
+            if($manual==false){
                 $numbering = Numbering::findOrFail($request->numbering_id);
                 if($numbering->counter_reset=='y'){
                     $period = date('Y');
@@ -167,8 +191,6 @@ class TransactionController extends Controller
                 );
                 $check = true;
                 do{
-                    $counter->getNumber();
-                    $trans_no = $counter->last_number;
                     $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
                     if($c==0){
                         $transaction = Transaction::create([
@@ -189,14 +211,17 @@ class TransactionController extends Controller
                         ]);
                         $counter->save();
                         $check = false;
+                        $counter->getNumber();
+                        $trans_no = $counter->last_number;
+
                     }
                 }while($check);
             }else{
-                $trans_no = $request->trans_no;
                 $transaction = Transaction::create([
                     'trans_no'=>$trans_no,
                     'trans_date'=>$trans_date,
                     'trans_type'=>$type,
+                    'status'=>$data['status'],
                     'contact_id'=>$data['contact_id'],
                     'numbering_id'=>$data['numbering_id'],
                     'department_id'=>isset($data['department_id'])?$data['department_id']:null,
@@ -222,8 +247,8 @@ class TransactionController extends Controller
                     'created_by'=>$user->id
                 ]);
             }
-            //
-            // $this->addToJournal($transaction);
+            $this->addToJournal($transaction);
+            \DB::commit();
             if($transaction->status=='submitted'){
                 notify([
                     'url'=>route('vouchers.view', $transaction->id),
@@ -238,23 +263,21 @@ class TransactionController extends Controller
                 'Total'=>$transaction->total
             ];
             add_log('vouchers', 'create', json_encode($reference));
-            \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
 
         return redirect()->route('dcru.index', 'vouchers')->with('success', 'Transaksi berhasil dibuat.');
     }
-    public function update(Request $request, $type, $id){
+
+    public function update(Request $request, $id){
         $transaction = Transaction::findOrFail($id);
         $data = $request->all();
-
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
+
         $rules = [
-            'numbering_id' => 'required|exists:numberings,id',
             'trans_date' => 'required|date_format:d-m-Y',
-            'trans_no' => "required|unique:transactions,trans_no,$id,id,company_id,$company_id",
             'description' => 'nullable|min:3|max:255',
             'account_id' => 'required|exists:accounts,id',
             'contact_id' => 'required|exists:contacts,id',
@@ -265,6 +288,9 @@ class TransactionController extends Controller
             'detail.*.department_id'=>'nullable|exists:departments,id',
             'detail.*.amount'=>'required',
         ];
+        $rules['trans_no'] = "required|unique:transactions,trans_no,$id,id,company_id,$company_id";
+
+
         $attr = [
             'numbering_id' => trans('Transaction Group'),
             'trans_no' => trans('Transaction No.'),
@@ -291,46 +317,26 @@ class TransactionController extends Controller
         $transaction->account_id = $data['account_id'];
         $transaction->contact_id = $data['contact_id'];
         $transaction->department_id = isset($data['department_id'])?$data['department_id']:null;
-        $transaction->numbering_id = $data['numbering_id'];
         $transaction->description = isset($data['description'])?$data['description']:null;
-        // $transaction->tags = $request->tags;
         $transaction->amount = parse_number($data['amount']);
         $transaction->updated_by = $user->id;
 
         try{
             \DB::beginTransaction();
-            $auto = empty($request->manual)?true:false;
-            if($auto){
-                $numbering = Numbering::findOrFail($request->numbering_id);
-                if($numbering->counter_reset=='y'){
-                    $period = date('Y');
-                }else if($numbering->counter_reset=='m'){
-                    $period = date('Y-m');
-                }else if($numbering->counter_reset=='d'){
-                    $period = date('Y-m-d');
-                }else{
-                    $period  = null;
+
+            if($transaction->status=='rejected'){
+                $transaction->status = $request->status;
+                if($transaction->status=='submitted'){
+                    notify([
+                        'url'=>route('vouchers.view', $transaction->id),
+                        'message_en'=>$transaction->createdBy->name.' submitted a new voucher',
+                        'message'=>$transaction->createdBy->name.' mengajukan voucher baru',
+                        'users'=>\App\User::getUsersHaveAction('vouchers', 'approve')
+                    ]);
                 }
-                $counter = Counter::firstOrCreate(
-                    ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company_id],
-                    ['counter'=>$numbering->counter_start-1]
-                );
-                $check = true;
-                do{
-                    $counter->getNumber();
-                    $trans_no = $counter->last_number;
-                    $c = Transaction::where('trans_no', $counter->last_number)->where('company_id', $company_id)->count();
-                    if($c==0){
-                        $transaction->trans_no = $trans_no;
-                        $transaction->update();
-                        $counter->save();
-                        $check = false;
-                    }
-                }while($check);
-            }else{
-                $trans_no = $request->trans_no;
-                $transaction->update();
             }
+            $transaction->update();
+
             //cek id
             $old_details = array();
             foreach($transaction->details as $detail){
@@ -372,13 +378,15 @@ class TransactionController extends Controller
             foreach($old_details as $detail){
                 $detail->delete();
             }
-            // $this->updateJournal($transaction, $transaction_details);
+
+            $this->updateJournal($transaction, $transaction_details);
             \DB::commit();
         }catch(Exception $e){
             \DB::rollback();
         }
-        return redirect()->route('vouchers.view', $transaction->id)->with('success', trans('Changes have been saved.'));
+        return redirect()->route('vouchers.view.transaction', $transaction->id)->with('success', trans('Changes have been saved.'));
     }
+
     public function approve(Request $request, $id){
         $company_id = company('id');
         $user = \Auth::user();
@@ -389,19 +397,29 @@ class TransactionController extends Controller
         if($request->status=='submitted' && $user->id!=$transaction->created_by){
             abort(401);
         }
+        $journal = Journal::where('transaction_id', $transaction->id)->where('is_voucher', 1)->where('company_id', $company_id)->first();
+        $journal->status = $request->status;
+        $journal->approved_at = date('Y-m-d H:i:s');
+        $journal->approved_by = user('id');
+        $journal->rejection_note = $request->rejection_note;
+        $journal->update();
         $transaction->status = $request->status;
         $transaction->approved_at = date('Y-m-d H:i:s');
         $transaction->approved_by = user('id');
         $transaction->rejection_note = $request->rejection_note;
         $transaction->update();
+        $msg = ''; $msg_en='';
         if($transaction->status=='approved'){
-            $this->addToJournal($transaction);
+            //$this->addToJournal($transaction);
             $msg = $user->name.' menyetujui voucher #'.$transaction->trans_no;
             $msg_en = $user->name.' approved voucher #'.$transaction->trans_no;
         }else
         if($transaction->status=='rejected'){
             $msg = $user->name.' menolak voucher #'.$transaction->trans_no;
             $msg_en = $user->name.' rejected voucher #'.$transaction->trans_no;
+        }else{
+            $msg = $user->name.' mengirim voucher #'.$transaction->trans_no;
+            $msg_en = $user->name.' submitted voucher #'.$transaction->trans_no;
         }
         notify([
             'url'=>route('vouchers.view', $transaction->id),
@@ -411,23 +429,9 @@ class TransactionController extends Controller
         ]);
 
         $msg = $transaction->status=='submitted'?trans('Voucher submitted!'):($transaction->status=='approved'?trans('Voucher approved!'):trans('Voucher rejected!'));
-        return redirect()->route('vouchers.view', $transaction->id)->with('success', $msg);
+        return redirect()->route('vouchers.view.transaction', $transaction->id)->with('success', $msg);
     }
-    public function patch(Request $request, $id){
-        $decoid = decode($id);
-        $transaction = Transaction::findOrFail($decoid);
 
-        validate($request->all(), [
-            'name' => 'required',
-            'value' => 'required',
-        ]);
-        $name = $request->name;
-        $value = $request->value;
-
-        $transaction->$name = $value;
-        $transaction->update();
-        return new TransactionResource($transaction);
-    }
     public function delete($id)
     {
         $company_id = company('id');
@@ -441,19 +445,17 @@ class TransactionController extends Controller
     }
 
 
-    public function batchDelete(Request $request){
+    public function deleteBatch(Request $request){
         $id = $request->id;
-        $ids = array();
-        foreach($id as $i){
-            $ids[] = decode($i);
-        }
-        if(count($ids)>0){
-            $type = Transaction::find($ids[0])->transaction_type_id;
-            Journal::whereIn('transaction_id', $ids)
+        if(count($id)>0){
+            $type = Transaction::find($id[0])
+
+            ->transaction_type_id;
+            Journal::whereIn('transaction_id', $id)
             ->where('transaction_type_id', $type)
             ->delete();
         }
-        Transaction::destroy($ids);
+        Transaction::destroy($id);
         return redirect()->route('vouchers.index')->with('success', trans(':attr has been deleted.', ['attr'=>trans('Voucher')]));
     }
 
@@ -475,6 +477,7 @@ class TransactionController extends Controller
         $journal->description = $description;
         // $journal->department_id = $transaction->department_id;
         // $journal->tags = $transaction->tags;
+        $journal->status = $transaction->status;
         $journal->total = $transaction->amount;
         $journal->updated_by = Auth::user()->id;
         $journal->save();
@@ -543,27 +546,6 @@ class TransactionController extends Controller
         return $journal;
     }
 
-    public function toJournal(Request $request, $id){
-        $transaction = Transaction::findOrFail(decode($id));
-        $journal = Journal::where('transaction_type_id',$transaction->transaction_type_id)
-                    ->where('transaction_id', $transaction->id)->first();
-        if($journal!==null){
-            return (new JournalResource($journal))
-                ->response()
-                ->setStatusCode(201);
-        }
-        try{
-            \DB::beginTransaction();
-            $journal = $this->addToJournal($transaction);
-            \DB::commit();
-        }catch(Exception $e){
-            \DB::rollback();
-        }
-
-        return (new JournalResource($journal))
-                ->response()
-                ->setStatusCode(201);
-    }
 
     private function addToJournal($transaction){
         if($transaction->trans_type=='receipt'){
@@ -598,9 +580,12 @@ class TransactionController extends Controller
                     'trans_no'=>$transaction->trans_no,
                     'trans_date'=>$transaction->trans_date,
                     'description'=>$description,
-                    'is_voucher'=>false,
+                    'is_voucher'=>true,
+                    'is_processed'=>false,
                     'is_single_entry'=>true,
                     'company_id'=>$transaction->company_id,
+                    'contact_id'=>$transaction->contact_id,
+                    'status'=>$transaction->status,
                     // 'department_id'=>$transaction->department_id,
                     // 'tags'=>$transaction->tags,
                     'total'=>$transaction->amount,
@@ -627,7 +612,7 @@ class TransactionController extends Controller
             'account_id'=>$transaction->account_id,
             'description'=>$description,
             'department_id'=>$transaction->department_id,
-            'is_locked'=>true,
+            'is_locked'=>false,
             // 'tags'=>$transaction->tags,
             'debit'=>$debit,
             'credit'=>$credit,

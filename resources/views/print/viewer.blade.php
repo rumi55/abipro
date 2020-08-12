@@ -1,19 +1,11 @@
 
 @php
-if($report=='print_journal') {
-    $active_menu=$data->is_voucher==0?'journals':'vouchers';
+    $active_menu='vouchers';
     $breadcrumbs = array(
-        ['label'=>trans($title), 'url'=>route('dcru.index', $active_menu)],
-        ['label'=>'Detail '.trans($data->is_voucher==0?'Jurnal':'Voucher'), 'url'=>route($active_menu.'.view', $data->id)],
-        ['label'=>trans('Cetak') .' '.trans($data->is_voucher==0?'Journal':'Voucher')],
-    );
-}else{
-    $active_menu='reports';
-    $breadcrumbs = array(
-        ['label'=>trans('Report'), 'url'=>route('reports.index')],
+        ['label'=>'Vouchers', 'url'=>route('dcru.index', $active_menu)],
+        ['label'=>'Detail Voucher', 'url'=>route($active_menu.'.view', $data->id)],
         ['label'=>$title],
     );
-}
 @endphp
 @extends('layouts.app')
 @section('title', trans($title))
@@ -23,24 +15,14 @@ if($report=='print_journal') {
         <div class="btn-group">
             <button id="print" type="button" class="btn btn-success"><i class="fas fa-print"></i></button>
             <button id="download" type="button" class="btn btn-success"><i class="fas fa-download"></i></button>
-            @if(!in_array($report, ['print_journal', 'print_receipt']))
-            <button id="toggle-filter" type="button" class="btn btn-success" data-toggle="collapse" data-target="#filter" aria-expanded="false" aria-controls="filter" ><i class="fas fa-sliders-h"></i></button>
-            @endif
         </div>
-    </div>
-</div>
-<div id="filter"  class="row collapse">
-    <div class="col-md-12">
-    @if(!in_array($report, ['print_journal', 'print_receipt']))
-        @include('report.filter._'.$report.'_filter')
-    @endif
     </div>
 </div>
 
 <div class="row mb-3">
     <div id="report-container" class="col-md-12">
         <div class="invoice p-5 mb-3 elevation-1 report">
-        @include('report._header')
+        @include('print._header')
         <div class="table-responsive">
             @include($view)
         </div>
@@ -57,6 +39,12 @@ if($report=='print_journal') {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/0.9.0rc1/jspdf.min.js"></script>
 <script type="text/javascript">
 $(function () {
+    var doc = new jsPDF();
+        var specialElementHandlers = {
+            '#editor': function (element, renderer) {
+            return true;
+        }
+    };
     $('#print').on('click',function(e){
         var w = window.open();
         var css = `
@@ -74,9 +62,11 @@ $(function () {
         `;
         w.document.write(html);
         w.document.close();
+        setTimeout(function(){
         w.focus();
         w.print();
         w.close();
+        }, 1000)
     });
     $('#download').click(function(e){
         var url = window.location.href;
@@ -86,6 +76,25 @@ $(function () {
             url +='?output=pdf';
         }
         window.open(url, '_blank');
+        // var css = `
+        // <link rel="stylesheet" href="{{asset('css/adminlte.min.css')}}">
+        // <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700" rel="stylesheet">
+        // <link rel="stylesheet" href="{{asset('css/report.css')}}">
+        // <link rel="stylesheet" media="print" href="{{asset('css/print.css')}}">
+        // `;
+        // var body = $('.report').html();
+        // var html = `
+        // <html>
+        // <head>${css}</head>
+        // <body>${body}</body>
+        // </html>
+        // `;
+        // doc.fromHTML(html, 15, 15, {
+        //     'width': 170,
+        //         'elementHandlers': specialElementHandlers
+        // });
+        // doc.save('contoh-file.pdf');
+
     });
     $('#filter').on('hide.bs.collapse', function () {
       $('#toggle-filter').removeClass('active')

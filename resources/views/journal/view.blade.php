@@ -12,7 +12,12 @@ $breadcrumbs = array(
 @section('content')
 <div class="card">
     <div class="card-header">
-        <h5 class="card-title">{{$title_type}} #{{$journal->trans_no}}</h5>
+        <h5 class="card-title">{{$title_type}} #{{$journal->trans_no}}
+            @if($journal->is_voucher==1 && $journal->is_processed==0)
+            @php $status =['draft'=>'secondary', 'submitted'=>'warning', 'approved'=>'success', 'rejected'=>'danger']; @endphp
+            <span class="badge badge-{{$status[$journal->status]}}">{{$journal->status}}</span>
+            @endif
+        </h5>
         <div class="card-tools">
         @if(has_action($type, 'report') || (has_action($type, 'edit') && !$journal->is_locked)
         || has_action($type, 'create')|| (has_action($type, 'delete') && !$journal->is_locked)
@@ -21,10 +26,9 @@ $breadcrumbs = array(
           <i class="fas fa-th"></i>
         </button>
         <div class="dropdown-menu dropdown-menu-right" role="menu">
-            @if(has_action($type, 'report'))
-            <a href="{{route($type.'.report', $journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> Cetak {{$title_type}}</a>
-            @endif
-            @if($journal->is_voucher && has_action($type, 'report'))
+
+
+            @if($journal->is_voucher && has_action($type, 'report') && $journal->status=='approved'  && $journal->is_processed==false)
             <a href="{{route($type.'.receipt', $journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> Cetak Kuitansi</a>
             @endif
             @if(has_action($type, 'edit') && !$journal->is_locked)
@@ -54,6 +58,12 @@ $breadcrumbs = array(
                 <dt>Tanggal</dt>
                 <dd>{{fdate($journal->trans_date)}}</dd>
             </dl>
+            @if($journal->is_voucher==1 && $journal->is_processed==0 && !empty($journal->contact_id))
+            <dl class="col-md-4">
+                <dt>{{__('Contact')}}</dt>
+                <dd><a href="{{route('contacts.view',$journal->contact_id)}}">{{$journal->contact!=null?$journal->contact->name:'-'}}</a></dd>
+            </dl>
+            @endif
             <dl class="col-md-4">
                 <dt>Keterangan</dt>
                 <dd>{{$journal->description}}</dd>
@@ -107,12 +117,23 @@ $breadcrumbs = array(
             </table>
         </div>
         <div class="row mt-5">
-            <div class="col-sm-6">
+            <div class="col-sm-4">
                 @if($journal->createdBy!=null)
                 <small>Dibuat oleh <a href="{{route('users.view', $journal->created_by)}}">{{$journal->createdBy->name}}</a> pada {{fdatetime($journal->created_at)}}</small>
                 @endif
             </div>
-            <div class="col-sm-6 text-right">
+            <div class="col-sm-4 text-center">
+                @if($journal->is_voucher && $journal->is_processed==0)
+                @if($journal->status=='rejected' && !empty($journal->approved_by))
+                <small><b>{{__('Rejected by')}}</b> <a href="{{route('users.view',$journal->approved_by)}}">{{$journal->approvedBy->name}}</a> {{__('at')}} {{fdatetime($journal->approved_at)}}</small><br>
+                <small><b>{{__('Rejection Note')}}:</b> {{$journal->rejection_note}}</small>
+                @endif
+                @if($journal->status=='approved' && !empty($journal->approved_by))
+                <small><b>{{__('Approved by')}}</b> <a href="{{route('users.view',$journal->approved_by)}}">{{$journal->approvedBy->name}}</a> {{__('at')}} {{fdatetime($journal->updated_at)}}</small>
+                @endif
+                @endif
+            </div>
+            <div class="col-sm-4 text-right">
                 @if($journal->updatedBy!=null)
                 <small>Terakhir diperbarui oleh <a href="{{route('users.view', $journal->updated_by)}}"> {{$journal->updatedBy->name}}</a> pada {{fdatetime($journal->updated_at)}}</small>
                 @endif
@@ -121,12 +142,32 @@ $breadcrumbs = array(
     </div>
     <div class="card-footer">
         <div class="row">
-            <div class="col-sm-6">
+            <div class="col-sm-2">
             @if(!empty($prev_id))
             <a title="{{$title_type}} Sebelumnya" href="{{route($type.'.view', $prev_id)}}"><i class="fas fa-chevron-left"></i></a>
             @endif
             </div>
-            <div class="col-sm-6 text-right">
+            <div class="col-sm-8 text-center">
+                @if($journal->is_voucher && $journal->is_processed==0)
+                @if($journal->status=='submitted' && has_action('vouchers', 'approve'))
+                <form action="{{route('vouchers.approve', $journal->id)}}" method="POST">
+                @csrf
+                <input id="rejection-note" type="hidden" name="rejection_note" />
+                <input id="status" type="hidden" name="status" />
+                <button type="submit" class="btn btn-success btn-approve">{{__('Approve')}}</button>
+                <button type="submit" class="btn btn-danger btn-reject">{{__('Reject')}}</button>
+                </form>
+                @endif
+                @if($journal->status=='draft' && has_action('vouchers', 'create') && user('id')==$journal->created_by)
+                <form action="{{route('vouchers.create.submit', $journal->id)}}" method="POST">
+                @csrf
+                <input id="status" type="hidden" name="status" value="submitted" />
+                <button type="submit" class="btn btn-success">{{__('Submit')}}</button>
+                </form>
+                @endif
+                @endif
+            </div>
+            <div class="col-sm-2 text-right">
             @if(!empty($next_id))
             <a title="{{$title_type}} Selanjutnya" href="{{route($type.'.view', $next_id)}}"><i class="fas fa-chevron-right"></i></a>
             @endif
@@ -149,6 +190,42 @@ $(function(){
           focusConfirm: false
         }).then(function(result){
           if(result.value){
+            form.submit();
+          }
+        })
+      });
+      $('.btn-approve').click(function(e){
+        e.preventDefault();
+        var form = $(this).parent();
+        Swal.fire({
+          title: '{{__("Warning")}}',
+          icon: 'warning',
+          html:'{{__("Are you sure want to approve this voucher?")}}',
+          showCloseButton: false,
+          showCancelButton: true,
+          focusConfirm: false
+        }).then(function(result){
+          if(result.value){
+              $('#status').val('approved');
+            form.submit();
+          }
+        })
+      });
+    $('.btn-reject').click(function(e){
+        e.preventDefault();
+        var form = $(this).parent();
+        Swal.fire({
+            title: '{{__("Warning")}}',
+          icon: 'warning',
+          html:'{{__("Are you sure want to reject this voucher?")}} {{__("Write your rejection note below!")}}',
+          input: 'textarea',
+          showCloseButton: false,
+          showCancelButton: true,
+          focusConfirm: false
+        }).then(function(result){
+          if(result.value){
+              $('#status').val('rejected');
+              $('#rejection-note').val(result.value);
             form.submit();
           }
         })
