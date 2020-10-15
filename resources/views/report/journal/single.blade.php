@@ -1,4 +1,5 @@
     <h2  class="text-center" >{{$title}}</h2>
+
     <table>
         <tr>
             <td style="width:150px">Tanggal</td>
@@ -15,7 +16,7 @@
             <td>:</td>
             <td>{{$data->description}}</td>
         </tr>
-    </table>        
+    </table>
     <br>
 <table class="table-report">
         <thead>
@@ -34,19 +35,29 @@
                 <td>{{$detail->description}}</td>
                 <td class="text-right">{{format_number($detail->debit)}}</td>
                 <td class="text-right">{{format_number($detail->credit)}}</td>
-            </tr>        
-        @endforeach   
+            </tr>
+        @endforeach
         </tbody>
     <tfoot>
-        <tr>        
+        <tr>
             <th colspan="3" class="text-left">Total</th>
             <th class="text-right">{{format_number($data->total)}}</th>
             <th class="text-right">{{format_number($data->total)}}</th>
-        </tr>        
+        </tr>
     </tfoot>
 </table>
 <br>
 <table class="table-report table-report-bordered">
-    <tr><td>Dibuat oleh:</td><td>Diperiksa oleh:</td><td>Disetujui oleh:</td><td>Diterima oleh:</td></tr>
-    <tr><td style="height:100px"></td><td></td><td></td><td></td></tr>
+    <tr>
+        <td class="bb-1 br-1">Dibuat oleh:</td>
+        <td class="bb-1 br-1">Diperiksa oleh:</td>
+        <td class="bb-1 br-1">Disetujui oleh:</td>
+        <td class="bb-1 br-1">Diterima oleh:</td>
+    </tr>
+    <tr>
+        <td class="br-1" style="height:100px"></td>
+        <td class="br-1"></td>
+        <td class="br-1"></td>
+        <td class="br-1"></td>
+    </tr>
 </table>

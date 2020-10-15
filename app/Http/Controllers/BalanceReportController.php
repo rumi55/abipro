@@ -38,19 +38,16 @@ class BalanceReportController extends Controller
             'view'=>$view
         );
 
+        $data = array_merge($data, $params);
         if(isset($request->output)){
             $output = $request->output;
-            $data = array_merge($data, $params);
-            if($output=='pdf'){
-                return $this->pdf($view, $data);
-            }else if($output=='print'){
-                return $this->print($data);
-            }else{
-                return $this->html($data);
+            if($output=='excel'){
+                header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                header("Content-Disposition: attachment; filename=journals.xls");
+                return $this->html($view, $data);
             }
-        }else{
-            return $this->html($view, $data);
         }
+        return $this->pdf($view, $data);
 
     }
     private function html($view, $data){

@@ -51,6 +51,18 @@ $breadcrumbs = array(
     <h3 class="card-title">{{__('Budget')}} {{$budget_year}}</h3>
     </div>
     <div class="card-body">
+        <div class="btn-group mb-4">
+            <button id="dt-btn-print" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-print"></i> {{__('Print')}}</button>
+            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown">
+                <span class="sr-only">Toggle Dropdown</span>
+                <div class="dropdown-menu" role="menu">
+                <a id="dt-btn-pdf" class="dropdown-item" href="#"><i class="fas fa-file-pdf"></i> PDF</a>
+                <a id="dt-btn-excel" class="dropdown-item" href="#"><i class="fas fa-file-excel"></i> Excel</a>
+                <a id="dt-btn-csv" class="dropdown-item" href="#"><i class="fas fa-file-csv"></i> CSV</a>
+                <a id="dt-btn-copy" class="dropdown-item" href="#"><i class="fas fa-copy"></i> Copy</a>
+                </div>
+            </button>
+        </div>
         <div class="table-responsive">
             <table class="table table-hover data-table">
                 <thead>
@@ -72,14 +84,14 @@ $breadcrumbs = array(
                         <th class="text-center">{{request('budget_year', date('Y'))}}</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tdata">
                 @php $type = null; @endphp
                 @foreach($accounts as $account)
                     @if($type!=$account->account_type_id)
                     @php $type = $account->account_type_id; @endphp
 
                     @endif
-                    <tr id="row-{{$account->id}}" class="tr-row" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
+                    <tr id="row-{{$account->id}}" class="tr-row" data-tree-level="{{$account->tree_level}}" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
                         @if($account->tree_level==1)
                         <td class="pl-4" style="vertical-align:middle;">{{$account->account_no}}</td>
                         @elseif($account->tree_level==2)
@@ -90,79 +102,79 @@ $breadcrumbs = array(
                         <td style="vertical-align:middle;">{{$account->account_name}}</td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jan]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}"  type="text" id="balance_{{$account->id}}_jan" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jan', $account->jan))?'0':old('balance.'.$account->id.'.jan', $account->jan)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jan]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}"  type="text" id="balance_{{$account->id}}_jan" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.jan', $account->jan))?'0':old('balance.'.$account->id.'.jan', $account->jan))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][feb]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_feb" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.feb', $account->feb))?'0':old('balance.'.$account->id.'.feb', $account->feb)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][feb]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_feb" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.feb', $account->feb))?'0':old('balance.'.$account->id.'.feb', $account->feb))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][mar]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_mar" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.mar', $account->mar))?'0':old('balance.'.$account->id.'.mar', $account->mar)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][mar]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_mar" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.mar', $account->mar))?'0':old('balance.'.$account->id.'.mar', $account->mar))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][apr]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_apr" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.apr', $account->apr))?'0':old('balance.'.$account->id.'.apr', $account->apr)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][apr]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_apr" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.apr', $account->apr))?'0':old('balance.'.$account->id.'.apr', $account->apr))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][may]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_may" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.may', $account->may))?'0':old('balance.'.$account->id.'.may', $account->may)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][may]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_may" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.may', $account->may))?'0':old('balance.'.$account->id.'.may', $account->may))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jun]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jun" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jun', $account->jun))?'0':old('balance.'.$account->id.'.jun', $account->jun)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jun]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jun" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.jun', $account->jun))?'0':old('balance.'.$account->id.'.jun', $account->jun))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jul]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jul" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.jul', $account->jul))?'0':old('balance.'.$account->id.'.jul', $account->jul)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][jul]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_jul" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.jul', $account->jul))?'0':old('balance.'.$account->id.'.jul', $account->jul))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][aug]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_aug" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.aug', $account->aug))?'0':old('balance.'.$account->id.'.aug', $account->aug)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][aug]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_aug" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.aug', $account->aug))?'0':old('balance.'.$account->id.'.aug', $account->aug))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][sep]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_sep" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.sep', $account->sep))?'0':old('balance.'.$account->id.'.sep', $account->sep)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][sep]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_sep" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.sep', $account->sep))?'0':old('balance.'.$account->id.'.sep', $account->sep))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][oct]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_oct" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.oct', $account->oct))?'0':old('balance.'.$account->id.'.oct', $account->oct)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][oct]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_oct" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.oct', $account->oct))?'0':old('balance.'.$account->id.'.oct', $account->oct))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][nov]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_nov" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.nov', $account->nov))?'0':old('balance.'.$account->id.'.nov', $account->nov)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][nov]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_nov" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.nov', $account->nov))?'0':old('balance.'.$account->id.'.nov', $account->nov))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][dec]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_dec" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{empty(old('balance.'.$account->id.'.dec', $account->dec))?'0':old('balance.'.$account->id.'.dec', $account->dec)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" {{$account->has_children==1?'readonly':''}} @if($account->has_children==0) name="budget[{{$account->id}}][dec]"@endif data-index="{{$account->id}}" data-parent="{{$account->account_parent_id}}" type="text" id="balance_{{$account->id}}_dec" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':' balance'}}" value= "{{fcurrency(empty(old('balance.'.$account->id.'.dec', $account->dec))?'0':old('balance.'.$account->id.'.dec', $account->dec))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
                         <td class="text-right">
                             @if($account->has_children==0)
-                            <input style="width:150px" readonly @if($account->has_children==0) name="budget[{{$account->id}}][total]"@endif type="text" id="balance_{{$account->id}}_total" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':''}}" value= "{{old('balance.'.$account->id.'.total', $account->total)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:150px" readonly @if($account->has_children==0) name="budget[{{$account->id}}][total]"@endif type="text" id="balance_{{$account->id}}_total" tab="-1" class="form-control{{$account->has_children==1?'-plaintext':''}}" value= "{{fcurrency(old('balance.'.$account->id.'.total', $account->total))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
                             @endif
                         </td>
@@ -204,6 +216,8 @@ th, td { white-space: nowrap; }
 
 </style>
 @push('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script src="{{asset('plugins/moment/moment.min.js')}}"></script>
 <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
 <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
@@ -211,7 +225,6 @@ th, td { white-space: nowrap; }
 <script src="{{asset('plugins/datatables/jquery.dataTables.js')}}"></script>
 <script src="{{asset('plugins/datatables-bs4/js/dataTables.bootstrap4.js')}}"></script>
 <script src="https://cdn.datatables.net/fixedcolumns/3.3.0/js/dataTables.fixedColumns.min.js"></script>
-
 <script type="text/javascript">
 $(function(){
     var dtconfig = {
@@ -251,7 +264,7 @@ $(function(){
         $('input[data-index='+idx+']').each(function (item){
             total += parseNumber($(this).val());
         })
-        $('#balance_'+idx+'_total').val(total);
+        $('#balance_'+idx+'_total').val(formatNumber(total));
     })
 
     $('.currency').inputmask({ 'alias': 'currency' })
@@ -299,6 +312,12 @@ $(function(){
             $('#department_id').trigger('change')
         }
     })
+    $('#dt-btn-pdf').on('click', function(e){
+        generatePDF().download('budget.pdf')
+    })
+    $('#dt-btn-print').on('click', function(e){
+        generatePDF().print()
+    })
 })
 
 function sum(selector){
@@ -316,7 +335,136 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join(''));
+    return parseFloat(val.split('.').join('').split(',').join('.'));
+}
+function formatNumber(val){
+    val = val.toString();
+    if(val=='' || val==null||val==0)return '0,00';
+    if(val.includes('.')){
+        return val.split('.').join(',');
+    }else{
+        return val.split('.').join(',')+',00';
+    }
+}
+
+function getData(){
+    var data = [];
+    var i = 1;
+    $('#tdata>tr').each(function(){
+        var row = []
+        var level = $(this).attr('data-tree-level');
+        var sp = level==0?'':(level==1?'\u200B\t':(level==2?'\u200B\t\t':''));
+        var color = i%2==0?'white':'#f3f3f3';
+        $('td', this).each(function(idx){
+            if(idx==0){
+                row.push({text: sp+$(this).html(), fillColor:color})
+            }else if(idx==1){
+                row.push({text: $(this).html(), fillColor:color})
+            }else{
+                var val = $('input',this).val()
+                val = val?val:''
+                row.push({text: sp+val, fillColor:color, alignment:'right'})
+            }
+        })
+        data.push(row)
+        i++
+    })
+    return data;
+}
+function generatePDF(){
+    var fonts = {
+	Roboto: {
+		normal: 'fonts/Roboto-Regular.ttf',
+		bold: 'fonts/Roboto-Medium.ttf',
+		italics: 'fonts/Roboto-Italic.ttf',
+		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
+	}
+};
+var year = $('#budget_year').val();
+var account_type = $('#account_type option:selected').html();
+var department = $('#department_id option:selected').html();
+department = department?`{{__('Department')}}: ${department}`:'';
+var data = getData();
+var docDefinition = {
+    pageOrientation: "landscape",
+	content: [
+		{
+            text:`{{company('name')}}`, alignment:'left', fontSize: 12, bold: true, lineHeight: 2
+        },
+		{
+            text:`{{__('Budget')}} ${year}`, alignment:'left', fontSize: 11, bold: true
+        },
+		{
+            text:`{{__('Account Type')}}: ${account_type}`, alignment:'left', fontSize: 10, lineHeight: 1
+        },
+		{
+            text: department, alignment:'left', fontSize: 10, lineHeight: 1
+        },
+		{
+            text:`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`, alignment:'left', fontSize: 10, lineHeight: 1
+        },
+		{
+			style: 'tableExample',
+			table: {
+                widths: ['auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto', 'auto'],
+				headerRows: 1,
+				body: [
+					[{text:'Kode Akun', style:"tableHeader"}, {text:'Nama Akun', style:"tableHeader"},
+                    {text:'Jan', style:"tableHeader", alignment:'right'},
+                    {text:'Feb', style:"tableHeader", alignment:'right'},
+                    {text:'Mar', style:"tableHeader", alignment:'right'},
+                    {text:'Apr', style:"tableHeader", alignment:'right'},
+                    {text:'Mei', style:"tableHeader", alignment:'right'},
+                    {text:'Jun', style:"tableHeader", alignment:'right'},
+                    {text:'Jul', style:"tableHeader", alignment:'right'},
+                    {text:'Agu', style:"tableHeader", alignment:'right'},
+                    {text:'Sep', style:"tableHeader", alignment:'right'},
+                    {text:'Okt', style:"tableHeader", alignment:'right'},
+                    {text:'Nov', style:"tableHeader", alignment:'right'},
+                    {text:'Des', style:"tableHeader", alignment:'right'},
+                    {text:year, style:"tableHeader", alignment:'right'},
+                    ],
+                    ...data
+                ]
+			},
+			layout: 'noBorders'
+		}
+	],
+    footer : function(currentPage, pageCount) {
+                return [
+                    { text: currentPage.toString() + ' / ' + pageCount, alignment: 'center' }
+                ];
+              },
+	styles: {
+		header: {
+			fontSize: 18,
+			bold: true,
+			margin: [0, 0, 0, 10]
+		},
+		subheader: {
+			fontSize: 16,
+			bold: true,
+			margin: [0, 10, 0, 5]
+		},
+		tableExample: {
+			margin: [0, 10, 0, 5]
+		},
+		tableHeader: {
+			alignment: "left",
+            bold: true,
+            color: "#212529",
+            fillColor: "#d6d8db",
+            fontSize: 10,
+            border: [true, true, true, true],
+		},
+        tableBodyOdd: {fillColor: "#f3f3f3"}
+	},
+	defaultStyle: {
+        fontSize: 9
+		// alignment: 'justify'
+	}
+};
+return pdfMake.createPdf(docDefinition)
 }
 </script>
 

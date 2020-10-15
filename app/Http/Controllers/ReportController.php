@@ -12,27 +12,26 @@ use DB;
 class ReportController extends Controller
 {
     public function index(){
-        
         $reports = array(
             [
                 'group'=>'finance',
                 'label'=>'Finance',
                 'reports'=>[
-                    ['title'=>'Profit & Loss', 'description'=>'Menampilkan laporan laba - rugi', 'route'=>route('reports.profit')],
-                    ['title'=>'Balance Sheet', 'description'=>'Menampilkan laporan neraca', 'route'=>route('reports.balance')],
-                    ['title'=>'Cashflow', 'description'=>'Menampilkan arus kas', 'route'=>route('reports.cashflow')],
-                    ['title'=>'Harga Pokok Produksi', 'description'=>'Menampilkan laporan harga pokok produksi', 'route'=>route('reports.hpp')],
+                    ['name'=>'profit','title'=>'Profit & Loss', 'description'=>'Menampilkan laporan laba - rugi', 'route'=>route('reports.view', 'profit')],
+                    ['name'=>'balance','title'=>'Balance Sheet', 'description'=>'Menampilkan laporan neraca', 'route'=>route('reports.view', 'balance')],
+                    ['name'=>'cashflow','title'=>'Cashflow', 'description'=>'Menampilkan arus kas', 'route'=>route('reports.view', 'cashflow')],
+                    ['name'=>'hpp','title'=>'Harga Pokok Produksi', 'description'=>'Menampilkan laporan harga pokok produksi', 'route'=>route('reports.view', 'hpp')],
                 ]
             ],
             [
                 'group'=>'ledger',
                 'label'=>'General Ledger',
                 'reports'=>[
-                    ['title'=>'Voucher', 'description'=>'Menampilkan laporan voucher', 'route'=>route('reports.vouchers')],
-                    ['title'=>'Journal', 'description'=>'Menampilkan laporan jurnal', 'route'=>route('reports.journals')],
-                    ['title'=>'General Ledger', 'description'=>'Menampilkan laporan buku besar', 'route'=>route('reports.ledgers')],
-                    ['title'=>'Trial Balance', 'description'=>'Menampilkan laporan neraca saldo', 'route'=>route('reports.trial_balance')],
-                    ['title'=>'Sortir', 'description'=>'Menampilkan laporan transaksi berdasarkan sortir', 'route'=>route('reports.sortirs')]
+                    ['name'=>'vouchers','title'=>'Voucher', 'description'=>'Menampilkan laporan voucher', 'route'=>route('reports.view', 'vouchers')],
+                    ['name'=>'journals','title'=>'Journal', 'description'=>'Menampilkan laporan jurnal', 'route'=>route('reports.view', 'journals')],
+                    ['name'=>'ledgers','title'=>'General Ledger', 'description'=>'Menampilkan laporan buku besar', 'route'=>route('reports.view', 'ledgers')],
+                    ['name'=>'trial_balance','title'=>'Trial Balance', 'description'=>'Menampilkan laporan neraca saldo', 'route'=>route('reports.view', 'trial_balance')],
+                    ['name'=>'sortirs','title'=>'Sortir', 'description'=>'Menampilkan laporan transaksi berdasarkan sortir', 'route'=>route('reports.view', 'sortirs')]
                 ]
             ],
             // [
@@ -45,5 +44,21 @@ class ReportController extends Controller
             // ]
         );
         return view('report.index', compact('reports'));
+    }
+    public function view($name){
+        return view('report.view', [
+            'report'=>$name,
+            'title'=>ucwords($name)
+        ]);
+    }
+    public function print($group,$id, $name){
+        $file = asset(route("$group.$name", ['id'=>$id], false));
+
+
+        return view('report.print', [
+            'report'=>$name,
+            'file'=>$file,
+            'title'=>ucwords($name)
+        ]);
     }
 }

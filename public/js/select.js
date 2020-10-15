@@ -18,6 +18,7 @@ function loadSelect(){
     var type = $('#numbering_id').attr('data-numbering-type')
     $("#numbering_id").select2({
         theme: 'bootstrap4',
+        allowClear: true,
         placeholder: 'Select numbering format',
         ajax: {
         delay:0,
@@ -205,6 +206,30 @@ function loadSelect(){
                             email: item.email,
                             address: item.address,
                             type: item.type,
+                            id: item.id
+                        }
+                    }
+                });
+            }
+        });
+    })
+    $('.numbering_id').each(function(){
+        var val = $(this).attr('data-value');
+        var opt = $(this);
+        $.ajax({
+            url:BASE_URL+'/json/numberings',
+            data: {filter:{id:val}}
+        }).then(function (res) {
+            if(res.length==1){
+                var item = res[0];
+                var option = new Option(item.name, item.id, true, true);
+                opt.append(option).trigger('change');
+                opt.trigger({
+                    type: 'select2:select',
+                    params: {
+                        data:{
+                            text: item.name,
+                            format: item.format,
                             id: item.id
                         }
                     }

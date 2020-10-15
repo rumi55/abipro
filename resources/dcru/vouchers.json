@@ -23,13 +23,13 @@
             },
             {
                 "data":"trans_date",
-                "name":"trans_date",
+                "name":"journals.trans_date",
                 "type":"date",
                 "title":"Transaction Date"
             },
             {
                 "data":"trans_no",
-                "name":"trans_no",
+                "name":"journals.trans_no",
                 "type":"detail",
                 "filter":{
                     "type":"unique",
@@ -96,7 +96,10 @@
                         "icon": "fas fa-chart-line",
                         "visible":"status==approved",
                         "route": {
-                            "name":"reports.vouchers"
+                            "name":"reports.view",
+                            "params":{
+                                "name":"vouchers"
+                            }
                         }
                     },
                     {
@@ -104,7 +107,11 @@
                         "icon": "fas fa-print",
                         "visible":"status==approved",
                         "route": {
-                            "name":"vouchers.receipt"
+                            "name":"reports.print",
+                            "params":{
+                                "group":"vouchers",
+                                "name":"receipt"
+                            }
                         }
                     },
                     {
@@ -112,7 +119,11 @@
                         "icon": "fas fa-print",
                         "visible":"status==approved",
                         "route": {
-                            "name":"vouchers.voucher"
+                            "name":"reports.print",
+                            "params":{
+                                "group":"vouchers",
+                                "name":"voucher"
+                            }
                         }
                     },
                     {
@@ -146,8 +157,11 @@
                 "label": "View Report",
                 "icon": "fas fa-chart-line",
                 "route": {
-                    "name":"reports.vouchers",
-                    "method":"GET"
+                    "method":"GET",
+                    "name":"reports.view",
+                    "params":{
+                        "name":"vouchers"
+                    }
                 }
             },
             {

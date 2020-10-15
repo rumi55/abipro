@@ -35,21 +35,21 @@ class JournalReportController extends Controller
             'journals'=>$data,
             'view'=>$view
         );
+
+        $data = array_merge($data, $params);
         if(isset($request->output)){
             $output = $request->output;
-            if($output=='pdf'){
-                return $this->pdf($view, $data);
-            }else if($output=='print'){
-                return $this->print($data);
-            }else{
-                return $this->html($data);
+            if($output=='excel'){
+                header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                header("Content-Disposition: attachment; filename=journals.xls");
+                return $this->html($view, $data);
             }
-        }else{
-            return $this->html($view, $data);
         }
+        return $this->pdf($view, $data);
     }
     private function html($view, $data){
-        return view('report.viewer', $data);
+        // return view('report.viewer', $data);
+        return view('report.pdf', $data);
     }
     private function print($data){
         return view('report.print',$data);
@@ -58,7 +58,7 @@ class JournalReportController extends Controller
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
         $pdf->loadView('report.pdf', $data);
-        return $pdf->download('journal.pdf');
+        return $pdf->stream('journal.pdf');
     }
 
     private function query($params, $company, $is_voucher){
@@ -83,7 +83,7 @@ class JournalReportController extends Controller
             $journal = $journal->whereIn('department_id', $params['department_id']);
         }
         $journal = $journal
-        ->select(['journal_id', 'department_name', 'trans_date', 'trans_no', 'sequence','description', 'created_at', 'debit',
+        ->select(['journal_id', 'department_custom_id','department_name', 'department_id', 'trans_date', 'trans_no', 'sequence','description', 'created_at', 'debit',
         'credit', 'total', 'account_id','account_no', 'account_name', 'tags','journal_description', 'created_by', 'balance'
         ]);
         $sort_key = $params['sort_key'];

@@ -212,6 +212,12 @@ class JSONOutputController extends Controller
         $company_id = company('id');
         $numberings = \App\Numbering::where('company_id', $company_id);
         $search = $request->query('q');
+        $filter = $request->query('filter');
+        if (isset($filter)) {
+            foreach ($filter as $column => $value) {
+                $numberings = $numberings->where($column, 'like', "%$value%");
+            }
+        }
         if (isset($request->type)) {
             $numberings = $numberings->where('transaction_type_id', $request->type);
         }
@@ -239,7 +245,7 @@ class JSONOutputController extends Controller
         $table = $request->table;
         $column = $request->column;
         $company_id = company('id');
-        return \DB::table($table)->where('company_id', $company_id)->select($column)->pluck($column)->toArray();
+        return \DB::table($table)->where('company_id', $company_id)->select($column)->distinct()->pluck($column)->toArray();
     }
     public function search(Request $request)
     {
@@ -249,7 +255,7 @@ class JSONOutputController extends Controller
         $company_id = company('id');
         return \DB::table($table)->where('company_id', $company_id)
             ->where($column, 'like', "%$q%")
-            ->select($column)->pluck($column)->toArray();
+            ->select($column)->distinct()->pluck($column)->toArray();
     }
 
     public function getTransactionNumber($id, $type='journal')
@@ -279,11 +285,13 @@ class JSONOutputController extends Controller
         do {
             $counter->getNumber();
             $trans_no = $counter->last_number;
-            $check = \App\Journal::where('trans_no', $trans_no)->where('company_id', $company_id)->exists();
-            // if($type=='journal'){
-            // }else if($type=='voucher'){
-            //     $check = \App\Transaction::where('trans_no', $trans_no)->where('company_id', $company_id)->exists();
-            // }
+            if($type=='journal'){
+                $check = \App\Journal::where('trans_no', $trans_no)->where('company_id', $company_id)->exists();
+            }else if($type=='voucher'){
+                $check = \App\Transaction::where('trans_no', $trans_no)->where('company_id', $company_id)->exists();
+            }else if($type=='contact'){
+                $check = \App\Contact::where('custom_id', $trans_no)->where('company_id', $company_id)->exists();
+            }
         } while ($check);
         if($trans_no==null){
             return response()->json(['status'=>'success', 'trans_no'=>null, 'message'=>'Numbering format tot found']);

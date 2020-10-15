@@ -3,17 +3,22 @@
     <ul class="nav nav-pills flex-column">
       <li class="nav-item">
         <a href="{{route('settings.index')}}" class="nav-link {{$active=='general'?'active':''}}">
-          {{__('General')}} 
+          {{__('General')}}
         </a>
       </li>
       <li class="nav-item">
         <a href="{{route('settings.account_mapping')}}" class="nav-link {{$active=='account_mappings'?'active':''}}">
-          {{__('Account Mapping')}} 
+          {{__('Account Mapping')}}
         </a>
       </li>
       <li class="nav-item">
         <a href="{{route('numberings.index')}}" class="nav-link {{$active=='numberings'?'active':''}}">
-          {{__('Numberings')}} 
+          {{__('Numberings')}}
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="{{route('report_templates.index')}}" class="nav-link {{$active=='templates'?'active':''}}">
+          {{__('Report Templates')}}
         </a>
       </li>
     </ul>

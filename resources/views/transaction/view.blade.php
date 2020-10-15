@@ -21,8 +21,8 @@ $breadcrumbs = array(
         </button>
         <div class="dropdown-menu dropdown-menu-right" role="menu">
             @if(has_action('vouchers', 'print') && $transaction->status=='approved')
-            <a href="{{route('vouchers.receipt', $transaction->journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Receipt')}}</a>
-            <a href="{{route('vouchers.voucher', $transaction->journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Voucher')}}</a>
+            <a href="{{route('reports.print' , ['group'=>'vouchers', 'name'=>'receipt','id'=>$transaction->journal->id])}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Receipt')}}</a>
+            <a href="{{route('reports.print' , ['group'=>'vouchers', 'name'=>'voucher','id'=>$transaction->journal->id])}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Voucher')}}</a>
             @endif
             @if(has_action('vouchers', 'tojournal') && $transaction->status=='approved')
             <form action="{{route('vouchers.tojournal', ['id'=>$transaction->journal->id])}}" method="POST">
@@ -30,13 +30,13 @@ $breadcrumbs = array(
             <button class="dropdown-item" ><i class="fas fa-exchange-alt"></i> {{__('Process to Journal')}}</button>
             </form>
             @endif
-            @if(has_action('vouchers', 'edit') && ($transaction->status=='draft' || $transaction->status=='rejected'))
+            @if(has_action('vouchers', 'edit') && !$transaction->journal->is_locked && ($transaction->status=='draft' || $transaction->status=='rejected'))
             <a href="{{route('vouchers.edit.single', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> {{__('Edit')}}</a>
             @endif
             @if(has_action('vouchers', 'create'))
             <a href="{{route('vouchers.create.single.duplicate', $transaction->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
             @endif
-            @if(has_action('vouchers', 'delete') && ($transaction->status=='draft' || $transaction->status=='rejected'))
+            @if(has_action('vouchers', 'delete') && !$transaction->journal->is_locked && ($transaction->status=='draft' || $transaction->status=='rejected'))
             <form action="{{route('vouchers.delete', ['id'=>$transaction->journal->id])}}" method="POST">
                 @csrf
                 @method('DELETE')

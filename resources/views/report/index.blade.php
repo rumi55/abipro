@@ -1,5 +1,5 @@
-@php 
-$active_menu='reports'; 
+@php
+$active_menu='reports';
 $breadcrumbs = array(
     ['label'=>trans('Reports')]
 );
@@ -25,7 +25,7 @@ $breadcrumbs = array(
         </div>
   </div>
   <div class="col-md-9">
-    
+
     <div class="tab-content p-0">
       @foreach($reports as $i=> $r)
       <div id="{{$r['group']}}" class="tab-pane {{$i==0?' active':''}}">
@@ -41,9 +41,9 @@ $breadcrumbs = array(
                   </div>
                   <div class="card-footer">
                     <div class="text-right">
-                      <a href="{{$report['route']}}" class="btn btn-sm btn-primary">
+                      <a href="{{$report['route']}}" class="btn btn-primary">
                         <i class="fas fa-chart-line"></i> {{__('View Report')}}
-                      </a>
+                    </a>
                     </div>
                   </div>
               </div>
@@ -53,7 +53,7 @@ $breadcrumbs = array(
       </div>
       @endforeach
     </div>
-    
     </div>
 </div>
+
 @endsection

@@ -27,17 +27,14 @@ $breadcrumbs = array(
         <div class="form-group row">
             <label for="custom_id" class="col-sm-2 col-form-label">{{__('ID')}}</label>
             <div class="col-md-10 col-sm-10">
-            @if($mode=='create')
+            @if($mode=='create' || ($mode=='edit' && !$model->isLocked()))
             <div class="input-group">
-            <div class="input-group-prepend">
-            <select id="numbering_id" name="numbering_id" class="form-control select2 @error('numbering_id') is-invalid @enderror">
-                @foreach($numberings as $numbering)
-                <option {{$numbering->id==old('numbering_id', $model->numbering_id)?'selected':''}} value="{{$numbering->id}}">{{$numbering->name}}</option>
-                @endforeach
-                <option {{empty(old('numbering_id', $model->numbering_id))?'selected':''}} value="">{{__('Manual')}}</option>
-            </select>
-            </div>
-            <input type="text" required class="form-control @error('custom_id') is-invalid @enderror  @error('display_name') is-invalid @enderror" name="custom_id" id="custom_id" value="{{old('custom_id', $model->custom_id)}}" placeholder="{{__('Enter ID')}}">
+                <div class="input-group-prepend">
+                    <select style="width: 200px" id="numbering_id" name="numbering_id" data-numbering-type="contact" data-value="{{old('numbering_id', $model->numbering_id)}}" class="form-control numbering_id @error('numbering_id') is-invalid @enderror">
+
+                    </select>
+                </div>
+                <input type="text" required class="form-control @error('custom_id') is-invalid @enderror  @error('display_name') is-invalid @enderror" name="custom_id" id="custom_id" value="{{old('custom_id', $model->custom_id)}}" placeholder="{{__('Enter ID')}}">
             </div>
             @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
             @error('custom_id') <small class="text-danger">{!! $message !!}</small> @enderror
@@ -47,6 +44,7 @@ $breadcrumbs = array(
             @endif
             </div>
         </div>
+
         <div class="form-group row">
             <label for="name" class="col-sm-2 col-form-label">{{__('Name')}}</label>
             <div class="col-md-10 col-sm-10">
@@ -112,7 +110,7 @@ $breadcrumbs = array(
             </div>
             <label for="opening_balance_ap" class="col-sm-2 col-form-label">{{__('Opening Balance')}}</label>
             <div class="col-md-2 col-sm-10">
-                <input name="opening_balance_ap" type="text" id="opening_balance_ap" class="form-control number @error('opening_balance_ap') is-invalid @enderror" value="{{old('opening_balance_ap', empty($model->opening_balance_ap)?'0,00':$model->opening_balance_ap)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                <input name="opening_balance_ap" type="text" id="opening_balance_ap" class="form-control number @error('opening_balance_ap') is-invalid @enderror" value="{{fcurrency(old('opening_balance_ap', empty($model->opening_balance_ap)?'0':$model->opening_balance_ap))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
             </div>
         </div>
         <div class="form-group row">
@@ -123,7 +121,7 @@ $breadcrumbs = array(
             </div>
             <label for="opening_balance_ar" class="col-sm-2 col-form-label">{{__('Opening Balance')}}</label>
             <div class="col-md-2 col-sm-10">
-                <input name="opening_balance_ar" type="text" id="opening_balance_ar" class="form-control number @error('opening_balance_ar') is-invalid @enderror" value="{{old('opening_balance_ar', empty($model->opening_balance_ar)?'0,00':$model->opening_balance_ar)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                <input name="opening_balance_ar" type="text" id="opening_balance_ar" class="form-control number @error('opening_balance_ar') is-invalid @enderror" value="{{fcurrency(old('opening_balance_ar', empty($model->opening_balance_ar)?'0':$model->opening_balance_ar))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
             </div>
         </div>
     @endcomponent
@@ -145,13 +143,19 @@ $(function(){
     $('.currency').inputmask({ 'alias': 'currency' })
     $('[data-mask]').inputmask();
     $('#numbering_id').change(function(){
-        if($(this).val()==''){
+        var id = $(this).val();
+        if(id==null){
             $('#custom_id').prop('disabled', false);
-            $('#custom_id').val('');
-        }else{
-            $('#custom_id').prop('disabled', true);
-            $('#custom_id').val('[{{__("Automatic ID")}}]');
+            return;
         }
+        $('#custom_id').prop('disabled', true);
+        $.ajax({
+            url: BASE_URL+'/json/numberings/'+id+'/contact',
+            method: 'GET',
+            success: function(res){
+                $('#custom_id').val(res.trans_no)
+            }
+        })
     });
 })
 </script>

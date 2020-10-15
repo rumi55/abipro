@@ -48,7 +48,7 @@ $breadcrumbs = array(
                     @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
-            @endif
+            @endif 
             <div class="col-md-4">
                 <div class="form-group">
                     <label for="trans_no" >{{__('Transaction No.')}}</label>
@@ -261,20 +261,46 @@ $breadcrumbs = array(
 <script type="text/javascript">
 $(function () {
     init()
+    var val = $('#numbering_id').attr('data-value')
+    if(val==null|| val==''){
+        $('#trans_no_manual').show();
+        $('#trans_no_manual').focus();
+        $('#trans_no_auto').hide();
+        $('#manual').prop('checked', true);
+    }
+    $('#numbering_id').val(val);
+    $('#numbering_id').trigger('change');
     $('input[name=manual]').change(function(){
         var manual = $(this).prop('checked');
         if(manual){
             $('#trans_no_manual').show();
             $('#trans_no_manual').focus();
             $('#trans_no_auto').hide();
+            $('#numbering_id').val(null);
+            $('#numbering_id').trigger('change');
         }else{
             $('#trans_no_manual').hide();
             $('#trans_no_auto').show();
+            var val = $('#numbering_id').attr('data-value')
+            $('#numbering_id').val(val);
+            $('#numbering_id').trigger('change');
         }
     })
 
     $('#numbering_id').change(function(){
         var id = $(this).val();
+        if(id==null){
+            $('#manual').prop('checked', true);
+            $('#trans_no_manual').show();
+            $('#trans_no_manual').focus();
+            $('#trans_no_auto').hide();
+            return;
+        }else{
+            $('#trans_no_manual').hide();
+            $('#trans_no_auto').show();
+            $('#manual').prop('checked', false);
+            $(this).attr('data-value', id)
+        }
         $.ajax({
             url: BASE_URL+'/json/numberings/'+id+'/voucher',
             method: 'GET',
@@ -384,16 +410,12 @@ function validate(){
 }
 function onchange(){
     var amount = sum('.amount');
-    $('#amount').val(amount==0?'0,00':amount);
+    $('#amount').val(formatNumber(amount));
 }
 function sum(selector){
     var total = 0;
    $(selector).each(function(index){
       var val = $(this).val();
-      if(val==''||val==null){
-        val = 0;
-        $(this).val('0,00')
-      }
       var n = parseNumber(val);
       total=total+n;
     });
@@ -401,7 +423,16 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join('').split(',').join('.'));
+    return parseFloat(val.split('.').join('').split(',').join('.'));
+}
+function formatNumber(val){
+    val = val.toString();
+    if(val=='' || val==null||val==0)return '0,00';
+    if(val.includes('.')){
+        return val.split('.').join(',');
+    }else{
+        return val.split('.').join(',')+',00';
+    }
 }
 function  init(){
     loadSelect();

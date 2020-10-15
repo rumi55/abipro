@@ -5,4 +5,12 @@
 <link rel="stylesheet" href="{{asset('plugins/icheck-bootstrap/icheck-bootstrap.min.css')}}">
 <link rel="stylesheet" href="{{asset('css/app.css')}}">
 @stack('css')
-<script type="text/javascript">var BASE_URL ='{{asset('')}}'</script> 
+{{-- <style>
+    footer{
+        position: fixed;
+        left:0;
+        bottom:0;
+        width:100%;
+    }
+</style> --}}
+<script type="text/javascript">var BASE_URL ='{{asset('')}}'</script>

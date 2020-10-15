@@ -42,17 +42,18 @@ class CashflowReportController extends Controller
             'end_balance_date'=>$params['end_date'],
             'view'=>$view
         );
+        $data = array_merge($data, $params);
         if(isset($request->output)){
             $output = $request->output;
-            if($output=='pdf'){
-                return $this->pdf($view, $data);
-            }else if($output=='html'){
+            if($output=='excel'){
+                header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                header("Content-Disposition: attachment; filename=journals.xls");
                 return $this->html($view, $data);
             }
         }
-        return $this->html($view, $data);
+        return $this->pdf($view, $data);
     }
-    
+
     private function html($view, $data){
         return view('report.viewer', $data);
     }
@@ -60,15 +61,15 @@ class CashflowReportController extends Controller
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
         $pdf->loadView($view, $data);
-        $pdf->loadView('report.print', $data);
+        $pdf->loadView('report.pdf', $data);
         return $pdf->stream($data['report'].'.pdf');
     }
-    
+
     private function query($params, $company){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
         $departments = '';
-        
+
         $balance = DB::table('vw_ledger')
         ->selectRaw("IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as balance")
         ->where('company_id', $company->id)
@@ -86,7 +87,7 @@ class CashflowReportController extends Controller
         if(count($params['department_id'])==0){
             $balance += $opening_balance;
         }
-        
+
         $income = DB::table('vw_ledger')
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
@@ -101,7 +102,7 @@ class CashflowReportController extends Controller
         }
         $income = $income
         ->orderBy('trans_date')->orderBy('trans_no')->get();
-        
+
         $expense = DB::table('vw_ledger')
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
@@ -122,7 +123,7 @@ class CashflowReportController extends Controller
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
         $departments = '';
-        
+
         $balance = DB::table('vw_ledger')
         ->selectRaw("IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as balance")
         ->where('company_id', $company->id)
@@ -140,7 +141,7 @@ class CashflowReportController extends Controller
         if(count($params['department_id'])==0){
             $balance += $opening_balance;
         }
-        
+
         $income = DB::table('vw_ledger')
         ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as total")
         ->where('company_id', $company->id)
@@ -157,7 +158,7 @@ class CashflowReportController extends Controller
         $income = $income
         ->groupBy(DB::raw('account_id, account_no, account_name'))
         ->orderBy('account_no')->get();
-        
+
         $expense = DB::table('vw_ledger')
         ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as total")
         ->where('company_id', $company->id)
@@ -174,17 +175,17 @@ class CashflowReportController extends Controller
         $expense = $expense
         ->groupBy(DB::raw('account_id, account_no, account_name'))
         ->orderBy('account_no')->get();
-        
+
         return [$income, $expense, $balance];
     }
-    
+
 
     private function getParams(Request $request, $company_id){
         $departments = $request->query('departments',[]);
         $accounts = $request->query('accounts',[]);
         $start_date = $request->query('start_date', date('Y-m-d'));
         $end_date = $request->query('end_date', date('Y-m-d'));
-        
+
         $detail = filter_var($request->detail, FILTER_VALIDATE_BOOLEAN);
 
         $params = [
@@ -196,5 +197,5 @@ class CashflowReportController extends Controller
         ];
         return $params;
     }
-    
+
 }

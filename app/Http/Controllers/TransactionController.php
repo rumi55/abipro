@@ -95,6 +95,7 @@ class TransactionController extends Controller
         if($transaction->company_id != $company_id){
             abort(404);
         }
+        $transaction->numbering_id = null;
         $accounts = \App\Account::where('company_id', $company_id)
         ->where('has_children', false)->orderBy('account_type_id')->get();
         $departments = \App\Department::where('company_id', $company_id)->get();
@@ -129,7 +130,7 @@ class TransactionController extends Controller
 
         $rules = [
             'trans_date' => 'required|date_format:d-m-Y',
-            'description' => 'nullable|min:3|max:255',
+            'description' => 'nullable|min:1|max:255',
             'account_id' => 'required|exists:accounts,id',
             'contact_id' => 'required|exists:contacts,id',
             'department_id' => 'nullable|exists:departments,id',
@@ -223,7 +224,6 @@ class TransactionController extends Controller
                     'trans_type'=>$type,
                     'status'=>$data['status'],
                     'contact_id'=>$data['contact_id'],
-                    'numbering_id'=>$data['numbering_id'],
                     'department_id'=>isset($data['department_id'])?$data['department_id']:null,
                     // 'tags'=>$request->tags,
                     'description'=>isset($data['description'])?$data['description']:null,

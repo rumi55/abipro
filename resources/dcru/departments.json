@@ -19,6 +19,11 @@
                 "data":"name",
                 "name":"name",
                 "title":"Nama Departemen",
+                "filter":{
+                    "type":"unique",
+                    "table":"departments",
+                    "column":"name"
+                },
                 "type":"text"
             },
             {
@@ -52,30 +57,30 @@
         "view": "company.department.create",
         "fields":[
             {
-                "name":"custom_id", 
-                "type":"text", 
+                "name":"custom_id",
+                "type":"text",
                 "label":"Kode",
-                "width":4, 
-                "svalidation":"required|min:3|max:8", 
+                "width":4,
+                "svalidation":"required|min:3|max:8",
                 "uvalidation":"required|min:3|max:8"
             },
             {
-                "name":"name", 
-                "type":"text", 
+                "name":"name",
+                "type":"text",
                 "label":"Departemen",
-                "width":9, 
-                "svalidation":"required|min:3|max:64", 
+                "width":9,
+                "svalidation":"required|min:3|max:64",
                 "uvalidation":"required|min:3|max:64"
             },
             {
-                "name":"description", 
-                "type":"text", 
+                "name":"description",
+                "type":"text",
                 "label":"Keterangan",
                 "svalidation":"max:255",
                 "uvalidation":"max:255"
             },
             {
-                "name":"company_id", 
+                "name":"company_id",
                 "type":"hidden",
                 "label":"Perusahaan",
                 "value":"session:user|company_id"

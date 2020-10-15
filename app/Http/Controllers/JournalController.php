@@ -74,8 +74,14 @@ class JournalController extends Controller
     public function createJournal(Request $request){
         return $this->create(0);
     }
+    public function duplicateJournal($id){
+        return $this->duplicate($id, 0);
+    }
     public function createVoucher(Request $request){
         return $this->create(1);
+    }
+    public function duplicateVoucher($id){
+        return $this->duplicate($id, 1);
     }
 
     public function create($is_voucher){
@@ -92,10 +98,10 @@ class JournalController extends Controller
         $mode = 'create';
         return view('journal.form', compact('journal', 'mode', 'accounts', 'departments', 'numberings', 'tags', 'contacts'));
     }
-    public function duplicate($id){
+    public function duplicate($id, $is_voucher){
         $company_id = \Auth::user()->activeCompany()->id;
         $journal = Journal::findOrFail($id);
-
+        $journal->is_voucher = $is_voucher;
         //redirect jika single entry
         if($journal->is_voucher==1 && $journal->is_processed==0 && !empty($journal->transaction_id)){
             $trans = \App\Transaction::findOrFail($journal->transaction_id);
@@ -108,6 +114,7 @@ class JournalController extends Controller
         $numberings = \App\Numbering::where('company_id', $company_id)
         ->where('transaction_type_id', TransactionType::JOURNAL)->get();
         $contacts = \App\Contact::where('company_id', $company_id)->orderBy('name')->get();
+        $journal->numbering_id = null;
         $mode = 'create';
         return view('journal.form', compact('journal', 'mode', 'accounts', 'departments', 'numberings', 'tags', 'contacts'));
     }
@@ -130,60 +137,63 @@ class JournalController extends Controller
     }
 
     public function report(Request $request, $id){
-        $output = $request->query('output', 'html');
+        $output = $request->query('output', 'pdf');
         $journal = Journal::findOrFail($id);
         $title = $journal->is_voucher==1?'Voucher':'Jurnal';
         $view = 'report.journal.single';
         $data = ['data'=>$journal, 'title'=>$title, 'report'=>'print_journal', 'view'=>$view];
-        if($output=='pdf'){
-            $pdf = app('dompdf.wrapper');
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            $pdf->loadView('report.pdf', $data);
-            return $pdf->download('journal.pdf');
-        }elseif($output=='print'){
-            return view('report.print', $data);
+        if($output=='excel'){
+            header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            header("Content-Disposition: attachment; filename=journals.xls");
+            return view('report.single.pdf', $data);
         }
-        return view('report.viewer', $data);
+        $pdf = app('dompdf.wrapper');
+        $pdf->getDomPDF()->set_option("enable_php", true);
+        $pdf->loadView('report.pdf', $data);
+        return $pdf->download('journal.pdf');
     }
     public function voucher(Request $request, $id){
-        $output = $request->query('output', 'html');
+        $output = $request->query('output', 'pdf');
         $journal = Journal::findOrFail($id);
         $title = $journal->is_voucher==1?'Voucher':'Jurnal';
-        $view = 'print.voucher.voucher';
+        $view = 'report.single.voucher';
         $data = ['data'=>$journal, 'title'=>$title, 'report'=>'print_journal', 'view'=>$view];
-        if($output=='pdf'){
-            $pdf = app('dompdf.wrapper');
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            $pdf->loadView('print.pdf', $data);
-            return $pdf->download('voucher.pdf');
-        }elseif($output=='print'){
-            return view('report.print', $data);
+        if($output=='excel'){
+            header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            header("Content-Disposition: attachment; filename=journals.xls");
+            return view('report.single.pdf', $data);
         }
-        return view('print.viewer', $data);
+        $pdf = app('dompdf.wrapper');
+        $pdf->getDomPDF()->set_option("enable_php", true);
+        $pdf->loadView('report.single.pdf', $data);
+        return $pdf->download('voucher.pdf');
     }
     public function receipt(Request $request, $id){
-        $output = $request->query('output', 'html');
+        $output = $request->query('output', 'pdf');
         $journal = Journal::findOrFail($id);
         if(!$journal->is_voucher){
             abort(404);
         }
         if(!empty($journal->transaction_id)){
             $voucher = \App\Transaction::find($journal->transaction_id);
+            $type = 'transaction';
         }else{
-
+            $type = 'voucher';
+            $voucher = $journal;
         }
         $title = 'Kuitansi';
-        $view = 'print.voucher.receipt';
-        $data = ['data'=>$voucher, 'title'=>$title, 'report'=>'print_receipt', 'view'=>$view];
-        if($output=='pdf'){
-            $pdf = app('dompdf.wrapper');
-            $pdf->getDomPDF()->set_option("enable_php", true);
-            $pdf->loadView('print.pdf', $data);
-            return $pdf->download('receipt.pdf');
-        }elseif($output=='print'){
-            return view('report.print', $data);
+        $view = 'report.single.receipt';
+        $data = ['data'=>$voucher, 'title'=>$title, 'type'=>$type,'report'=>'print_receipt', 'view'=>$view];
+        if($output=='excel'){
+            header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            header("Content-Disposition: attachment; filename=journals.xls");
+            return view('report.single.pdf', $data);
         }
-        return view('print.viewer', $data);
+        $pdf = app('dompdf.wrapper');
+        $pdf->getDomPDF()->set_option("enable_php", true);
+        $pdf->loadView('report.single.pdf', $data);
+        return $pdf->download('receipt.pdf');
+
     }
 
     public function save(Request $request){
@@ -195,7 +205,7 @@ class JournalController extends Controller
 
         $rules = [
             'trans_date' => 'required|date_format:d-m-Y',
-            'description' => 'required',
+            'description' => 'nullable|min:1|max:255',
             'total_debit' => 'same:total_credit',
             'total_credit' => 'same:total_debit',
             'detail.*.account_id'=>'required',
@@ -212,6 +222,7 @@ class JournalController extends Controller
         $attr = [
             'trans_no_manual' => trans('Transaction Number'),
             'trans_no_auto' => trans('Transaction Number'),
+            'numbering_id' => trans('Group Transaction'),
             'trans_date' => trans('Transaction Date'),
             'description' => trans('Description'),
             'total_debit' => trans('Total Debit'),
@@ -231,7 +242,7 @@ class JournalController extends Controller
         $is_voucher = $request->is_voucher;
 
         $trans_date = fdate($request->trans_date, 'Y-m-d');
-        $total = parse_number($request->total);
+        $total = $request->total;
         $trans_no = $manual?$request->trans_no_manual:$request->trans_no_auto;
 
         try{
@@ -336,7 +347,7 @@ class JournalController extends Controller
         $company_id = company('id');
         $rules = [
             'trans_date' => 'required|date_format:d-m-Y',
-            'description' => 'required',
+            'description' => 'nullable|min:1|max:255',
             'total_debit' => 'same:total_credit',
             'total_credit' => 'same:total_debit',
             'detail.*.account_id'=>'required',
@@ -374,7 +385,7 @@ class JournalController extends Controller
             $journal->description = $request->description;
             $journal->numbering_id = $request->numbering_id;
             $journal->contact_id = $request->contact_id??null;
-            $journal->total = parse_number($request->total);
+            $journal->total = $request->total;
             $journal->updated_by = $user->id;
             if(!empty($request->status)){
                 $journal->status = $request->status;
@@ -517,7 +528,7 @@ class JournalController extends Controller
         $journal = Journal::findOrFail($id);
         $journal->is_processed=true;
         $journal->save();
-        return redirect()->route('dcru.index', 'journals')->with('success', 'Voucher have been transfered to journal successfully.');
+        return redirect()->route('dcru.index', 'journals')->with('success', __('Voucher have been transfered to journal successfully.'));
     }
 
     public function toVoucher($id){
@@ -534,7 +545,7 @@ class JournalController extends Controller
     public function toJournalBatch(Request $request){
         $id = $request->id;
         Journal::whereIn('id', $id)->where('is_voucher', true)->where('status', 'approved')->update(['is_processed'=>true]);
-        return redirect()->back()->with('success', 'Voucher have been transfered to journal successfully.');
+        return redirect()->back()->with('success', __('Voucher have been transfered to journal successfully.'));
     }
 
     public function toVoucherBatch(Request $request){

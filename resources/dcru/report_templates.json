@@ -1,0 +1,77 @@
+{
+    "name":"report_templates",
+    "title":"Template",
+    "dtables":{
+        "title":"Template",
+        "columns":[
+            {
+                "data":"template_name",
+                "name":"template_name",
+                "title":"Template Name",
+                "type":"text"
+            },
+            {
+                "data":"report_name",
+                "name":"report_name",
+                "title":"Report Type",
+                "type":"text"
+            },
+            {
+                "data":"is_default",
+                "name":"is_default",
+                "title":"Default",
+                "type":"boolean"
+            },
+            {
+                "data":"",
+                "name":"",
+                "type":"menu"
+            }
+        ],
+        "query":{
+            "table":"report_templates",
+            "select":"*",
+            "where":{
+                "condition":"company_id=?",
+                "params":["user:company_id"]
+            }
+        }
+    },
+    "form":{
+        "title": "Departemen",
+        "table": "departments",
+        "view": "company.department.create",
+        "fields":[
+            {
+                "name":"custom_id",
+                "type":"text",
+                "label":"Kode",
+                "width":4,
+                "svalidation":"required|min:3|max:8",
+                "uvalidation":"required|min:3|max:8"
+            },
+            {
+                "name":"name",
+                "type":"text",
+                "label":"Departemen",
+                "width":9,
+                "svalidation":"required|min:3|max:64",
+                "uvalidation":"required|min:3|max:64"
+            },
+            {
+                "name":"description",
+                "type":"text",
+                "label":"Keterangan",
+                "svalidation":"max:255",
+                "uvalidation":"max:255"
+            },
+            {
+                "name":"company_id",
+                "type":"hidden",
+                "label":"Perusahaan",
+                "value":"session:user|company_id"
+            }
+        ]
+    }
+
+}

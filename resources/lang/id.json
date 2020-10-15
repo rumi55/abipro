@@ -245,6 +245,7 @@
     "Error": "Galat",
     "Warning": "Peringatan",
     "Info": "Info",
+    "Different": "Selisih",
     "Image": "Gambar",
     "Choose Image": "Pilih Gambar",
     "Enter ID": "Masukkan Kode",
@@ -270,5 +271,13 @@
     "Write your rejection note below!": "Tulis catatan penolakan Anda di bawah ini!",
     "Are you sure want to process to journal?":"Apakah Anda yakin ingin memproses ke jurnal?",
     "Are you sure want to process to journal? Only approved voucher will be processed.":"Apakah Anda yakin ingin memproses ke jurnal? Hanya voucher yang disetujui yang akan diproses.",
-    "This process will delete all your data. Are you sure want to continue this process?": "Proses ini akan menghapus data Anda sebelumnya, apakah Anda yakin ingin melanjutkan?"
+    "This process will delete all your data. Are you sure want to continue this process?": "Proses ini akan menghapus data Anda sebelumnya, apakah Anda yakin ingin melanjutkan?",
+
+    "Company Name":"Nama Perusahaan",
+    "Company Logo":"Logo Perusahaan",
+    "Company Email":"Email Perusahaan",
+    "Company Address":"Alamat Perusahaan",
+    "Company Website":"Website Perusahaan",
+    "Company Phone":"Phone Perusahaan",
+    "Company Fax":"Fax Perusahaan"
 }

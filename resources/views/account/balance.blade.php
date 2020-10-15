@@ -38,6 +38,18 @@ $breadcrumbs = array(
 @csrf
 <div class="card">
     <div class="card-body">
+        <div class="btn-group mb-4">
+            <button id="dt-btn-print" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-print"></i> {{__('Print')}}</button>
+            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown">
+                <span class="sr-only">Toggle Dropdown</span>
+                <div class="dropdown-menu" role="menu">
+                <a id="dt-btn-pdf" class="dropdown-item" href="#"><i class="fas fa-file-pdf"></i> PDF</a>
+                <a id="dt-btn-excel" class="dropdown-item" href="#"><i class="fas fa-file-excel"></i> Excel</a>
+                <a id="dt-btn-csv" class="dropdown-item" href="#"><i class="fas fa-file-csv"></i> CSV</a>
+                <a id="dt-btn-copy" class="dropdown-item" href="#"><i class="fas fa-copy"></i> Copy</a>
+                </div>
+            </button>
+        </div>
         <table class="table table-hover table-sm">
             <thead>
                 <tr>
@@ -50,18 +62,18 @@ $breadcrumbs = array(
 
         <div class="table-responsive" style="height:400px">
             <table class="table table-hover table-sm">
-                <tbody>
+                <tbody id="tdata">
                 @php $type = null; @endphp
                 @foreach($accounts as $account)
                     @if($type!=$account->account_type_id)
                     @php $type = $account->account_type_id; @endphp
-                    <tr>
+                    <tr class="type-name">
                         <td class="font-weight-bold" colspan="4">{{$account->account_type_name}}</td>
                     </tr>
                     @endif
-                    <tr id="row-{{$account->id}}" class="tr-row" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
+                <tr id="row-{{$account->id}}" class="tr-row" data-tree-level="{{$account->tree_level}}" data-id="{{$account->id}}" data-parent="{{$account->account_parent_id}}">
                         @if($account->tree_level==1)
-                        <td class="pl-4" style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
+                        <td  class="pl-4" style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
                         @elseif($account->tree_level==2)
                         <td class="pl-5" style="vertical-align:middle;width:20%">{{$account->account_no}}</td>
                         @else
@@ -70,7 +82,7 @@ $breadcrumbs = array(
                         <td style="vertical-align:middle;width:60%">{{$account->account_name}}</td>
                         <td class="text-right" style="width:20%">
                             @if($account->has_children==0)
-                            <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{empty(old('balance.'.$account->id, $account->balance))?'0':old('balance.'.$account->id, $account->balance)}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 0, 'digitsOptional': false, 'prefix': ''" data-mask>
+                            <input style="width:200px" name="balance[{{$account->id}}]" data-index="{{$account->id}}" type="text" id="balance_{{$account->id}}" class="form-control" value="{{fcurrency(empty(old('balance.'.$account->id, $account->balance))?'0':old('balance.'.$account->id, $account->balance))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             @error('balance_'.$account->id)<small class="text-danger">{!! $message !!}</small>@enderror
 
                             @endif
@@ -103,6 +115,8 @@ $breadcrumbs = array(
 <script src="{{asset('plugins/daterangepicker/daterangepicker.js')}}"></script>
 <script src="{{asset('plugins/select2/js/select2.full.min.js')}}"></script>
 <script src="{{asset('plugins/inputmask/min/jquery.inputmask.bundle.min.js')}}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
 <script type="text/javascript">
 $(function(){
     $('.debit').change(function(){
@@ -196,16 +210,22 @@ $(function(){
     //     }
     //     $(this).submit();
     // });
+    $('#dt-btn-pdf').on('click', function(e){
+        generatePDF().download('opening_balance.pdf')
+    })
+    $('#dt-btn-print').on('click', function(e){
+        generatePDF().print()
+    })
 })
 function onchange(){
     var debit = sum('.debit');
     var credit = sum('.credit');
-    $('#total_debit').val(debit);
-    $('#total_credit').val(credit);
+    $('#total_debit').val(formatNumber(debit));
+    $('#total_credit').val(formatNumber(credit));
     if(debit==credit){
         $('.total').addClass('text-success');
         $('.total').removeClass('text-danger');
-        $('#total').val(debit);
+        $('#total').val(formatNumber(debit));
         $('#btn-save').prop('disabled', false);
     }else{
         $('.total').addClass('text-danger');
@@ -228,7 +248,123 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join(''));
+    return parseFloat(val.split('.').join('').split(',').join('.'));
+}
+function formatNumber(val){
+    val = val.toString();
+    if(val=='' || val==null||val==0)return '0,00';
+    if(val.includes('.')){
+        return val.split('.').join(',');
+    }else{
+        return val.split('.').join(',')+',00';
+    }
+}
+
+function getData(){
+    var data = [];
+    var i = 1;
+    $('#tdata>tr').each(function(){
+        var row = []
+        var level = $(this).attr('data-tree-level');
+        var sp = level==0?'':(level==1?'\u200B\t':(level==2?'\u200B\t\t':''))
+        var color = i%2==0?'white':'#f3f3f3'
+        if($(this).hasClass('type-name')){
+            $('td', this).each(function(idx){
+                row.push({text: sp+$(this).html(), fillColor:color, bold:true, colSpan:3})
+            })
+        }else{
+
+            $('td', this).each(function(idx){
+                if(idx==0){
+                    row.push({text: sp+$(this).html(), fillColor:color})
+                }else if(idx==1){
+                    row.push({text: $(this).html(), fillColor:color})
+                }else if(idx==2){
+                    var val = $('input',this).val()
+                    val = val?val:''
+                    row.push({text: sp+val, fillColor:color, alignment:'right'})
+                }
+            })
+        }
+        data.push(row)
+        i++
+    })
+    return data;
+}
+function generatePDF(){
+    var fonts = {
+	Roboto: {
+		normal: 'fonts/Roboto-Regular.ttf',
+		bold: 'fonts/Roboto-Medium.ttf',
+		italics: 'fonts/Roboto-Italic.ttf',
+		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
+	}
+};
+
+var data = getData();
+var account_type = $('#account_type option:selected').html();
+var department = $('#department_id option:selected').html();
+department = department?`{{__('Department')}}: ${department}`:'';
+account_type = account_type?`{{__('Account Type')}}: ${account_type}`:'';
+var docDefinition = {
+	content: [
+		{
+            text:`{{company('name')}}`, alignment:'left', fontSize: 12, bold: true, lineHeight: 2
+        },
+		{
+            text:`Saldo Awal`, alignment:'left', fontSize: 11, bold: true
+        },
+		{
+            text:`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`, alignment:'left', fontSize: 10, lineHeight: 2
+        },
+		{
+			style: 'tableExample',
+			table: {
+                widths: ['auto', '*', '*'],
+				headerRows: 1,
+				body: [
+					[{text:'Kode Akun', style:"tableHeader"}, {text:'Nama Akun', style:"tableHeader"}, {text:'Saldo Awal', style:"tableHeader", alignment:'right'}],
+                    ...data
+                ]
+			},
+			layout: 'noBorders'
+		}
+	],
+    footer : function(currentPage, pageCount) {
+                return [
+                    { text: currentPage.toString() + ' / ' + pageCount, alignment: 'center' }
+                ];
+              },
+	styles: {
+		header: {
+			fontSize: 18,
+			bold: true,
+			margin: [0, 0, 0, 10]
+		},
+		subheader: {
+			fontSize: 16,
+			bold: true,
+			margin: [0, 10, 0, 5]
+		},
+		tableExample: {
+			margin: [0, 10, 0, 5]
+		},
+		tableHeader: {
+			alignment: "left",
+            bold: true,
+            color: "#212529",
+            fillColor: "#d6d8db",
+            fontSize: 11,
+            border: [true, true, true, true],
+		},
+        tableBodyOdd: {fillColor: "#f3f3f3"}
+	},
+	defaultStyle: {
+        fontSize: 10
+		// alignment: 'justify'
+	}
+};
+return pdfMake.createPdf(docDefinition)
 }
 </script>
 

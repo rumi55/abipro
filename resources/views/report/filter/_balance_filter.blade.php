@@ -1,6 +1,5 @@
-@component('components.card_form',['id'=>'filter-form', 'btn_label'=>'Filter', 'method'=>'GET', 'action'=>route('reports.balance')])
 <div class="row">
-    <div class="col-md-3">
+    <div class="col-md-12">
       <div class="form-group">
         <label>Jenis Perbandingan</label>
         <select id="compare" class="select2" name="compare">
@@ -16,7 +15,7 @@
     $end_month = request('end_month', date('m'));
     $y = request('year', date('d-m-Y'));
     @endphp
-    <div class="col-md-6">
+    <div class="col-md-12">
       <div class="form-group">
         <label id="label-period">Bulan</label>
         <div id="group-month" class="input-group">
@@ -88,14 +87,14 @@
         </div>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-12">
       <div class="form-group">
       @php $val = request('departments',[]); $val = implode(',', $val); @endphp
         <label>Departemen</label>
         <select id="select-department" style="width:100%" data-selected="{{$val}}" name="departments[]" class="select2" multiple></select>
       </div>
     </div>
-    <div class="col-md-3">
+    <div class="col-md-12">
       <div class="form-group">
         <label>Subakun</label>
         <select class="select2" name="subaccount">
@@ -106,7 +105,6 @@
       </div>
     </div>
 </div>
-@endcomponent
 @push('css')
 <link rel="stylesheet" href="{{asset('plugins/daterangepicker/daterangepicker.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">

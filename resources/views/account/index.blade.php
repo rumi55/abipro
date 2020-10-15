@@ -1,5 +1,5 @@
-@php 
-$active_menu='accounts'; 
+@php
+$active_menu='accounts';
 $breadcrumbs = array(
     ['label'=>trans('Account')]
 );
@@ -36,12 +36,26 @@ $breadcrumbs = array(
             </div>
         </div>
     </div>
-    <div class="card-body pb-1">    
+    <div class="card-body pb-1">
+        <div class="btn-group">
+            <button id="dt-btn-print" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-print"></i> {{__('Print')}}</button>
+            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown">
+                <span class="sr-only">Toggle Dropdown</span>
+                <div class="dropdown-menu" role="menu">
+                <a id="dt-btn-pdf" class="dropdown-item" href="#"><i class="fas fa-file-pdf"></i> PDF</a>
+                <a id="dt-btn-excel" class="dropdown-item" href="#"><i class="fas fa-file-excel"></i> Excel</a>
+                <a id="dt-btn-csv" class="dropdown-item" href="#"><i class="fas fa-file-csv"></i> CSV</a>
+                </div>
+            </button>
+        </div>
         <div class="table-responsive mt-4">
-            <table class="table table-hover">
+            <table  class="table table-hover">
                 <thead class="thead-light">
                     <tr>
                         <th style="width:20px">
+                            <a id="collapse-all" class="collapse-btn" href="javascript:void(0)" data-collapse="false">
+                                <i class="fas fa-angle-down fa-xs"></i>
+                            </a>
                         </th>
                         <th>{{__('Account No.')}}</th>
                         <th>{{__('Account Name')}}</th>
@@ -49,7 +63,7 @@ $breadcrumbs = array(
                         <th></th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="tdata">
                 @if(count($accounts)==0)
                     <tr><td class="text-center" colspan="5">
                     {{__('No account available.')}}
@@ -83,12 +97,11 @@ $breadcrumbs = array(
                             <div class="dropdown-menu dropdown-menu-right" role="menu">
                                 <a href="{{route('accounts.view', $account->id)}}" class="dropdown-item"><i class="fas fa-search"></i> {{__('Detail')}}</a>
                                 <a href="{{route('accounts.edit', $account->id)}}" class="dropdown-item"><i class="fas fa-edit"></i> {{__('Edit')}}</a>
-                                @if($account->isLocked()!=1 && $account->has_children==0)
+
                                 <form method="POST" action="{{route('accounts.delete',$account->id)}}" style="display:inline">
                                     @method('DELETE') @csrf
                                     <button type="button" class="dropdown-item btn-delete"><i class="fas fa-trash"></i> {{__('Delete')}}</button>
                                 </form>
-                                @endif
                             </div>
                         </td>
                     </tr>
@@ -100,6 +113,13 @@ $breadcrumbs = array(
 </div>
 @endsection
 @push('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/shim.min.js"></script>
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
+<script type="text/javascript" src="//unpkg.com/blob.js@1.0.1/Blob.js"></script>
+<script type="text/javascript" src="//unpkg.com/file-saver@1.3.3/FileSaver.js"></script>
 <script type="text/javascript">
 $(function () {
     $('.btn-delete').click(function(e){
@@ -118,7 +138,7 @@ $(function () {
         })
       });
 
-    
+
     $('.collapse-btn').on('click', function(e){
         var id = $(this).attr('data-id');
         var iscollapse = $(this).attr('data-collapse');
@@ -128,7 +148,29 @@ $(function () {
             collapse(true, id)
         }
     })
-    collapseAll(true);
+    $('#collapse-all').click(function(){
+        var isCollapse = $(this).attr('data-collapse');
+        console.log(isCollapse)
+        isCollapse = isCollapse=='true'?false:true;
+        console.log(isCollapse)
+        var icon = isCollapse?'right':'down';
+        console.log(icon)
+        $(this).html(`<i class="fas fa-angle-${icon} fa-xs"></i>`)
+        collapseAll(isCollapse);
+        $(this).attr('data-collapse', isCollapse)
+    })
+    $('#dt-btn-pdf').on('click', function(e){
+        generatePDF().download('chart_of_account.pdf')
+    })
+    $('#dt-btn-print').on('click', function(e){
+        generatePDF().print()
+    })
+    $('#dt-btn-excel').on('click', function(e){
+        generateExcel('xlsx')
+    })
+    $('#dt-btn-csv').on('click', function(e){
+        generateExcel('csv')
+    })
 })
 function collapse(hide, parent_id){
     $('.tr-row[data-parent='+parent_id+']').each(function(e){
@@ -162,6 +204,134 @@ function collapseAll(collapse){
     });
     $('#collapseall-btn').html('<i class="fas fa-angle-'+(collapse?'right':'down')+' fa-xs"></i>');
     $('#collapseall-btn').attr('data-collapse', collapse);
+}
+function getData(){
+    var data = [];
+    var i = 1;
+    $('#tdata>tr').each(function(){
+        var row = []
+        var level = $(this).attr('data-tree-level');
+        var sp = level==0?'':(level==1?'\u200B\t':(level==2?'\u200B\t\t':'\u200B\t\t\t'))
+        if(!($(this).css('display') == 'none')){
+            var color = i%2==0?'white':'#f3f3f3'
+            $('td', this).each(function(idx){
+                if(idx==1){
+                    row.push({text: sp+$(this).html(), fillColor:color})
+                }else if(idx==2){
+                    row.push({text: sp+$('a',this).html(), fillColor:color})
+                }else if(idx==3){
+                    row.push({text: $(this).html(), fillColor:color})
+                }
+            })
+            data.push(row)
+            i++
+        }
+    })
+    return data;
+}
+function generateExcel(type){
+    var data = getData();
+    var dataExcel = data.map(function(a){
+        return a.map(function(b){
+            return b.text
+        })
+    })
+    if(type=='csv'){
+        dataExcel = [
+            ['Kode Akun', 'Nama Akun', 'Tipe'],
+            ...dataExcel
+        ]
+    }else{
+        dataExcel = [
+            [`{{company('name')}}`],
+            ['Daftar Akun'],
+            [`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`],
+            [],
+            ['Kode Akun', 'Nama Akun', 'Tipe'],
+            ...dataExcel
+        ]
+    }
+
+    var name = 'chart_of_accounts';
+    /* create new workbook */
+    var wb = XLSX.utils.book_new();
+    /* convert table 'table1' to worksheet named "Sheet1" */
+    var ws = XLSX.utils.aoa_to_sheet(dataExcel);
+    console.log(ws)
+    XLSX.utils.book_append_sheet(wb, ws, name);
+    XLSX.writeFile(wb, name+'.'+type);
+}
+function generatePDF(){
+    var fonts = {
+	Roboto: {
+		normal: 'fonts/Roboto-Regular.ttf',
+		bold: 'fonts/Roboto-Medium.ttf',
+		italics: 'fonts/Roboto-Italic.ttf',
+		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
+	}
+};
+
+var data = getData();
+
+var docDefinition = {
+	content: [
+		{
+            text:`{{company('name')}}`, alignment:'left', fontSize: 12, bold: true, lineHeight: 2
+        },
+		{
+            text:`Daftar Akun`, alignment:'left', fontSize: 11, bold: true
+        },
+		{
+            text:`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`, alignment:'left', fontSize: 10, lineHeight: 2
+        },
+		{
+			style: 'tableExample',
+			table: {
+                widths: ['auto', '*', '*'],
+				headerRows: 1,
+				body: [
+					[{text:'Kode Akun', style:"tableHeader"}, {text:'Nama Akun', style:"tableHeader"}, {text:'Tipe Akun', style:"tableHeader"}],
+                    ...data
+                ]
+			},
+			layout: 'noBorders'
+		}
+	],
+    footer : function(currentPage, pageCount) {
+                return [
+                    { text: currentPage.toString() + ' / ' + pageCount, alignment: 'center' }
+                ];
+              },
+	styles: {
+		header: {
+			fontSize: 18,
+			bold: true,
+			margin: [0, 0, 0, 10]
+		},
+		subheader: {
+			fontSize: 16,
+			bold: true,
+			margin: [0, 10, 0, 5]
+		},
+		tableExample: {
+			margin: [0, 10, 0, 5]
+		},
+		tableHeader: {
+			alignment: "left",
+            bold: true,
+            color: "#212529",
+            fillColor: "#d6d8db",
+            fontSize: 11,
+            border: [true, true, true, true],
+		},
+        tableBodyOdd: {fillColor: "#f3f3f3"}
+	},
+	defaultStyle: {
+        fontSize: 10
+		// alignment: 'justify'
+	}
+};
+return pdfMake.createPdf(docDefinition)
 }
 </script>
 @endpush

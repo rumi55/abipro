@@ -13,13 +13,13 @@ class SortirReportController extends Controller
     public function index(Request $request){
         $company = Auth::user()->activeCompany();
         $company_id = $company->id;
-        
+
         $layout = $request->query('layout', 'detail');
         $title = 'Laporan Sortir';
         $view = 'report.sortir.default';
-        
+
         $params = $this->getParams($request, $company_id);
-        
+
         $period = ($params['start_date']==$params['end_date'])?fdate($params['start_date'], 'd M Y'):fdate($params['start_date'], 'd M Y').' s.d '.fdate($params['end_date'], 'd M Y');
         $balance_date = \Carbon\Carbon::parse($params['start_date'])->subDay()->format('d-m-Y');
         $data = array(
@@ -37,21 +37,17 @@ class SortirReportController extends Controller
         }else{
             $data['ledgers'] = $this->query($params, $company);
         }
-        
-        // return $this->pdf($view, $data);
+
+        $data = array_merge($data, $params);
         if(isset($request->output)){
-            $data['accounts'] = ($data['accounts'])->toArray();
             $output = $request->output;
-            if($output=='pdf'){
-                return $this->pdf($view, $data);
-            }else if($output=='print'){
-                return $this->print($data);
-            }else{
-                return $this->html($data);
+            if($output=='excel'){
+                header("Content-type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+                header("Content-Disposition: attachment; filename=journals.xls");
+                return $this->html($view, $data);
             }
-        }else{
-            return $this->html($view, $data);
         }
+        return $this->pdf($view, $data);
     }
     private function html($view, $data){
         return view('report.viewer', $data);
@@ -65,7 +61,7 @@ class SortirReportController extends Controller
         $pdf->loadView('report.pdf', $data);
         return $pdf->download($data['report'].'.pdf');
     }
-    
+
     private function query($params, $company){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
@@ -73,7 +69,7 @@ class SortirReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        
+
         $ledger = DB::table(DB::raw("vw_ledger a"))
         ->leftJoin(DB::raw('tags b'), DB::raw('FIND_IN_SET(b.id, tags)'), '>', DB::raw('0'))
         ->where("a.company_id", $company->id)
@@ -83,7 +79,7 @@ class SortirReportController extends Controller
         if(count($params['account_id'])>0){
             $ledger = $ledger->whereIn(DB::raw('a.account_id'), $params['account_id']);
         }
-        
+
         if(count($params['department_id'])>0){
             $ledger = $ledger->whereIn(DB::raw('a.department_id'), $params['department_id']);
         }
@@ -96,11 +92,11 @@ class SortirReportController extends Controller
         $ledger = $ledger
         ->selectRaw("a.journal_id, a.account_id, a.account_no, a.account_name,
         a.department_name, a.trans_date, a.trans_no, a.description,
-        a.tags, a.debit, a.credit, a.debit_sign, a.credit_sign, a.created_by, 
+        a.tags, a.debit, a.credit, a.debit_sign, a.credit_sign, a.created_by,
         b.id as tag_id, b.group as tag_group, b.item_id, b.item_name")
         ->orderBy(DB::raw("b.`group`, b.item_id, a.department_id, a.account_type_id, a.account_no, a.trans_date"))
         ->get();
-        
+
         return $ledger;
     }
     private function querySumm($params, $company){
@@ -111,15 +107,15 @@ class SortirReportController extends Controller
         $start_period = $period[1];
         $end_period = $period[2];
         $sortirs = [];
-        
+
         if(!empty($params['sortir_items'])){
             $sortirs = $params['sortir_items'];
         }else{
             $sortirs = DB::table('tags')->where('group', $params['sortir'])->pluck('id')->toArray();
         }
-        
+
         $csortirs = count($sortirs);
-        
+
         $find_sortird = '';
         $find_sortire = '';
         $find_sortirf = '';
@@ -144,23 +140,23 @@ class SortirReportController extends Controller
             $find_sortirg=" AND ($find_sortirg) ";
         }
         // DB::enableQueryLog();
-        
+
         $balance = DB::table(DB::raw('vw_accounts a'))
         ->select([
             DB::raw('a.id, a.account_no, a.account_name'),
-            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_ledger d 
+            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_ledger d
             WHERE d.account_id=a.id AND a.company_id=d.company_id
             AND d.trans_date>='$start_date' AND d.trans_date<='$end_date' $find_sortird
             ) as debit"),
-            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_ledger e 
+            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_ledger e
             WHERE e.account_id=a.id AND a.company_id=e.company_id
             AND e.trans_date>='$start_date' AND e.trans_date<='$end_date' $find_sortire
             ) as credit"),
-            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+a.balance FROM vw_ledger f 
+            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+a.balance FROM vw_ledger f
             WHERE f.account_id=a.id AND a.company_id=f.company_id
             AND f.trans_date<'$start_date' $find_sortirf
             ) as op_balance"),
-            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+a.balance FROM vw_ledger g 
+            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+a.balance FROM vw_ledger g
             WHERE g.account_id=a.id AND a.company_id=g.company_id
             AND g.trans_date<='$end_date'
             ) as total_balance")
@@ -175,7 +171,7 @@ class SortirReportController extends Controller
         // }
         // $balance = $balance->groupBy(DB::raw('a.account_no, a.account_name, c.balance'));
         $balance = $balance->orderBy(DB::raw('a.account_no'))->get();
-        
+
         // dd(DB::getQueryLog());
         return $balance;
     }
@@ -185,13 +181,13 @@ class SortirReportController extends Controller
         $end_date = $request->end_date??date('Y-m-d');
         $sortir = $request->sortir;
         $sortir_items = $request->sortir_items;
-        
+
         $accounts = $request->accounts??[];
         $departments = $request->departments??[];
-        
+
         $columns = ['tags'=>false, 'created_by'=>false, 'department'=>false];
-        
-        
+
+
         if(empty($start_date)){
             $max_date = DB::table('vw_ledger')
             ->where('company_id', $company_id)->max('trans_date');
@@ -202,14 +198,14 @@ class SortirReportController extends Controller
             $end_date = $max_date;
         }
 
-        $columns = ['tags'=>empty($request->tags)?false:true, 
-        'description'=>empty($request->description)?false:true, 
-        'created_by'=>empty($request->created_by)?false:true, 
+        $columns = ['tags'=>empty($request->tags)?false:true,
+        'description'=>empty($request->description)?false:true,
+        'created_by'=>empty($request->created_by)?false:true,
         'department'=>empty($request->department)?false:true,];
 
         $start_date = fdate($start_date, 'Y-m-d');
         $end_date = fdate($end_date, 'Y-m-d');
-        
+
         $params = [
             'columns'=>$columns,
             'sortir'=>$sortir,

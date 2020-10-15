@@ -1,16 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <style type="text/css">
         html {
             font-family: sans-serif;
             font-size: 9pt;
-            line-height: 1.15;
+            line-height: 1;
             -webkit-text-size-adjust: 100%;
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
         }
-        h1,h2,h3,h4{
+        p{
+            line-height: 1;
+            margin-bottom: 5;
+            margin-top: 5;
+        }
+        h1{
             font-size: 12pt;
+            font-weight: bold;
+        }
+        h2{
+            font-size: 11pt;
+            font-weight: bold;
+        }
+        h3{
+            font-size: 11pt;
+            font-weight: bold;
+        }
+        h4{
+            font-size: 10pt;
+            font-weight: bold;
         }
         .text-bold{
             font-weight: bold;
@@ -93,6 +112,7 @@
 
         .table-report td a {
             color: #212529;
+            text-decoration: none;
         }
 
         .table-report td a:hover {
@@ -168,11 +188,39 @@
         .table-report th.bb-2 {
             border-bottom: 2px solid #d6d8db;
         }
+        header {
+                position: fixed;
+                top: 0cm;
+                left: 0cm;
+                right: 0cm;
+                height: 2cm;
 
+                text-align: center;
+                line-height: 1.5cm;
+            }
+
+            /** Define the footer rules **/
+            footer {
+                position: fixed;
+                bottom: -0.5cm;
+                left: 0cm;
+                right: 0cm;
+                height: 0.5cm;
+
+                /** Extra personal styles **/
+                text-align: center;
+                line-height: 0.5cm;
+            }
+            .pagenum:before {
+                content: counter(page);
+            }
     </style>
 </head>
 <body>
     @include('report._header_pdf')
     @include($view)
+    <footer>
+        <span class="pagenum"></span>
+    </footer>
 </body>
 </html>

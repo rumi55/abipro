@@ -198,7 +198,9 @@ if (!function_exists('fmonth')) {
 }
 if (!function_exists('fcurrency')) {
     function fcurrency($value){
-        $value = parse_number($value);
+        if(!(strpos($value, ',')==FALSE)){
+            $value = parse_number($value);
+        }
         if(empty($value))return '0,00';
         return number_format($value, 2, ',', '.');
     }
@@ -371,6 +373,34 @@ if (!function_exists('notify')) {
             DB::table('notifications')->insert($a);
         }
         return true;
+    }
+}
+if (!function_exists('report_template')) {
+    function report_template($name)
+    {
+        $template = DB::table('report_templates')->where('report_name', $name)->where('is_default', true)
+        ->where('company_id', company('id'))->first();
+        $logo = company('logo');
+        $logo = empty($logo)?'/img/noimage.png':url_file(company('logo'));
+        $variable = [
+            '{company_logo}'=> '<img height="60px" src="'.public_path().$logo.'">',
+            '{company_name}'=> company('name'),
+            '{company_address}'=> company('address'),
+            '{company_phone}'=> company('phone'),
+            '{company_fax}'=> company('fax'),
+            '{company_website}'=> company('website'),
+            '{company_email}'=> company('email'),
+            '{date}'=>date('d-m-Y'),
+            '{datetime}'=>date('d-m-Y H:i'),
+        ];
+        if($template==null){
+            return null;
+        }
+        $text = $template->template_content;
+        foreach ($variable as $key =>$value) {
+            $text = str_replace($key, $value, $text);
+        }
+        return $text;
     }
 }
 

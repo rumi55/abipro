@@ -78,6 +78,9 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
 
     //reports
     Route::get('/reports', 'ReportController@index')->name('reports.index');
+    Route::get('/reports/view/{name}', 'ReportController@view')->name('reports.view');
+    Route::get('/{group}/view/{id}/{name}', 'ReportController@print')->name('reports.print');
+
     Route::get('/reports/journals', 'JournalReportController@journal')->name('reports.journals');
     Route::get('/reports/vouchers', 'JournalReportController@voucher')->name('reports.vouchers');
     Route::get('/reports/ledgers', 'LedgerReportController@index')->name('reports.ledgers');
@@ -105,7 +108,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::post('/vouchers/delete/all', 'JournalController@deleteBatch')->name('vouchers.delete.batch');
     Route::get('/vouchers/{id}', 'JournalController@view')->name('vouchers.view');
     Route::put('/vouchers/{id}', 'JournalController@update')->name('vouchers.edit.update');
-    Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicate')->name('vouchers.create.duplicate');
+    Route::get('/vouchers/{id}/duplicate', 'JournalController@duplicateVoucher')->name('vouchers.create.duplicate');
 
     Route::get('/vouchers/transaction/{id}/edit', 'TransactionController@edit')->name('vouchers.edit.single');
     Route::put('/vouchers/transaction/{id}/edit', 'TransactionController@update')->name('vouchers.edit.single.update');
@@ -168,7 +171,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/journals/{id}/edit', 'JournalController@edit')->name('journals.edit');
     Route::delete('/journals/{id}', 'JournalController@delete')->name('journals.delete');
     Route::put('/journals/{id}', 'JournalController@update')->name('journals.edit.update');
-    Route::get('/journals/{id}/duplicate', 'JournalController@duplicate')->name('journals.create.duplicate');
+    Route::get('/journals/{id}/duplicate', 'JournalController@duplicateJournal')->name('journals.create.duplicate');
     Route::get('/journals/{id}', 'JournalController@view')->name('journals.view');
     Route::get('/journals/{id}/report', 'JournalController@report')->name('journals.report');
     Route::post('/journals/{id}/lock', 'JournalController@lockJournal')->name('journals.lock');
@@ -197,6 +200,17 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/settings/account_mapping', 'SettingController@accountMapping')->name('settings.account_mapping');
     Route::post('/settings/account_mapping', 'SettingController@accountMappingSave')->name('settings.account_mapping.save');
 
+    //report template
+    Route::get('/report_templates', 'ReportTemplateController@index')->name('report_templates.index');
+    Route::get('/report_templates/create', 'ReportTemplateController@create')->name('report_templates.create');
+    Route::get('/report_templates', 'ReportTemplateController@index')->name('report_templates.index');
+    Route::get('/report_templates/create', 'ReportTemplateController@create')->name('report_templates.create');
+    Route::post('/report_templates', 'ReportTemplateController@save')->name('report_templates.create.save');
+    Route::get('/report_templates/{id}/duplicate', 'ReportTemplateController@duplicate')->name('report_templates.create.duplicate');
+    Route::get('/report_templates/{id}/edit', 'ReportTemplateController@edit')->name('report_templates.edit');
+    Route::put('/report_templates/{id}/update', 'ReportTemplateController@update')->name('report_templates.edit.update');
+    Route::delete('/report_templates/{id}', 'ReportTemplateController@delete')->name('report_templates.delete');
+    Route::get('/report_templates/{id}', 'ReportTemplateController@view')->name('report_templates.view');
     //numberings
     Route::get('/numberings', 'NumberingController@index')->name('numberings.index');
     Route::get('/numberings/create', 'NumberingController@create')->name('numberings.create');
@@ -257,6 +271,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/notifications', 'NotificationController@latest')->name('notifications.latest');
     Route::get('/notifications/{id}', 'NotificationController@read')->name('notifications.read');
 
+    Route::get('/viewer', 'PDFController@index')->name('pdf');
     //CRUD
     Route::get('/dt/{name}', 'DcruController@dt')->name('dcru.index.dt');
     Route::get('/{name}', 'DcruController@index')->name('dcru.index');

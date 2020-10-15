@@ -1,5 +1,5 @@
-@php 
-$active_menu='company'; 
+@php
+$active_menu='company';
 $breadcrumbs = array(
     ['label'=>'Company']
 );
@@ -38,6 +38,7 @@ $breadcrumbs = array(
               <hr>
               <strong><i class="far fa-envelope mr-1"></i> Email</strong>
               <p class="text-muted">{{empty($contact->email)?'-':$contact->email}}</p>
+            </div>
           </div>
         </div>
       </div>

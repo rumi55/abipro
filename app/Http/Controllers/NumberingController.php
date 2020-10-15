@@ -16,7 +16,7 @@ class NumberingController extends Controller
         $data = dcru_dt('numberings', 'dtables');
         return view('setting.numbering.index', $data);
     }
-        public function create(){
+    public function create(){
         $model = new Numbering;
         $model->counter_reset = 'y';
         $model->counter_digit = 4;

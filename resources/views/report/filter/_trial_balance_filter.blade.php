@@ -1,6 +1,5 @@
-@component('components.card_form',['id'=>'filter-form', 'btn_label'=>'Filter', 'method'=>'GET', 'action'=>route('reports.trial_balance')])
 <div class="row">
-<div class="col-md-4">
+<div class="col-md-12">
       <div class="form-group">
         <label>Tanggal</label>
         <div class="input-group">
@@ -21,23 +20,22 @@
         <small id="end_date_error" class="text-danger"></small>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-12">
       <div class="form-group">
       @php $val = request('accounts',[]); $val = implode(',', $val); @endphp
         <label>Akun</label>
         <select id="select-journal" data-selected="{{$val}}" name="accounts[]" class="select2" multiple></select>
       </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-12">
       <div class="form-group">
       @php $val = request('departments',[]); $val = implode(',', $val); @endphp
         <label>Departemen</label>
         <select id="select-department" data-selected="{{$val}}" name="departments[]" class="select2" multiple></select>
       </div>
     </div>
-     
+
 </div>
-@endcomponent
 @push('css')
 <link rel="stylesheet" href="{{asset('plugins/daterangepicker/daterangepicker.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
@@ -68,7 +66,7 @@ $(function () {
   select2Load('#select-journal', "{{route('select2', ['name'=>'accounts'])}}")
   select2Load('#select-department', "{{route('select2', ['name'=>'departments'])}}")
   select2Load('#select-sortir', "{{route('select2', ['name'=>'sortirs'])}}")
-  
+
   $('.select2').select2({theme: 'bootstrap4'});
     $('.datepicker').daterangepicker({
       timePicker: false,
@@ -83,7 +81,7 @@ $(function () {
       validate();
     });
     $('#end_date').change(function(){
-      validate();  
+      validate();
     });
     $('#filter-form').submit(function(e){
       if(validate()){
@@ -98,11 +96,11 @@ function validate(){
   var edate = moment(end_val, "DD-MM-YYYY");
   invalid = edate.isBefore(sdate);
   if(invalid){
-    $('#end_date_error').html('Tanggal akhir tidak boleh lebih kecil dari tanggal awal');    
+    $('#end_date_error').html('Tanggal akhir tidak boleh lebih kecil dari tanggal awal');
     $('#filter-form-btn').addClass('disabled');
     $('#filter-form-btn').attr('aria-disabled', 'true');
   }else{
-    $('#end_date_error').html('');    
+    $('#end_date_error').html('');
     $('#filter-form-btn').removeClass('disabled');
     $('#filter-form-btn').attr('aria-disabled', 'false');
   }

@@ -27,14 +27,14 @@ $cb_actions = 0;
 $bactions = '';
 foreach($bulk_actions as $act){
   if(isset($act['type']) && $act['type']=='delete' && has_action($name, 'delete')){
-    $bactions .= '<form action="'.asset(route('dcru.delete.all', ['name'=>$name], false)).'" method="POST" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="true" data-confirm-text="Apakah Anda yakin ingin menghapus item terpilih?" class="dropdown-item bulk-btn"><i class="fas fa-trash"></i> Hapus</button></form>';
+    $bactions .= '<form action="'.asset(route('dcru.delete.all', ['name'=>$name], false)).'" method="POST" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="true" data-confirm-text="'.__('Are you sure want to delete the selected items?').'" class="dropdown-item bulk-btn"><i class="fas fa-trash"></i> Hapus</button></form>';
     $cb_actions++;
   }else{
     $routes = explode('.', $act['route']['name']);
     if(has_action($routes[0], $routes[1])){
       $params = isset($act['route']['params'])?$act['route']['params']:[];
       $method = isset($act['route']['method'])?$act['route']['method']:'POST';
-      $bactions .= '<form action="'.asset(route($act['route']['name'], $params, false)).'" method="'.$method.'" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="'.(isset($act['confirm'])?true:false).'" '.(isset($act['confirm'])?('data-confirm-text="'.$act['confirm'].'"'):'').' class="dropdown-item bulk-btn">'.(isset($act['icon'])?('<i class="'.$act['icon'].'"></i> '):'') .$act['label'].'</button></form>';
+      $bactions .= '<form action="'.asset(route($act['route']['name'], $params, false)).'" method="'.$method.'" style="display:inline;">'.csrf_field().'<button type="button" data-confirm="'.(isset($act['confirm'])?true:false).'" '.(isset($act['confirm'])?('data-confirm-text="'.__($act['confirm']).'"'):'').' class="dropdown-item bulk-btn">'.(isset($act['icon'])?('<i class="'.$act['icon'].'"></i> '):'') .$act['label'].'</button></form>';
       $cb_actions++;
     }
   }
@@ -53,6 +53,7 @@ foreach($parameters as $key=>$param){
 }
 ?>
 <script>
+    var printerCounter = 0;
     var {{$dtname}}config = {
       processing: true,
       serverSide: true,
@@ -72,7 +73,9 @@ foreach($parameters as $key=>$param){
             @elseif(in_array($dt['type'], ['boolean', 'icon', 'badge', 'image']))
             className:"text-center",
             @elseif(in_array($dt['type'], ['number', 'currency']))
-            className:"text-right",
+            className:"text-right number",
+            @elseif(in_array($dt['type'], ['date', 'date']))
+            className:"date",
             @endif
             @if($dt['type']!='checkbox')
             title:"{{__($dt['title'])}}",
@@ -117,7 +120,45 @@ foreach($parameters as $key=>$param){
         },
         {
             extend: 'pdfHtml5',
-            title:'{{__($dt_title)}}',
+            title: '',
+            download: 'print',
+            customize: function (doc) {
+                doc.content = [
+                    {
+                        text:`{{company('name')}}`, alignment:'left', fontSize: 12, bold: true, lineHeight: 2
+                    },
+                    {
+                        text:`{{__($dt_title)}}`, alignment:'left', fontSize: 11, bold: true
+                    },
+                    {
+                        text:`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`, alignment:'left', fontSize: 10, lineHeight: 2
+                    },
+                    ...doc.content
+                ]
+                doc.styles.title = {alignment:'left', fontSize:11, bold: true}
+                doc.styles.tableHeader= {
+                    alignment: "left",
+                    bold: true,
+                    color: "white",
+                    fillColor: "#2d4154",
+                    fontSize: 11
+                }
+              doc.footer = function(currentPage, pageCount) {
+                return [
+                    { text: currentPage.toString() + ' / ' + pageCount, alignment: 'center' }
+                ];
+              }
+              var table = doc.content[3].table
+              var len = doc.content[3].table.body[0].length;
+              table.widths = [];
+              for(var i=0;i<len;i++){
+                  if(i==len-1){
+                    table.widths.push('auto')
+                  }else{
+                    table.widths.push('*')
+                  }
+              }
+            },
             exportOptions: {
               columns: ':visible:not(.noexport)'
             }
@@ -201,29 +242,43 @@ foreach($parameters as $key=>$param){
           data.push({name:d.name, value:d.value})
         }
       }
-        console.log(data)
       load{{$dtname}}(data);
     });
     $('#{{$dtname}}').on( 'draw.dt', function () {
       $('.bulk-actions-wrapper-{{$dtname}}').html(
         '<div class="btn-group">'+
           '<button id="dt-btn-print-{{$dtname}}" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-print"></i> {{__("Print")}}</button>'+
+        //   '<button id="dt-btn-pdf-{{$dtname}}" type="button" class="btn btn-secondary btn-sm"><i class="fas fa-file-pdf"></i> PDF</button>'+
           '<button type="button" class="btn btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown">'+
             '<span class="sr-only">Toggle Dropdown</span>'+
             '<div class="dropdown-menu" role="menu">'+
               '<a id="dt-btn-pdf-{{$dtname}}" class="dropdown-item" href="#"><i class="fas fa-file-pdf"></i> PDF</a>'+
               '<a id="dt-btn-excel-{{$dtname}}" class="dropdown-item" href="#"><i class="fas fa-file-excel"></i> Excel</a>'+
               '<a id="dt-btn-csv-{{$dtname}}" class="dropdown-item" href="#"><i class="fas fa-file-csv"></i> CSV</a>'+
-              '<a id="dt-btn-copy-{{$dtname}}" class="dropdown-item" href="#"><i class="fas fa-copy"></i> Copy</a>'+
+            //   '<a id="dt-btn-copy-{{$dtname}}" class="dropdown-item" href="#"><i class="fas fa-copy"></i> Copy</a>'+
             '</div>'+
           '</button>'+
         '</div>'
       );
-      $('#dt-btn-pdf-{{$dtname}}').click(function(){$('.buttons-pdf[aria-controls={{$dtname}}]').trigger('click')})
-      $('#dt-btn-excel-{{$dtname}}').click(function(){$('.buttons-excel[aria-controls={{$dtname}}]').trigger('click')})
-      $('#dt-btn-print-{{$dtname}}').click(function(){$('.buttons-print[aria-controls={{$dtname}}]').trigger('click')})
+      $('#dt-btn-pdf-{{$dtname}}').click(function(){
+        //   $('.buttons-pdf[aria-controls={{$dtname}}]').trigger('click')
+        var pdf = generatePDF('{{$dtname}}');
+        pdf.download('{{__($dt_title)}}')
+    })
+      $('#dt-btn-excel-{{$dtname}}').click(function(){
+        //   $('.buttons-excel[aria-controls={{$dtname}}]').trigger('click')
+        generateExcel('{{$dtname}}','xlsx')
+        })
+      $('#dt-btn-print-{{$dtname}}').click(function(){
+        //   $('.buttons-print[aria-controls={{$dtname}}]').trigger('click')
+        var pdf = generatePDF('{{$dtname}}');
+        pdf.print()
+        })
+        $('#dt-btn-csv-{{$dtname}}').click(function(){
+            // $('.buttons-csv[aria-controls={{$dtname}}]').trigger('click')
+            generateExcel('{{$dtname}}','csv')
+        })
       $('#dt-btn-copy-{{$dtname}}').click(function(){$('.buttons-copy[aria-controls={{$dtname}}]').trigger('click')})
-      $('#dt-btn-csv-{{$dtname}}').click(function(){$('.buttons-csv[aria-controls={{$dtname}}]').trigger('click')})
 
       $('.bulk-actions-wrapper-{{$dtname}}').append(
         `
@@ -353,8 +408,227 @@ foreach($parameters as $key=>$param){
     var dt = $('#{{$dtname}}').DataTable({{$dtname}}config);
 
     $('#search').on('keyup change', function () {
-    dt.search(this.value).draw();
-});
+        dt.search(this.value).draw();
+    });
   }
+
+function getData(dtid){
+    var data = [];
+    var exportable = [];
+    $('#'+dtid+'>thead>tr').each(function(){
+        var row = []
+        $('th', this).each(function(idx){
+            if(!$(this).hasClass('noexport')){
+                var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
+            
+                row.push({text: $(this).html(), style:"tableHeader",...align})
+                exportable.push(idx)
+            }
+        })
+        data.push(row)
+    })
+    var i = 1;
+    $('#'+dtid+'>tbody>tr').each(function(){
+        var row = []
+        var color = i%2==0?'white':'#f3f3f3'
+        $('td', this).each(function(idx){
+            var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
+            var f = exportable.find(function(j){return j==idx})
+            if(f){
+                row.push({text: $(this).text(), fillColor:color, ...align})
+            }
+        })
+        i++;
+        data.push(row)
+    })
+    return data;
+}
+function getHeaderExcel(dtid){
+    var data = [];
+    var exportable = [];
+    $('#'+dtid+'>thead>tr').each(function(){
+        var row = []
+        $('th', this).each(function(idx){
+            if(!$(this).hasClass('noexport')){
+                var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
+            
+                row.push($(this).html())
+                exportable.push(idx)
+            }
+        })
+        data.push(row)
+    })
+    return data;
+}
+function getDataExcel(dtid){
+    var data = [];
+    var exportable = [];
+    $('#'+dtid+'>thead>tr').each(function(){
+        $('th', this).each(function(idx){
+            if(!$(this).hasClass('noexport')){
+                exportable.push(idx)
+            }
+        })
+    })
+    var i = 1;
+    $('#'+dtid+'>tbody>tr').each(function(){
+        var row = []
+        var color = i%2==0?'white':'#f3f3f3'
+        $('td', this).each(function(idx){
+            var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
+            var f = exportable.find(function(j){return j==idx})
+            if(f){
+                var v = $(this).text()
+                v = $(this).hasClass('number')?parseNumber(v):v
+                row.push(v)
+            }
+        })
+        i++;
+        data.push(row)
+    })
+    return data;
+}
+function generateExcel(dtid,type){
+    // var data = getData(dtid);
+    var header = getHeaderExcel(dtid);
+    var data = getDataExcel(dtid);
+    // var dataExcel = data.map(function(a){
+    //     return a.map(function(b){
+    //         return b.text
+    //     })
+    // })
+    var colNumber = header[0].length;
+    var dataExcel = [
+        ...header,
+        ...data
+    ];
+    let objectMaxLength = []
+
+    dataExcel.map(arr => {
+        Object.keys(arr).map(key => {
+            let value = arr[key] === null ? '' : arr[key]
+
+            if (typeof value === 'number')
+            {
+            return objectMaxLength[key] = 15
+            }
+
+            objectMaxLength[key] = objectMaxLength[key] >= value.length ? objectMaxLength[key]  : value.length
+        })
+    })
+
+    let worksheetCols = objectMaxLength.map(width => {
+        return {
+            width
+        }
+    })
+    if(type=='xlsx'){
+        dataExcel = [
+            [`{{company('name')}}`],
+            [],
+            ['{{__($dt_title)}}'],
+            [`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`],
+            [],
+            ...dataExcel
+        ]
+    }
+
+    var name = '{{__($dt_title)}}';
+    /* create new workbook */
+    var wb = XLSX.utils.book_new();
+    /* convert table 'table1' to worksheet named "Sheet1" */
+    var ws = XLSX.utils.aoa_to_sheet(dataExcel);
+    ws["!cols"] = worksheetCols;
+    // var merge = { s: {r:0, c:0}, e: {r:0, c:1} };
+    if(!ws['!merges']) ws['!merges'] = [];
+    ws['!merges'].push({ s: {r:0, c:0}, e: {r:0, c:colNumber-1} });
+    ws['!merges'].push({ s: {r:1, c:0}, e: {r:1, c:colNumber-1} });
+    ws['!merges'].push({ s: {r:2, c:0}, e: {r:2, c:colNumber-1} });
+    ws['!merges'].push({ s: {r:3, c:0}, e: {r:3, c:colNumber-1} });
+
+    XLSX.utils.book_append_sheet(wb, ws, name);
+    XLSX.writeFile(wb, name+'.'+type);
+}
+function generatePDF(dtid){
+    var fonts = {
+	Roboto: {
+		normal: 'fonts/Roboto-Regular.ttf',
+		bold: 'fonts/Roboto-Medium.ttf',
+		italics: 'fonts/Roboto-Italic.ttf',
+		bolditalics: 'fonts/Roboto-MediumItalic.ttf'
+	}
+};
+
+var data = getData(dtid);
+var widths = [];
+var l = data[0].length;
+for(var i=0;i<l;i++){
+    if(i==0 || i==l-1)
+    widths.push('auto')
+    else
+    widths.push('*')
+}
+
+var docDefinition = {
+	content: [
+		{
+            text:`{{company('name')}}`, alignment:'left', fontSize: 12, bold: true, lineHeight: 2
+        },
+		{
+            text:`{{__($dt_title)}}`, alignment:'left', fontSize: 11, bold: true
+        },
+		{
+            text:`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`, alignment:'left', fontSize: 10, lineHeight: 2
+        },
+		{
+			style: 'tableExample',
+			table: {
+                widths: widths,
+				headerRows: 1,
+				body: data
+			},
+			layout: 'noBorders'
+		}
+	],
+    footer : function(currentPage, pageCount) {
+                return [
+                    { text: currentPage.toString() + ' / ' + pageCount, alignment: 'center' }
+                ];
+              },
+	styles: {
+		header: {
+			fontSize: 18,
+			bold: true,
+			margin: [0, 0, 0, 10]
+		},
+		subheader: {
+			fontSize: 16,
+			bold: true,
+			margin: [0, 10, 0, 5]
+		},
+		tableExample: {
+			margin: [0, 10, 0, 5]
+		},
+		tableHeader: {
+			alignment: "left",
+            bold: true,
+            color: "#212529",
+            fillColor: "#d6d8db",
+            fontSize: 11,
+            border: [true, true, true, true],
+		},
+        tableBodyOdd: {fillColor: "#f3f3f3"}
+	},
+	defaultStyle: {
+        fontSize: 10
+		// alignment: 'justify'
+	}
+};
+return pdfMake.createPdf(docDefinition)
+}
+function parseNumber(val){
+    if(val=='' || val==null)return 0;
+    return parseFloat(val.split('.').join('').split(',').join('.'));
+}
 </script>
 @endpush

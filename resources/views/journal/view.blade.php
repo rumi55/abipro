@@ -1,6 +1,6 @@
 @php
-$type = $journal->is_voucher==1?'vouchers':'journals';
-$title_type = $journal->is_voucher==1?'Voucher':'Jurnal';
+$type = ($journal->is_voucher==1 && $journal->is_processed==0)?'vouchers':'journals';
+$title_type = ($journal->is_voucher==1 && $journal->is_processed==0)==1?'Voucher':'Jurnal';
 $active_menu=$type;
 $breadcrumbs = array(
     ['label'=>$title_type, 'url'=>route('dcru.index',$type)],
@@ -29,19 +29,26 @@ $breadcrumbs = array(
 
 
             @if($journal->is_voucher && has_action($type, 'report') && $journal->status=='approved'  && $journal->is_processed==false)
-            <a href="{{route($type.'.receipt', $journal->id)}}" class="dropdown-item" ><i class="fas fa-print"></i> Cetak Kuitansi</a>
+            <a href="{{route('reports.print' , ['group'=>'vouchers', 'name'=>'receipt','id'=>$journal->id])}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Receipt')}}</a>
+            <a href="{{route('reports.print' , ['group'=>'vouchers', 'name'=>'voucher','id'=>$journal->id])}}" class="dropdown-item" ><i class="fas fa-print"></i> {{__('Print Voucher')}}</a>
             @endif
-            @if(has_action($type, 'edit') && !$journal->is_locked)
+            @if(has_action('vouchers', 'tojournal') && $journal->status=='approved')
+            <form action="{{route('vouchers.tojournal', ['id'=>$journal->id])}}" method="POST">
+            @csrf
+            <button class="dropdown-item" ><i class="fas fa-exchange-alt"></i> {{__('Process to Journal')}}</button>
+            </form>
+            @endif
+            @if(has_action($type, 'edit') && !$journal->is_locked && ($journal->status=='draft' || $journal->status=='rejected'))
             <a href="{{route($type.'.edit', $journal->id)}}" class="dropdown-item" ><i class="fas fa-edit"></i> Edit</a>
             @endif
             @if(has_action($type, 'create'))
-            <a href="{{route($type.'.create.duplicate', $journal->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> Gandakan</a>
+            <a href="{{route($type.'.create.duplicate', $journal->id)}}" class="dropdown-item" ><i class="fas fa-copy"></i> {{__('Duplicate')}}</a>
             @endif
-            @if(has_action($type, 'delete') && !$journal->is_locked)
+            @if(has_action($type, 'delete') && !$journal->is_locked && ($journal->status=='draft' || $journal->status=='rejected'))
             <form action="{{route('dcru.delete', ['name'=>'journals', 'id'=>$journal->id])}}" method="POST">
                 @csrf
                 @method('DELETE')
-            <a href="#" class="dropdown-item btn-delete" ><i class="fas fa-trash"></i> Hapus</a>
+            <a href="#" class="dropdown-item btn-delete text-danger" ><i class="fas fa-trash"></i> {{__('Delete')}}</a>
             </form>
             @endif
         </div>

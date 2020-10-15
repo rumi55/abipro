@@ -234,6 +234,9 @@ class AccountController extends Controller
     public function delete($id)
     {
         $account = Account::findOrFail($id);
+        if(!($account->isLocked()!=1 && $account->has_children==0)){
+            return redirect()->route('accounts.index')->with('error', 'Akun tidak dapat dihapus karena dipakai dalam transaksi atau memiliki subakun.');
+        }
         $parent = $account->parent;
         $account->delete();
         if($parent!==null){
@@ -413,7 +416,7 @@ class AccountController extends Controller
         if(!empty($request->department_id)){
             $params['department_id']=$request->department_id;
         }
-        return redirect()->route('accounts.opening_balance', $params)->with('success', trans(':attr have been saved successfully', ['attr'=>trans('Opening Balance')]));
+        return redirect()->route('accounts.opening_balance', $params)->with('success', trans(':attr have been saved successfully.', ['attr'=>trans('Opening Balance')]));
     }
     public function saveBudget(Request $request){
         $user = Auth::user();

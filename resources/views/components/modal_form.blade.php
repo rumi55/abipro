@@ -1,10 +1,15 @@
 <div class="modal fade {{$class ?? ''}}" id="{{$id ?? ''}}">
   <div class="modal-dialog">
     <div class="modal-content {{$bg ?? ''}}">
-    <form id="{{ $form_id ?? '' }}" action="{{$action}}" method="POST"  enctype="multipart/form-data" autocomplete="off">
-    @csrf
+    <form id="{{ $form_id ?? '' }}" action="{{$action}}" method="{{$method??'POST'}}"  enctype="multipart/form-data" autocomplete="off">
+
     @isset($method)
-      @method($method)
+        @if($method!='get')
+            @csrf
+        @endif
+        @if($method=='put' || $method=="delete")
+            @method($method)
+        @endif
     @endisset
       <div class="modal-header">
         <h4 class="modal-title">{{$title}}</h4>

@@ -23,7 +23,7 @@ class Journal extends Model
         return $this->belongsTo('App\TransactionType');
     }
     public function numbering(){
-        return $this->hasManyThrough('App\numbering', 'App\transaction_type_id');
+        return $this->belongsTo('App\Numbering', 'numbering_id', 'id');
     }
     public function contact(){
         return $this->belongsTo('App\Contact');

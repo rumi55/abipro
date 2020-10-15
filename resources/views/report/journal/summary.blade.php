@@ -1,31 +1,28 @@
-@extends('report.layout')
-@section('title', $title)
-@section('content')
-    <h2 class="text-center">{{$title}}</h2>
-    <small class="font-small">Tanggal: {{$period}}</small>
-    <table>
+<h4  class="text-center" >{{$title}}<br/><span style="font-size:0.7em">Tanggal Laporan: {{date('d-m-Y H:i:s')}}</span></h4>
+    <span><b>Tanggal:</b> {{$period}}</span>
+    <table class="table-report table-report-noborder">
         <thead>
             <tr>
-                <th class="border-top-double border-bottom-double">Tanggal</th>
-                <th class="border-top-double border-bottom-double">No. Bukti</th>
+                <th class="text-left">No. Bukti</th>
+                <th class="text-left">Tanggal</th>
                 @if($columns['department'])
-                <th class="border-top-double border-bottom-double">Dept.</th>
+                <th class="text-left">Dept.</th>
                 @endif
-                <th class="border-top-double border-bottom-double">Kode Akun</th>
-                <th class="border-top-double border-bottom-double">Nama Akun</th>
+                <th class="text-left">Kode Akun</th>
+                <th class="text-left">Nama Akun</th>
                 @if($columns['description'])
-                <th class="border-top-double border-bottom-double">Keterangan</th>
+                <th class="text-left">Keterangan</th>
                 @endif
-                <th class="border-top-double border-bottom-double text-right">Debet</th>
-                <th class="border-top-double border-bottom-double text-right">Kredit</th>
+                <th class=" text-right">Debet</th>
+                <th class=" text-right">Kredit</th>
                 @if($columns['created_by'])
-                    <th class="border-top-double border-bottom-double text-right">Dibuat oleh</th>
+                    <th class=" text-right">Dibuat oleh</th>
                 @endif
             </tr>
         </thead>
         <tbody>
-            @php 
-                $journal_id=0; 
+            @php
+                $journal_id=0;
                 $cdata = count($journals);
                 $colspan = 4;
                 if($columns['department']){
@@ -37,14 +34,13 @@
             @endphp
             @foreach($journals as $i=> $journal)
                 <tr>
-                    
-                    @if($journal_id!==$journal->journal_id)
+                    @if($journal_id!=$journal->journal_id)
                         @php $journal_id=$journal->journal_id; @endphp
-                        <td>{{fdate($journal->trans_date)}}</td>
                         <td>{{$journal->trans_no}}</td>
+                        <td>{{fdate($journal->trans_date)}}</td>
                     @else
+                        <td></td>
                         <td>{{fdate($journal->trans_date)}}</td>
-                        <td>{{$journal->trans_no}}</td>
                     @endif
                     @if($columns['department'])
                     <td>{{$journal->department_name}}</td>
@@ -63,28 +59,7 @@
                     @if($columns['created_by'])
                     <td>{{$journal->created_by}}</td>
                     @endif
-                </tr>      
-                @if($i+1==$cdata)
-                <tr>
-                        <td  colspan="{{$colspan}}" class="border-top border-bottom font-bold">Jumlah</td>
-                        <td class="border-top border-bottom font-bold text-right">{{format_number(abs($journal->total))}}</td>
-                        @if($columns['created_by'])
-                        <td class="border-top border-bottom font-bold text-right"></td>
-                        @endif
-                </tr>        
-            @else
-                @if($journal_id!=($journals[$i+1])->journal_id)
-                    <tr>
-                        <td  colspan="{{$colspan}}" class="border-top border-bottom font-bold">Jumlah</td>
-                        <td class="border-top border-bottom font-bold text-right">{{format_number(abs($journal->total))}}</td>
-                        <td class="border-top border-bottom font-bold text-right">{{format_number(abs($journal->total))}}</td>
-                        @if($columns['created_by'])
-                        <td class="border-top border-bottom font-bold text-right"></td>
-                        @endif
-                    </tr>        
-                @endif
-            @endif
-            @endforeach    
+                </tr>
+            @endforeach
         </tbody>
     </table>
-@endsection

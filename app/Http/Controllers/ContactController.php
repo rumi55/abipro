@@ -136,7 +136,8 @@ class ContactController extends Controller
     public function update(Request $request, $id){
         $user = Auth::user();
         $company = $user->activeCompany();
-
+        $contact = Contact::findOrFail($id);
+        $custom_id = $contact->custom_id;
         $data = $request->all();
         $rules = [
             'custom_id' => 'nullable|max:16|unique:contacts,custom_id,'.$id.',id,company_id,'.$company->id,
@@ -146,6 +147,13 @@ class ContactController extends Controller
             'mobile' => 'nullable|max:16|unique:contacts,mobile,'.$id.',id,company_id,'.$company->id,
             'address' => 'max:128'
         ];
+        if(!$contact->isLocked()){
+            if(empty($data['numbering_id'])){
+                $rules['custom_id'] = 'required|max:16|unique:contacts,custom_id,'.$id.',id,company_id,'.$company->id;
+            }else{
+                $data['custom_id']=null;
+            }
+        }
         $attr = [
             'custom_id' => trans('ID'),
             'name' => trans('Name'),
@@ -158,7 +166,35 @@ class ContactController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        $contact = Contact::findOrFail($id);
+        if(!empty($data['numbering_id']) && !$contact->isLocked()){
+            $numbering = Numbering::findOrFail($data['numbering_id']);
+            if($numbering->counter_reset=='y'){
+                $period = date('Y');
+            }else if($numbering->counter_reset=='m'){
+                $period = date('Y-m');
+            }else if($numbering->counter_reset=='d'){
+                $period = date('Y-m-d');
+            }else{
+                $period  = null;
+            }
+            $counter = Counter::firstOrCreate(
+                ['period'=>$period, 'numbering_id'=>$numbering->id, 'company_id'=>$company->id],
+                ['counter'=>$numbering->counter_start-1]
+            );
+
+            $check = true;
+            do{
+                $counter->getNumber();
+                $custom_id = $counter->last_number;
+                $exists = Contact::where('custom_id', $custom_id)->where('company_id', $company->id)->exists();
+                if(!$exists){
+                    $counter->save();
+                    $data['custom_id']=$custom_id;
+                    $check = false;
+                }
+            }while($check);
+        }
+        $contact->custom_id = $custom_id;
         $contact->name = $request->name;
         $contact->email = $request->email;
         $contact->mobile = $request->mobile;
@@ -182,7 +218,11 @@ class ContactController extends Controller
     {
         $id = decode($id);
         $contact = Contact::findOrFail($id);
+        if($contact->isLocked()){
+            return redirect()->route('contacts.index')->with('error', 'Kontak tidak dapat dihapus karena dipakai dalam transaksi.');
+        }
         $contact->delete();
-        return response()->json(null, 204);
+        add_log('contacts', 'delete', '');
+        return redirect()->route('contacts.index')->with('success', trans('Item has been deleted.'));
     }
 }

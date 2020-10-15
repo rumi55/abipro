@@ -8,18 +8,33 @@
                 "data":"group",
                 "name":"group",
                 "title":"Jenis Sortir",
+                "filter":{
+                    "type":"unique",
+                    "table":"tags",
+                    "column":"group"
+                },
                 "type":"text"
             },
             {
                 "data":"item_id",
                 "name":"item_id",
                 "title":"Kode Item",
+                "filter":{
+                    "type":"unique",
+                    "table":"tags",
+                    "column":"item_id"
+                },
                 "type":"text"
             },
             {
                 "data":"item_name",
                 "name":"item_name",
                 "title":"Nama Item",
+                "filter":{
+                    "type":"unique",
+                    "table":"tags",
+                    "column":"item_name"
+                },
                 "type":"text"
             },
             {
@@ -48,30 +63,30 @@
         "view": "company.department.create",
         "fields":[
             {
-                "name":"custom_id", 
-                "type":"text", 
+                "name":"custom_id",
+                "type":"text",
                 "label":"Kode",
-                "width":4, 
-                "svalidation":"required|min:3|max:8", 
+                "width":4,
+                "svalidation":"required|min:3|max:8",
                 "uvalidation":"required|min:3|max:8"
             },
             {
-                "name":"name", 
-                "type":"text", 
+                "name":"name",
+                "type":"text",
                 "label":"Kontak",
-                "width":9, 
-                "svalidation":"required|min:3|max:64", 
+                "width":9,
+                "svalidation":"required|min:3|max:64",
                 "uvalidation":"required|min:3|max:64"
             },
             {
-                "name":"description", 
-                "type":"text", 
+                "name":"description",
+                "type":"text",
                 "label":"Keterangan",
                 "svalidation":"max:255",
                 "uvalidation":"max:255"
             },
             {
-                "name":"company_id", 
+                "name":"company_id",
                 "type":"hidden",
                 "label":"Perusahaan",
                 "value":"session:user|company_id"

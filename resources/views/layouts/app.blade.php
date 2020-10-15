@@ -11,7 +11,7 @@
 </head>
 <body class="hold-transition sidebar-mini pace-primary  layout-navbar-fixed">
 <div class="wrapper">
-  <!-- Navbar --> 
+  <!-- Navbar -->
   <nav class="main-header navbar navbar-expand navbar-dark navbar-purple elevation-2 border-bottom-0">
     <!-- Left navbar links -->
     <ul class="navbar-nav">
@@ -50,7 +50,7 @@
         </a>
         <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
           <!-- User image -->
-          
+
           <li class="user-header bg-gray">
           <img src="{{asset(empty(user('photo'))?'img/user2-160x160.jpg':url_file(user('photo')))}}" class="img-circle elevation-2" alt="User Image">
             <p>

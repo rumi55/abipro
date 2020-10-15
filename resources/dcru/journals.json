@@ -12,13 +12,13 @@
             },
             {
                 "data":"trans_date",
-                "name":"trans_date",
+                "name":"journals.trans_date",
                 "type":"date",
                 "title":"Transaction Date"
             },
             {
                 "data":"trans_no",
-                "name":"trans_no",
+                "name":"journals.trans_no",
                 "type":"detail",
                 "filter":{
                     "type":"unique",
@@ -43,7 +43,7 @@
             },
             {
                 "data":"created_name",
-                "name":"created_by",
+                "name":"users.name",
                 "title":"Created By",
                 "type":"route",
                 "route":{
@@ -60,6 +60,7 @@
                 "title":"",
                 "searchable":false,
                 "orderable":false,
+                "exportable":false,
                 "values":{
                     "1":{"icon":"fas fa-lock"},
                     "0":{"icon":""}
@@ -77,10 +78,24 @@
                         "type": "view"
                     },
                     {
+                        "label": "View Report",
+                        "icon": "fas fa-chart-line",
+                        "route": {
+                            "name":"reports.view",
+                            "params":{
+                                "name":"journals"
+                            }
+                        }
+                    },
+                    {
                         "label": "Cetak",
                         "icon": "fas fa-print",
                         "route": {
-                            "name":"journals.report"
+                            "name":"reports.print",
+                            "params":{
+                                "group":"journals",
+                                "name":"report"
+                            }
                         }
                     },
                     {
@@ -128,6 +143,17 @@
             }
         ],
         "bulk_actions":[
+            {
+                "label": "View Report",
+                "icon": "fas fa-chart-line",
+                "route": {
+                    "method":"GET",
+                    "name":"reports.view",
+                    "params":{
+                        "name":"journals"
+                    }
+                }
+            },
             {
                 "label": "Kunci Jurnal",
                 "icon": "fas fa-lock",

@@ -1,6 +1,6 @@
 @php
-$type = $journal->is_voucher==1?'vouchers':'journals';
-$title_type = $journal->is_voucher==1?'Voucher':'Journal';
+$type = ($journal->is_voucher==1 && $journal->is_processed==0)?'vouchers':'journals';
+$title_type = ($journal->is_voucher==1 && $journal->is_processed==0)?'Voucher':'Journal';
 $breadcrumbs = array(
     ['label'=>$title_type, 'url'=>route('dcru.index',$type)],
     ['label'=>($mode=='edit'?__('Edit'):__('Create')).' '.$title_type],
@@ -36,8 +36,8 @@ $breadcrumbs = array(
 
                         </select>
                     </div>
-                    <small class="text-muted" style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}">{{__('Select numbering format. Transaction number will be generated automatically based on selected numbering format.')}}</small>
-                    @error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
+                    <small class="text-muted" style="{{($mode=='edit' ||  (old('manual')!=null && old('manual')==1))?'display:none':''}}">{{__('Select numbering format. Transaction number will be generated automatically based on selected numbering format.')}}</small>
+                    <br>@error('numbering_id')<small class="text-danger">{!!$message!!}</small>@enderror
                 </div>
             </div>
             @endif
@@ -48,11 +48,11 @@ $breadcrumbs = array(
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <div class="input-group-text">
-                            <input id="manual" type="checkbox" {{($mode=='edit' || old('manual')==1)?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
+                            <input id="manual" type="checkbox" {{($mode=='edit' ||  (old('manual')!=null && old('manual')==1))?'checked':''}} value="1" name="manual" aria-label="manual"> <label for="manual">Manual</label>
                           </div>
                         </div>
-                        <input  id="trans_no_auto" readonly style="{{($mode=='edit' || old('manual')==1)?'display:none':''}}" name="trans_no_auto" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_auto',$journal->trans_no)}} @endif" >
-                        <input  id="trans_no_manual" style="{{($mode=='edit' || old('manual')==1)?'':'display:none'}}" name="trans_no_manual" type="text" class="form-control trans_no" value="@if($mode=='edit' || old('manual')==1) {{old('trans_no_manual',$journal->trans_no)}} @endif" >
+                        <input  id="trans_no_auto" readonly style="{{($mode=='edit' || (old('manual')!=null && old('manual')==1))?'display:none':''}}" name="trans_no_auto" type="text" class="form-control trans_no" value="@if($mode=='edit' ||  (old('manual')==null || old('manual')==0)) {{old('trans_no_auto',$journal->trans_no)}} @endif" >
+                        <input  id="trans_no_manual" style="{{($mode=='edit' ||  (old('manual')!=null && old('manual')==1))?'':'display:none'}}" name="trans_no_manual" type="text" class="form-control trans_no" value="@if($mode=='edit' ||  (old('manual')!=null && old('manual')==1)) {{old('trans_no_manual',$journal->trans_no)}} @endif" >
                     </div>
                     @error('trans_no_manual')<br/><small class="text-danger">{!!$message!!}</small>@enderror
                     @error('trans_no_auto')<br/><small class="text-danger">{!!$message!!}</small>@enderror
@@ -134,14 +134,14 @@ $breadcrumbs = array(
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_debit_{{$i}}" >{{__('Debit')}}:</label>
-                                <input name="detail[{{$i}}][debit]" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail.'.$i.'.debit') is-invalid @enderror" value="{{empty(old('detail.'.$i.'.debit', $detail!=null?$detail->debit:''))?'0,00':old('detail.'.$i.'.debit', $detail!=null?$detail->debit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[{{$i}}][debit]" data-index="{{$i}}" required type="text" id="detail_debit_{{$i}}" class="form-control debit @error('detail.'.$i.'.debit') is-invalid @enderror" value="{{fcurrency(old('detail.'.$i.'.debit', $detail!=null?$detail->debit:''))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail.'.$i.'.debit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_credit_{{$i}}" >{{__('Credit')}}:</label>
-                                <input name="detail[{{$i}}][credit]" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail.'.$i.'.credit') is-invalid @enderror" value="{{empty(old('detail.'.$i.'.credit', $detail!=null?$detail->credit:''))?'0,00':old('detail.'.$i.'.credit', $detail!=null?$detail->credit:'')}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[{{$i}}][credit]" data-index="{{$i}}" required type="text" id="detail_credit_{{$i}}" class="form-control credit @error('detail.'.$i.'.credit') is-invalid @enderror" value="{{fcurrency(old('detail.'.$i.'.credit', $detail!=null?$detail->credit:'0'))}}"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                                     @error('detail.'.$i.'.credit')<small class="text-danger">{!!$message!!}</small>@enderror
                             </div>
                         </div>
@@ -203,13 +203,18 @@ $breadcrumbs = array(
                 </div>
                 <div class="col text-right">
                     <small class="text-muted">{{__('Total Debit')}}</small><br>
-                    <input name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="{{empty(old('total_debit', $journal->total))?'0,00':old('total_debit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
+                    <input name="total_debit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_debit" value="{{fcurrency(old('total_debit', $journal->total))}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_debit')<small class="text-danger">{!! $message !!}</small>@enderror
+                    <small style="display: none" class="diff-plus text-muted">{{__('Different')}}</small><br>
+                    <input style="display: none" type="text" class="diff-plus form-control-plaintext text-warning text-bold" readonly id="diff-plus" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                 </div>
+
                 <div class="col text-right">
-                <small class="text-muted">{{__('Total Credit')}}</small><br>
-                    <input name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="{{empty(old('total_credit', $journal->total))?'0,00':old('total_credit', $journal->total)}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
+                    <small class="text-muted">{{__('Total Credit')}}</small><br>
+                    <input name="total_credit" type="text" class="total form-control-plaintext text-success text-bold" readonly id="total_credit" value="{{fcurrency(old('total_credit', $journal->total))}}" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     @error('total_credit')<small class="text-danger">{!! $message !!}</small>@enderror
+                    <small style="display: none" class="diff-min text-muted">{{__('Different')}}</small><br>
+                    <input style="display: none" type="text" class="diff-min form-control-plaintext text-warning text-bold" readonly id="diff-min" data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask/>
                     <input type="hidden" id="total" name="total" value="{{old('total', $journal->total)}}" />
                     <input type="hidden" name="is_voucher" value="{{old('is_voucher', $journal->is_voucher)}}" />
                     <input id="detail_length" type="hidden" name="detail_length" value="{{$row_count}}" />
@@ -264,20 +269,47 @@ $breadcrumbs = array(
 function  init(){
     loadSelect();
     //$("#numbering_id").select2({theme: 'bootstrap4', placeholder:'Select Numbering Format'});
+    
+    var val = $('#numbering_id').attr('data-value')
+    if(val==null|| val==''){
+        $('#trans_no_manual').show();
+        $('#trans_no_manual').focus();
+        $('#trans_no_auto').hide();
+        $('#manual').prop('checked', true);
+    }
+    $('#numbering_id').val(val);
+    $('#numbering_id').trigger('change');
     $('input[name=manual]').change(function(){
         var manual = $(this).prop('checked');
         if(manual){
             $('#trans_no_manual').show();
             $('#trans_no_manual').focus();
             $('#trans_no_auto').hide();
+            $('#numbering_id').val(null);
+            $('#numbering_id').trigger('change');
         }else{
             $('#trans_no_manual').hide();
             $('#trans_no_auto').show();
+            var val = $('#numbering_id').attr('data-value')
+            $('#numbering_id').val(val);
+            $('#numbering_id').trigger('change');
         }
     })
 
     $('#numbering_id').change(function(){
         var id = $(this).val();
+        if(id==null){
+            $('#manual').prop('checked', true);
+            $('#trans_no_manual').show();
+            $('#trans_no_manual').focus();
+            $('#trans_no_auto').hide();
+            return;
+        }else{
+            $('#trans_no_manual').hide();
+            $('#trans_no_auto').show();
+            $('#manual').prop('checked', false);
+            $(this).attr('data-value', id)
+        }
         $.ajax({
             url: BASE_URL+'/json/numberings/'+id+'/journal',
             method: 'GET',
@@ -389,13 +421,13 @@ $(function () {
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_debit_${idx}" >{{__('Debit')}}:</label>
-                                <input name="detail[${idx}][debit]" data-index="${idx}" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[${idx}][debit]" data-index="${idx}" value="0,00" required type="text" id="detail_debit_${idx}" class="form-control debit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
                         <div class="col-md-3 col-sm-6">
                             <div class="form-group">
                                 <label for="detail_credit_${idx}" >{{__('Credit')}}:</label>
-                                <input name="detail[${idx}][credit]" data-index="${idx}" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
+                                <input name="detail[${idx}][credit]" data-index="${idx}" value="0,00" required type="text" id="detail_credit_${idx}" class="form-control credit"  data-inputmask="'alias':'decimal', 'groupSeparator': '.', 'radixPoint':',', 'autoGroup': true, 'digits': 2, 'digitsOptional': false, 'prefix': ''" data-mask>
                             </div>
                         </div>
                         <div class="col-md-6 col-sm-12">
@@ -470,8 +502,24 @@ function validate(){
 function onchange(){
     var debit = sum('.debit');
     var credit = sum('.credit');
-    $('#total_debit').val(debit==0?'0,00':debit);
-    $('#total_credit').val(credit==0?'0,00':credit);
+    debit = debit.toFixed(2);
+    credit = credit.toFixed(2);
+    console.log(debit, credit)
+    var diff = debit-credit;
+    $('#total_debit').val(formatNumber(debit));
+    $('#total_credit').val(formatNumber(credit));
+    if(diff<0){
+        $('.diff-plus').hide();
+        $('#diff-min').val(formatNumber(diff));
+        $('.diff-min').show();
+    }else if(diff>0){
+        $('.diff-min').hide();
+        $('#diff-plus').val(formatNumber(diff));
+        $('.diff-plus').show();
+    }else{
+        $('.diff-plus').hide();
+        $('.diff-min').hide();
+    }
     if(debit==credit){
         $('.total').addClass('text-success');
         $('.total').removeClass('text-danger');
@@ -484,13 +532,9 @@ function onchange(){
     }
 }
 function sum(selector){
-    var total = 0;
+    var total = 0.0;
    $(selector).each(function(index){
       var val = $(this).val();
-      if(val==''||val==null){
-        val = 0;
-        $(this).val('0,00')
-      }
       var n = parseNumber(val);
       total=total+n;
     });
@@ -498,7 +542,16 @@ function sum(selector){
 }
 function parseNumber(val){
     if(val=='' || val==null)return 0;
-    return parseInt(val.split('.').join('').split(',').join('.'));
+    return parseFloat(val.split('.').join('').split(',').join('.'));
+}
+function formatNumber(val){
+    val = val.toString();
+    if(val=='' || val==null||val==0)return '0,00';
+    if(val.includes('.')){
+        return val.split('.').join(',');
+    }else{
+        return val.split('.').join(',')+',00';
+    }
 }
 </script>
 @endpush

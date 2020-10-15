@@ -1,14 +1,8 @@
-<table style="width:100%;">
-	@if(!empty(company('logo')))
-	<tr>
-		<td class="text-center">
-			<img height="100px" src="{{public_path().url_file(company('logo'))}}" >
-		</td>
-	</tr>
-	@endif
-	<tr>
-		<td class="text-center">
-		<h3>{{company('name')}}</h3>
-		</td>
-	</tr>
-	</table>
+@php
+$template = report_template('header');
+@endphp
+@empty($template)
+
+@else
+@endif
+{!! $template !!}
