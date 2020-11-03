@@ -89,7 +89,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::get('/reports/profit', 'ProfitReportController@index')->name('reports.profit');
     Route::get('/reports/hpp', 'HPPReportController@index')->name('reports.hpp');
     Route::get('/reports/cashflow', 'CashflowReportController@index')->name('reports.cashflow');
-    Route::get('/reports/sortir', 'SortirReportController@index')->name('reports.sortirs');
+    Route::get('/reports/sortirs', 'SortirReportController@index')->name('reports.sortirs');
 
     //voucher
     Route::get('/vouchers', 'TransactionController@index')->name('vouchers.index');
@@ -211,6 +211,7 @@ Route::group(['middleware'=>['auth', 'role', 'company']],function(){
     Route::put('/report_templates/{id}/update', 'ReportTemplateController@update')->name('report_templates.edit.update');
     Route::delete('/report_templates/{id}', 'ReportTemplateController@delete')->name('report_templates.delete');
     Route::get('/report_templates/{id}', 'ReportTemplateController@view')->name('report_templates.view');
+
     //numberings
     Route::get('/numberings', 'NumberingController@index')->name('numberings.index');
     Route::get('/numberings/create', 'NumberingController@create')->name('numberings.create');

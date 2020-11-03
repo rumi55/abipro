@@ -77,7 +77,7 @@ $variable = [
 <table class="table-report">
     <thead>
     <tr>
-        <th class="text-left">No.</th>
+        <th class="text-left" style="width: 30px">No.</th>
         <th class="text-left">Uraian</th>
         <th class="text-right">Jumlah</th>
     </tr>

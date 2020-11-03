@@ -20,8 +20,8 @@
                     <td class="text-right">{{format_number($dt->debit)}}</td>
                     <td class="text-right">{{format_number($dt->credit)}}</td>
                     <td class="text-right">{{format_number($dt->total_balance)}}</td>
-                </tr>        
-            @endforeach    
+                </tr>
+            @endforeach
             <tr>
                 <td colspan="8" class="bt-2"></td>
             </tr>

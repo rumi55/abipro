@@ -1,11 +1,18 @@
 
 @php
-if($report=='print_journal') {
-    $active_menu=$data->is_voucher==0?'journals':'vouchers';
+if($group=='vouchers') {
+    $active_menu='vouchers';
     $breadcrumbs = array(
-        ['label'=>trans($title), 'url'=>route('dcru.index', $active_menu)],
-        ['label'=>'Detail '.trans($data->is_voucher==0?'Jurnal':'Voucher'), 'url'=>route($active_menu.'.view', $data->id)],
-        ['label'=>trans('Cetak') .' '.trans($data->is_voucher==0?'Journal':'Voucher')],
+        ['label'=>trans('Vouchers'), 'url'=>route('dcru.index', $active_menu)],
+        ['label'=>'Detail '.trans('Voucher'), 'url'=>route($active_menu.'.view', $id)],
+        ['label'=>trans($title)],
+    );
+}else if($group=='journals') {
+    $active_menu='journals';
+    $breadcrumbs = array(
+        ['label'=>trans('Journals'), 'url'=>route('dcru.index', $active_menu)],
+        ['label'=>'Detail '.trans('Journal'), 'url'=>route($active_menu.'.view', $id)],
+        ['label'=>trans($title)],
     );
 }else{
     $active_menu='reports';

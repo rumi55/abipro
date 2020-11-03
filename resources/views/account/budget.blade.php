@@ -9,15 +9,63 @@ $breadcrumbs = array(
 @section('title', __('Budget'))
 @section('content')
 
+@php $accountType =[];$dept=''; @endphp
 <div class="card">
     <div class="card-body">
     <form action="{{route('accounts.budgets')}}" method="get">
         <div class="row">
-            <div class="col">
+            <div class="col-md-4">
                 <div class="form-group">
                     <label for="account_type" >{{__('Account Type')}}</label>
-                    <select id="account_type" name="account_type_id" class="form-control select2"></select>
+                    <select id="account_type" name="account_type_id[]" class="form-control select2" multiple>
+                        @foreach($account_types as $type)
+                        <option value="{{$type->id}}" {{request('account_type_id')!=null && in_array($type->id, request('account_type_id'))?'selected':''}}>{{tt($type, 'name')}}</option>
+                        @php
+                            if(request('account_type_id')!=null && in_array($type->id, request('account_type_id'))){
+                                $accountType[]=tt($type, 'name');
+                            }
+                        @endphp
+                        @endforeach
+                    </select>
                 </div>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Akun</label>
+                <select id="filter_account" name="account[]" class="form-control select2" multiple>
+                    @foreach($paccounts as $account)
+                    @empty(request('account_type_id'))
+                        @if($account->tree_level==0)
+                            <option value="{{$account->id}}" {{request('account')!=null && in_array($account->id, request('account'))?'selected':''}} >({{$account->account_no}}) {{$account->account_name}}</option>
+                        @endif
+                    @else
+                        @if($account->tree_level==0 && in_array($account->account_type_id, request('account_type_id')))
+                            <option value="{{$account->id}}" {{request('account')!=null && in_array($account->id, request('account'))?'selected':''}} >({{$account->account_no}}) {{$account->account_name}}</option>
+                        @endif
+                    @endempty
+                    @endforeach
+                </select>
+            </div>
+            <div class="form-group col-md-4">
+                <label>Subakun</label>
+                <select id="filter_subaccount" name="subaccount[]" class="form-control select2" multiple>
+                    @foreach($paccounts as $account)
+                        @empty(request('account'))
+                            @empty(request('account_type_id'))
+                                @if($account->tree_level==1)
+                                    <option value="{{$account->id}}"  {{request('subaccount')!=null && in_array($account->id, request('subaccount'))?'selected':''}}>({{$account->account_no}}) {{$account->account_name}}</option>
+                                @endif
+                            @else
+                                @if($account->tree_level==1 && in_array($account->account_type_id, request('account_type_id')))
+                                    <option value="{{$account->id}}"  {{request('subaccount')!=null && in_array($account->id, request('subaccount'))?'selected':''}}>({{$account->account_no}}) {{$account->account_name}}</option>
+                                @endif
+                            @endempty
+                        @else
+                            @if($account->tree_level==1 && in_array($account->account_parent_id, request('account')))
+                                <option value="{{$account->id}}"  {{request('subaccount')!=null && in_array($account->id, request('subaccount'))?'selected':''}}>({{$account->account_no}}) {{$account->account_name}}</option>
+                            @endif
+                        @endempty
+                    @endforeach
+                </select>
             </div>
             <div class="col">
                 <div class="form-group">
@@ -59,7 +107,6 @@ $breadcrumbs = array(
                 <a id="dt-btn-pdf" class="dropdown-item" href="#"><i class="fas fa-file-pdf"></i> PDF</a>
                 <a id="dt-btn-excel" class="dropdown-item" href="#"><i class="fas fa-file-excel"></i> Excel</a>
                 <a id="dt-btn-csv" class="dropdown-item" href="#"><i class="fas fa-file-csv"></i> CSV</a>
-                <a id="dt-btn-copy" class="dropdown-item" href="#"><i class="fas fa-copy"></i> Copy</a>
                 </div>
             </button>
         </div>
@@ -186,7 +233,16 @@ $breadcrumbs = array(
                 <input type="hidden" name="department_id" value="{{request('department_id')}}" />
             @endif
                 <input type="hidden" name="budget_year" value="{{$budget_year}}" />
-                <input type="hidden" name="account_type_id" value="{{$account_type_id}}" />
+                @if(!empty(request('account_type_id')))
+            @foreach (request('account_type_id') as $item)
+            <input type="hidden" name="account_type_id[]" value="{{$item}}" />
+            @endforeach
+            @endif
+            @if(!empty(request('account')))
+            @foreach (request('account') as $item)
+            <input type="hidden" name="account[]" value="{{$item}}" />
+            @endforeach
+            @endif
         </div>
     </div>
     <div class="card-footer">
@@ -195,12 +251,18 @@ $breadcrumbs = array(
     </div>
 </div>
 </form>
+
 @endsection
 @push('css')
 <link rel="stylesheet" href="{{asset('plugins/select2/css/select2.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
 <link rel="stylesheet" href="{{asset('plugins/datatables-bs4/css/dataTables.bootstrap4.css')}}">
 <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/3.3.0/css/fixedColumns.bootstrap4.min.css">
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/shim.min.js"></script>
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+
+<script type="text/javascript" src="//unpkg.com/blob.js@1.0.1/Blob.js"></script>
+<script type="text/javascript" src="//unpkg.com/file-saver@1.3.3/FileSaver.js"></script>
 <style>
 .hide{
   display:none;
@@ -270,27 +332,7 @@ $(function(){
     $('.currency').inputmask({ 'alias': 'currency' })
     $('[data-mask]').inputmask();
     $(".select2").select2({theme: 'bootstrap4'})
-    $.ajax({
-        url: BASE_URL+'/json/account_types',
-        dataType: 'json',
-        cache: false,
-        success:function(res){
-            var items =$.map(res, function (item) {
-                    return {
-                        text: item.name,
-                        id: item.id
-                    }
-                })
-            $("#account_type").select2({
-                theme: 'bootstrap4',
-                allowClear:true,
-                placeholder: '{{__("Select Account Type")}}',
-                data:items
-            })
-            $('#account_type').val('{{request("account_type_id", 1)}}')
-            $('#account_type').trigger('change')
-        }
-    })
+
     $.ajax({
         url: BASE_URL+'/json/departments',
         dataType: 'json',
@@ -317,6 +359,12 @@ $(function(){
     })
     $('#dt-btn-print').on('click', function(e){
         generatePDF().print()
+    })
+    $('#dt-btn-excel').on('click', function(e){
+        generateExcel('xlsx')
+    })
+    $('#dt-btn-csv').on('click', function(e){
+        generateExcel('csv')
     })
 })
 
@@ -370,6 +418,43 @@ function getData(){
         i++
     })
     return data;
+}
+function generateExcel(type){
+    var year = $('#budget_year').val();
+    var dept = $('#department_id option:selected').text();
+    dept = dept==''?'':'Departemen: '+dept;
+    var data = getData();
+    var dataExcel = data.map(function(a){
+        return a.map(function(b){
+            return b.text
+        })
+    })
+    if(type=='csv'){
+        dataExcel = [
+            ['Kode Akun', 'Nama Akun', 'Saldo Awal'],
+            ...dataExcel
+        ]
+    }else{
+        dataExcel = [
+            [`{{company('name')}}`],
+            ['Daftar Akun'],
+            [`Tanggal Laporan: {{date('d/m/Y H:i:s')}}`],
+            [],
+            [`{{empty($accountType)?'':'Tipe Akun: '.(implode(',', $accountType))}}`],
+            [dept],
+            [],
+            ['Kode Akun', 'Nama Akun', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des', year],
+            ...dataExcel
+        ]
+    }
+
+    var name = 'budgets';
+    /* create new workbook */
+    var wb = XLSX.utils.book_new();
+    /* convert table 'table1' to worksheet named "Sheet1" */
+    var ws = XLSX.utils.aoa_to_sheet(dataExcel);
+    XLSX.utils.book_append_sheet(wb, ws, name);
+    XLSX.writeFile(wb, name+'.'+type);
 }
 function generatePDF(){
     var fonts = {

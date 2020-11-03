@@ -137,7 +137,7 @@ class ContactController extends Controller
         $user = Auth::user();
         $company = $user->activeCompany();
         $contact = Contact::findOrFail($id);
-        $custom_id = $contact->custom_id;
+        $custom_id = $contact->isLocked()?$contact->custom_id:$request->custom_id;
         $data = $request->all();
         $rules = [
             'custom_id' => 'nullable|max:16|unique:contacts,custom_id,'.$id.',id,company_id,'.$company->id,

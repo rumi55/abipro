@@ -63,9 +63,9 @@
     "All Module": "Semua Modul",
     "Reference": "Referensi",
     "Timestamp": "Waktu",
-    "Transaction No.": "No. Transaksi",
+    "Transaction No.": "No. Bukti",
     "Transaction Number": "No. Bukti",
-
+    "Report Date":"Tanggal Laporan",
 
 
     "Sales": "Penjualan",
@@ -125,9 +125,9 @@
     "Balance Sheet": "Laporan Neraca",
     "Cashflow": "Arus Kas",
     "Cashflow Report": "Laporan Arus Kas",
-    "Trial Balance": "Neraca Percobaan",
+    "Trial Balance": "Neraca Saldo",
     "View Report": "Lihat Laporan",
-
+    "General Ledger": "Buku Besar",
     "Cost of Sales": "Harga Pokok Penjualan",
     "Total Cost of Sales": "Total Harga Pokok Penjualan",
     "Gross Profit": "Laba Kotor",

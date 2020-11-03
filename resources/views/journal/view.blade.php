@@ -58,11 +58,11 @@ $breadcrumbs = array(
     <div class="card-body pb-1">
         <div class="row">
             <dl class="col-md-4">
-                <dt>Nomor</dt>
+                <dt>{{__('Transaction No.')}}</dt>
                 <dd>{{$journal->trans_no}}</dd>
             </dl>
             <dl class="col-md-4">
-                <dt>Tanggal</dt>
+                <dt>{{__('Transaction Date')}}</dt>
                 <dd>{{fdate($journal->trans_date)}}</dd>
             </dl>
             @if($journal->is_voucher==1 && $journal->is_processed==0 && !empty($journal->contact_id))

@@ -22,6 +22,13 @@
     </div>
     <div class="col-md-12">
       <div class="form-group">
+      @php $val = request('trans_group'); @endphp
+      <label>{{__('Transaction Group')}}</label>
+        <select id="select-trans-group" data-selected="{{$val}}" name="trans_group" class="select2"></select>
+      </div>
+    </div>
+    <div class="col-md-12">
+      <div class="form-group">
       @php $val = request('journals',[]); $val = implode(',', $val); @endphp
       <label>{{__('Transaction No.')}}</label>
         <select id="select-journal" data-selected="{{$val}}" name="journals[]" class="select2" multiple></select>
@@ -128,6 +135,7 @@ function select2Load(selector, url){
   })
 }
 $(function () {
+  select2Load('#select-trans-group', "{{route('select2', ['name'=>'numberings', 'transaction_type'=>'journal'])}}")
   select2Load('#select-journal', "{{route('select2', ['name'=>'journals'])}}")
   select2Load('#select-department', "{{route('select2', ['name'=>'departments'])}}")
 

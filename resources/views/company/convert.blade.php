@@ -1,5 +1,5 @@
-@php 
-$active_menu=''; 
+@php
+$active_menu='';
 $breadcrumbs = array(
     ['label'=>__('Company'), 'url'=>route('company.profile')],
     ['label'=>__('Convert Abipro Desktop')]
@@ -17,7 +17,7 @@ $breadcrumbs = array(
         <div class="card-header">
         <h3 class="card-title">
         <a href="{{route('companies.index')}}"><i class="fas fa-chevron-left"></i></a> {{__('Convert Abipro Desktop')}} to {{$company->name}}
-        
+
         </h3>
         </div>
         <form id="form" role="form" action="{{route('convert.upload', 'gldept')}}" method="POST" enctype="multipart/form-data" >
@@ -26,7 +26,7 @@ $breadcrumbs = array(
             <div class="form-group">
               <label>Abipro Desktop Folder</label>
                     <input  type="file" class="form-control " webkitdirectory directory multiple id="file" placeholder="" value="">
-              
+
               <small class="text-muted"></small>
             </div>
             Berikut ini file-file yang diperlukan dalam proses konversi ini:
@@ -39,11 +39,11 @@ $breadcrumbs = array(
                 </tr>
               </thead>
               <tbody>
-              @php 
+              @php
               $filteredFiles=[
-          'gltype', 'glnama', 'glmast', 'gldept', 
-          'gls1', 'gls2', 'gls3', 'gls4', 'gls5', 'gls6', 
-          'gltran', 
+        'gldept',
+          'gls1', 'gls2', 'gls3', 'gls4', 'gls5', 'gls6','gltype', 'glnama', 'glmast',
+          'gltran',
         ];
               @endphp
                 @foreach($filteredFiles as $i=>$file)
@@ -86,19 +86,19 @@ $(function () {
   })
 
   var filteredFiles=[
-          'gltype.dbf', 'glnama.dbf', 'glmast.dbf', 'gldept.dbf', 
-          'gls1.dbf', 'gls2.dbf', 'gls3.dbf', 'gls4.dbf', 'gls5.dbf', 'gls6.dbf', 
-          'gltran.dbf', 
+          'gldept.dbf',
+          'gls1.dbf', 'gls2.dbf', 'gls3.dbf', 'gls4.dbf', 'gls5.dbf', 'gls6.dbf','gltype.dbf', 'glnama.dbf', 'glmast.dbf', 
+          'gltran.dbf',
         ];
   var folder = document.getElementById("file");
     var selected = [];
-    var form_data = new FormData();  
+    var form_data = new FormData();
   folder.onchange=function(){
     $('.loading').show();
     var files = folder.files,
         len = files.length,
         i, exist=0;
-    
+
     for(i=0;i<len;i+=1){
       var file = files[i];
         var filename = file.name.toLowerCase();
@@ -114,7 +114,7 @@ $(function () {
     }
     $('.loading').hide();
   }
-  
+
   $( '#form' ).submit(function ( e ) {
     e.preventDefault();
     var form=$(this).get(0);
@@ -173,6 +173,6 @@ $(function () {
     })
   }
 });
-  
+
 </script>
 @endpush

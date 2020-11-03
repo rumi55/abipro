@@ -78,6 +78,9 @@ class JournalReportController extends Controller
         if(count($params['journal_id'])>0){
             $journal = $journal->whereIn('journal_id', $params['journal_id']);
         }
+        if(!empty($params['trans_group'])){
+            $journal = $journal->where('numbering_id', $params['trans_group']);
+        }
 
         if(count($params['department_id'])>0){
             $journal = $journal->whereIn('department_id', $params['department_id']);
@@ -158,6 +161,7 @@ class JournalReportController extends Controller
         $params = [
             'layout'=>$layout,
             'columns'=>$columns,
+            'trans_group'=>$request->trans_group,
             'journal_id'=>$journals??[],
             'department_id'=>$departments??[],
             'start_date'=>$start_date,

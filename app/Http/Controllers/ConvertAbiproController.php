@@ -146,7 +146,8 @@ class ConvertAbiproController extends Controller
         try{
             \DB::beginTransaction();
             foreach ($data as $dt) {
-                if(empty($dt['account_no']) || empty($dt['account_name']) || empty($dt['account_parent_id'])){
+                //ada hardcode
+                if(empty($dt['account_no']) || empty($dt['account_name']) || empty($dt['account_parent_id']) || $dt['account_name']=='AAS'){
                     continue;
                 }
                 $dt['company_id'] = $company_id;

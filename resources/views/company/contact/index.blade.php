@@ -39,7 +39,6 @@ $breadcrumbs = array(
                     <div class="tab-pane fade active show" id="custom-tabs-three-customer" role="tabpanel" aria-labelledby="custom-tabs-three-customer-tab">
                     @include('dcru.dtables_js')
                     @include('dcru.dtables_script', $dtcustomer)
-
                     </div>
                     <div class="tab-pane fade" id="custom-tabs-three-supplier" role="tabpanel" aria-labelledby="custom-tabs-three-supplier-tab">
                     @include('dcru.dtables_script', $dtsupplier)

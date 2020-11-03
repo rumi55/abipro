@@ -57,7 +57,7 @@ class VoucherReportController extends Controller
         $pdf->loadView($view, $data);
         return $pdf->stream('journal.pdf');
     }
-    
+
     private function query($params, $company){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
@@ -65,7 +65,7 @@ class VoucherReportController extends Controller
         $last_period = $period[0];
         $start_period = $period[1];
         $end_period = $period[2];
-        
+
         // DB::enableQueryLog();
         $journal = DB::table(DB::raw("vw_voucher a"))
         ->where("a.company_id", $company->id)
@@ -113,7 +113,7 @@ class VoucherReportController extends Controller
                 $journals[] = decode($id);
             }
         }
-        
+
         if(!empty($department_id)){
             $exploded = explode(',',$department_id);
             $paramsString.=($paramsString!=''?'&':'')."departments=$department_id";
@@ -122,7 +122,7 @@ class VoucherReportController extends Controller
                 // $departments[] = intval($id);
             }
         }
-        
+
         $period = $request->period;
         $start_date = $request->start_date;
         $end_date = $request->end_date;
@@ -135,7 +135,7 @@ class VoucherReportController extends Controller
             $start_date = \Carbon\Carbon::parse($max_date)->startOfMonth()->format('Y-m-d');
             $end_date = $max_date;
         }
-        
+
         if(count($journals)>0){
             $end_date = DB::table('vw_voucher')
             ->where('company_id', $company_id)
@@ -146,7 +146,7 @@ class VoucherReportController extends Controller
             ->whereIn('journal_id', $journals)
             ->min('trans_date');
         }
-        
+
 
         $start_date = fdate($start_date, 'Y-m-d');
         $end_date = fdate($end_date, 'Y-m-d');
@@ -154,7 +154,7 @@ class VoucherReportController extends Controller
         if(!empty($sort_key)){
             $paramsString.=($paramsString!=''?'&':'')."sort_key=$sort_key&sort_order=$sort_order";
         }
-        
+
         $params = [
             'params'=>$paramsString,
             'journal_id'=>$journals,
@@ -164,7 +164,7 @@ class VoucherReportController extends Controller
             'sort_key'=>$sort_key,
             'sort_order'=>$sort_order,
         ];
-        
+
         return $params;
     }
 }

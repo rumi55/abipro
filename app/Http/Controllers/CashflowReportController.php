@@ -60,7 +60,6 @@ class CashflowReportController extends Controller
     private function pdf($view, $data){
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
-        $pdf->loadView($view, $data);
         $pdf->loadView('report.pdf', $data);
         return $pdf->stream($data['report'].'.pdf');
     }
@@ -70,8 +69,8 @@ class CashflowReportController extends Controller
         $end_date = $params['end_date'];
         $departments = '';
 
-        $balance = DB::table('vw_ledger')
-        ->selectRaw("IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as balance")
+        $balance = DB::table('vw_journals')
+        ->selectRaw("IF(SUM(vw_journals.total) IS NULL, 0,SUM(vw_journals.total)) as balance")
         ->where('company_id', $company->id)
         ->where('account_type_id', '=',1)
         ->whereDate('trans_date', '<', $start_date);
@@ -88,14 +87,14 @@ class CashflowReportController extends Controller
             $balance += $opening_balance;
         }
 
-        $income = DB::table('vw_ledger')
+        $income = DB::table('vw_journals')
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
         ->whereDate('trans_date', '>=', $start_date)
         ->whereDate('trans_date', '<=', $end_date)
         ->where('debit', '=', 0)
         ->whereRaw(
-            "journal_id IN (SELECT journal_id FROM vw_ledger WHERE account_type_id=1 AND company_id=$company->id)"
+            "journal_id IN (SELECT journal_id FROM vw_journals WHERE account_type_id=1 AND company_id=$company->id)"
         );
         if(count($params['department_id'])>0){
             $income = $income->whereIn('department_id', $params['department_id']);
@@ -103,14 +102,14 @@ class CashflowReportController extends Controller
         $income = $income
         ->orderBy('trans_date')->orderBy('trans_no')->get();
 
-        $expense = DB::table('vw_ledger')
+        $expense = DB::table('vw_journals')
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
         ->whereDate('trans_date', '>=', $start_date)
         ->whereDate('trans_date', '<=', $end_date)
         ->where('credit', '=', 0)
         ->whereRaw(
-            "journal_id IN (SELECT journal_id FROM vw_ledger WHERE account_type_id=1 AND company_id=$company->id)"
+            "journal_id IN (SELECT journal_id FROM vw_journals WHERE account_type_id=1 AND company_id=$company->id)"
         );
         if(count($params['department_id'])>0){
             $expense = $expense->whereIn('department_id', $params['department_id']);
@@ -124,8 +123,8 @@ class CashflowReportController extends Controller
         $end_date = $params['end_date'];
         $departments = '';
 
-        $balance = DB::table('vw_ledger')
-        ->selectRaw("IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as balance")
+        $balance = DB::table('vw_journals')
+        ->selectRaw("IF(SUM(vw_journals.total) IS NULL, 0,SUM(vw_journals.total)) as balance")
         ->where('company_id', $company->id)
         ->where('account_type_id', '=',1)
         ->whereDate('trans_date', '<', $start_date);
@@ -142,15 +141,15 @@ class CashflowReportController extends Controller
             $balance += $opening_balance;
         }
 
-        $income = DB::table('vw_ledger')
-        ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as total")
+        $income = DB::table('vw_journals')
+        ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_journals.total) IS NULL, 0,SUM(vw_journals.total)) as total")
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
         ->whereDate('trans_date', '>=', $start_date)
         ->whereDate('trans_date', '<=', $end_date)
         ->where('debit', '=', 0)
         ->whereRaw(
-            "journal_id IN (SELECT journal_id FROM vw_ledger WHERE account_type_id=1 AND company_id=$company->id)"
+            "journal_id IN (SELECT journal_id FROM vw_journals WHERE account_type_id=1 AND company_id=$company->id)"
         );
         if(count($params['department_id'])>0){
             $income = $income->whereIn('department_id', $params['department_id']);
@@ -159,15 +158,15 @@ class CashflowReportController extends Controller
         ->groupBy(DB::raw('account_id, account_no, account_name'))
         ->orderBy('account_no')->get();
 
-        $expense = DB::table('vw_ledger')
-        ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_ledger.total) IS NULL, 0,SUM(vw_ledger.total)) as total")
+        $expense = DB::table('vw_journals')
+        ->selectRaw("account_id, account_no, account_name, IF(SUM(vw_journals.total) IS NULL, 0,SUM(vw_journals.total)) as total")
         ->where('company_id', $company->id)
         ->where('account_type_id', '<>',1)
         ->whereDate('trans_date', '>=', $start_date)
         ->whereDate('trans_date', '<=', $end_date)
         ->where('credit', '=', 0)
         ->whereRaw(
-            "journal_id IN (SELECT journal_id FROM vw_ledger WHERE account_type_id=1 AND company_id=$company->id)"
+            "journal_id IN (SELECT journal_id FROM vw_journals WHERE account_type_id=1 AND company_id=$company->id)"
         );
         if(count($params['department_id'])>0){
             $expense = $expense->whereIn('department_id', $params['department_id']);

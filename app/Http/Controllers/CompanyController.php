@@ -141,6 +141,7 @@ class CompanyController extends Controller
             //setup data
             //insert data journal type, numbering format
             \App\Numbering::createDefault($company->id);
+            \App\ReportTemplate::createDefault($company->id);
             // JournalType::createDefault($company->id);
             // Account::createDefaultAccount($company->id, $user->id);
             // Account::createDefaultAccountType($company->id, $user->id);

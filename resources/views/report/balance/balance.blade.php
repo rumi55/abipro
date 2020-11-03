@@ -12,29 +12,29 @@
             </tr>
         </thead>
         <tbody>
-        @php 
-        $type = null; 
-        $group = null; 
-        
+        @php
+        $type = null;
+        $group = null;
+
         @endphp
             @foreach($data as $i => $dt)
             @if($group!==$dt->group)
             @php $group=$dt->group @endphp
                 <tr>
                     <td colspan="2" class="font-bold">{{$dt->group=='asset'?'Aktiva':($dt->group=='liability'?'Kewajiban':'Ekuitas')}}</td>
-                </tr>        
+                </tr>
             @endif
             @if($type!==$dt->account_type)
             @php $type=$dt->account_type @endphp
                 <tr>
                     <td colspan="2" class="font-bold">&nbsp;&nbsp;&nbsp;&nbsp;{{$dt->account_type}}</td>
-                </tr>        
+                </tr>
             @endif
                 <tr>
                     <td>&nbsp;&nbsp;&nbsp;&nbsp;{{$dt->account_name}}</td>
                     <td class="text-right">{{format_number($dt->total)}}</td>
-                </tr>        
-            @endforeach    
+                </tr>
+            @endforeach
             <tr>
                 <td colspan="6" class="border-bottom"></td>
             </tr>

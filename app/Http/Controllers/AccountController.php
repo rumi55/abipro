@@ -23,11 +23,12 @@ class AccountController extends Controller
     public function index(Request $request){
         $user = Auth::user();
         $company_id = $user->activeCompany()->id;
+        $accountTypes = AccountType::orderBy('id')->get();
         $account = Account::where('company_id', $company_id);
         $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
         $accounts = $account->get();
-        return view('account.index', compact('accounts'));
+        return view('account.index', compact('accounts', 'accountTypes'));
     }
 
 
@@ -331,7 +332,7 @@ class AccountController extends Controller
         $company = $user->activeCompany();
         $balance_date = $company->accounting_start_date;
         $department_id = $request->department_id;
-        $account_type_id = $request->query('account_type_id', 1);
+        $account_type_id = $request->query('account_type_id', []);
         $budget_year = $request->query('budget_year', date('Y'));
         $account = \DB::table('accounts')
         ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
@@ -344,24 +345,44 @@ class AccountController extends Controller
         })
         ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id,
         account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, jan, feb, mar, apr, may, jun, jul, aug, sep, `oct`, nov, `dec`, total')
-        ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
+        ->where('accounts.company_id', $company->id)->whereIn('account_types.group',['income', 'expense']);
 
-        if(!empty($account_type_id)){
-            $account = $account->where('account_type_id', $account_type_id);
+        if(!empty($request->account)){
+            if(!empty($request->subaccount)){
+                $account = $account->whereIn('accounts.id', $request->account)
+                ->orWhere(function ($query)use($request){
+                    $query->whereIn('accounts.id', $request->subaccount)
+                          ->whereIn('accounts.account_parent_id', $request->account);
+                });
+            }else{
+                $account = $account->whereIn('accounts.id', $request->account)
+                ->orWhereIn('accounts.account_parent_id', $request->account);
+            }
+        }elseif(!empty($request->subaccount)){
+            $account = $account->whereIn('accounts.id', $request->subaccount);
+        }else if(!empty($account_type_id)){
+            $account = $account->whereIn('account_type_id', $account_type_id);
         }
         $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
         $accounts = $account->get();
         $departments = Department::where('company_id', $company->id)->get();
-        $account_types = AccountType::orderBy('id')->get();
-        return view('account.budget', compact('accounts', 'budget_year', 'departments', 'account_types', 'account_type_id'));
+        $account_types = AccountType::whereIn('account_types.group',['income', 'expense'])->orderBy('id')->get();
+        $paccounts = Account::where('accounts.company_id', $company->id)
+        ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
+        ->whereIn('account_types.group',['income', 'expense'])
+        ->orderBy('accounts.id')->get();
+        return view('account.budget', compact('paccounts','accounts', 'budget_year', 'departments', 'account_types', 'account_type_id'));
     }
     public function openingBalance(Request $request){
         $user = Auth::user();
+        $accountTypes = AccountType::orderBy('id')->whereIn('account_types.group',['asset', 'liability', 'equity'])->get();
+
         $company = $user->activeCompany();
         $balance_date = $company->accounting_start_date;
         $department_id = $request->department_id;
         $account_type_id = $request->account_type_id;
+        // dd($account_type_id);
         $account = \DB::table('accounts')
         ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
         ->leftJoin('balances', function($join)use($department_id){
@@ -372,19 +393,35 @@ class AccountController extends Controller
             }
         })
         ->selectRaw('sequence, accounts.id, account_name, account_no, account_parent_id, account_types.id as account_type_id, account_types.name as account_type_name, has_children, tree_level, balance')
-        ->where('accounts.company_id', $company->id);//->where('account_type_id','<',12);
+        ->where('accounts.company_id', $company->id)->whereIn('account_types.group',['asset', 'liability', 'equity']);
 
 
-
-        if(!empty($account_type_id)){
-            $account = $account->where('account_type_id', $account_type_id);
+        if(!empty($request->account)){
+            if(!empty($request->subaccount)){
+                $account = $account->whereIn('accounts.id', $request->account)
+                ->orWhere(function ($query)use($request){
+                    $query->whereIn('accounts.id', $request->subaccount)
+                          ->whereIn('accounts.account_parent_id', $request->account);
+                });
+            }else{
+                $account = $account->whereIn('accounts.id', $request->account)
+                ->orWhereIn('accounts.account_parent_id', $request->account);
+            }
+        }elseif(!empty($request->subaccount)){
+            $account = $account->whereIn('accounts.id', $request->subaccount);
+        }else if(!empty($account_type_id)){
+            $account = $account->whereIn('account_type_id', $account_type_id);
         }
         $account = $account->orderBy('account_type_id', 'asc');
         $account = $account->orderBy('sequence', 'asc');
         $accounts = $account->get();
         $departments = Department::where('company_id', $company->id)->get();
-        $account_types = AccountType::orderBy('id')->get();
-        return view('account.balance', compact('accounts', 'balance_date', 'departments', 'account_types'));
+        $account_types = AccountType::orderBy('id')->whereIn('account_types.group',['asset', 'liability', 'equity'])->get();
+        $paccounts = Account::where('accounts.company_id', $company->id)
+        ->leftJoin('account_types', 'account_types.id', '=', 'account_type_id')
+        ->whereIn('account_types.group',['asset', 'liability', 'equity'])
+        ->orderBy('accounts.id')->get();
+        return view('account.balance', compact('paccounts','accounts', 'accountTypes', 'balance_date', 'departments', 'account_types'));
     }
 
     public function saveOpeningBalance(Request $request){
@@ -411,6 +448,16 @@ class AccountController extends Controller
         if(!empty($request->account_type_id)){
             $params = [
                 'account_type_id'=>$data['account_type_id']
+            ];
+        }
+        if(!empty($request->account)){
+            $params = [
+                'account'=>$data['account']
+            ];
+        }
+        if(!empty($request->subaccount)){
+            $params = [
+                'subaccount'=>$data['subaccount']
             ];
         }
         if(!empty($request->department_id)){

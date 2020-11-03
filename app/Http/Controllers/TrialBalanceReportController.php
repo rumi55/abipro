@@ -67,6 +67,7 @@ class TrialBalanceReportController extends Controller
     private function query($params, $company){
         $start_date = $params['start_date'];
         $end_date = $params['end_date'];
+        $department_id = $params['department_id'];
         $period = $company->getPeriod(fdate($start_date, 'Y'), fdate($start_date, 'm'));
         $last_period = $period[0];
         $start_period = $period[1];
@@ -75,24 +76,31 @@ class TrialBalanceReportController extends Controller
 
         $balance = DB::table(DB::raw('vw_accounts a'))
         ->select([
-            DB::raw('a.id, a.account_no, a.account_name'),
-            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_ledger d
+            DB::raw('a.id, a.account_no, a.account_name, vw_opening_balance.department_id'),
+            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_journals d
             WHERE d.account_id=a.id AND a.company_id=d.company_id
             AND d.trans_date>='$start_date' AND d.trans_date<='$end_date'
             ) as debit"),
-            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_ledger e
+            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_journals e
             WHERE e.account_id=a.id AND a.company_id=e.company_id
             AND e.trans_date>='$start_date' AND e.trans_date<='$end_date'
             ) as credit"),
-            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+a.balance FROM vw_ledger f
+            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+vw_opening_balance.balance FROM vw_journals f
             WHERE f.account_id=a.id AND a.company_id=f.company_id
             AND f.trans_date<'$start_date'
             ) as op_balance"),
-            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+a.balance FROM vw_ledger g
+            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+vw_opening_balance.balance FROM vw_journals g
             WHERE g.account_id=a.id AND a.company_id=g.company_id
             AND g.trans_date<='$end_date'
             ) as total_balance")
         ])
+        ->leftJoin('vw_opening_balance', function($join)use($department_id){
+            if(count($department_id)==0){
+                $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereNull('department_id');
+            }else{
+                $join->on('vw_opening_balance.account_id', '=', 'a.id')->whereIn('vw_opening_balance.department_id', $department_id);
+            }
+        })
         ->whereRaw("a.company_id='$company->id' AND a.has_children=false");
         if(count($params['account_id'])>0){
             $balance = $balance->whereIn(DB::raw('a.id'), $params['account_id']);
@@ -130,27 +138,27 @@ class TrialBalanceReportController extends Controller
         $balance = DB::table(DB::raw('vw_accounts a'))
         ->select([
             DB::raw('a.id, a.account_no, a.account_name, a.account_group'),
-            DB::raw("(SELECT IF(SUM(d.debit) IS NULL, 0, SUM(d.debit)) FROM vw_ledger d
+            DB::raw("(SELECT IF(SUM(d.debit) IS NULL, 0, SUM(d.debit)) FROM vw_journals d
             WHERE d.account_id=a.id AND a.company_id=d.company_id
             AND d.trans_date>='$start_date' AND d.trans_date<='$end_date'
             ) as debit"),
-            DB::raw("(SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit)) FROM vw_ledger e
+            DB::raw("(SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit)) FROM vw_journals e
             WHERE e.account_id=a.id AND a.company_id=e.company_id
             AND e.trans_date>='$start_date' AND e.trans_date<='$end_date'
             ) as credit"),
-            DB::raw("(SELECT IF(SUM(f.debit) IS NULL,0, SUM(f.debit))+a.op_debit+$re1 FROM vw_ledger f
+            DB::raw("(SELECT IF(SUM(f.debit) IS NULL,0, SUM(f.debit))+a.op_debit+$re1 FROM vw_journals f
             WHERE f.account_id=a.id AND a.company_id=f.company_id
             AND f.trans_date<'$start_date'
             ) as op_debit"),
-            DB::raw("(SELECT IF(SUM(g.debit) IS NULL,0, SUM(g.debit))+a.op_debit+$re2 FROM vw_ledger g
+            DB::raw("(SELECT IF(SUM(g.debit) IS NULL,0, SUM(g.debit))+a.op_debit+$re2 FROM vw_journals g
             WHERE g.account_id=a.id AND a.company_id=g.company_id
             AND g.trans_date<='$end_date'
             ) as total_debit"),
-            DB::raw("(SELECT IF(SUM(h.credit) IS NULL,0, SUM(h.credit))+a.op_credit+$re3 FROM vw_ledger h
+            DB::raw("(SELECT IF(SUM(h.credit) IS NULL,0, SUM(h.credit))+a.op_credit+$re3 FROM vw_journals h
             WHERE h.account_id=a.id AND a.company_id=h.company_id
             AND h.trans_date<'$start_date'
             ) as op_credit"),
-            DB::raw("(SELECT IF(SUM(i.credit) IS NULL,0, SUM(i.credit))+a.op_credit+$re4 FROM vw_ledger i
+            DB::raw("(SELECT IF(SUM(i.credit) IS NULL,0, SUM(i.credit))+a.op_credit+$re4 FROM vw_journals i
             WHERE i.account_id=a.id AND a.company_id=i.company_id
             AND i.trans_date<='$end_date'
             ) as total_credit"),
@@ -163,27 +171,27 @@ class TrialBalanceReportController extends Controller
         $income = DB::table(DB::raw('vw_accounts a'))
         ->select([
             DB::raw('a.id, a.account_no, a.account_name, a.account_group'),
-            DB::raw("(SELECT IF(SUM(d.debit) IS NULL, 0, SUM(d.debit)) FROM vw_ledger d
+            DB::raw("(SELECT IF(SUM(d.debit) IS NULL, 0, SUM(d.debit)) FROM vw_journals d
             WHERE d.account_id=a.id AND a.company_id=d.company_id
             AND d.trans_date>='$start_date' AND d.trans_date<='$end_date'
             ) as debit"),
-            DB::raw("(SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit)) FROM vw_ledger e
+            DB::raw("(SELECT IF(SUM(e.credit) IS NULL,0, SUM(e.credit)) FROM vw_journals e
             WHERE e.account_id=a.id AND a.company_id=e.company_id
             AND e.trans_date>='$start_date' AND e.trans_date<='$end_date'
             ) as credit"),
-            DB::raw("(SELECT IF(SUM(f.debit) IS NULL,0, SUM(f.debit))+a.op_debit FROM vw_ledger f
+            DB::raw("(SELECT IF(SUM(f.debit) IS NULL,0, SUM(f.debit))+a.op_debit FROM vw_journals f
             WHERE f.account_id=a.id AND a.company_id=f.company_id
             AND f.trans_date<'$start_date' AND f.trans_date>='$cutoff'
             ) as op_debit"),
-            DB::raw("(SELECT IF(SUM(g.debit) IS NULL,0, SUM(g.debit))+a.op_debit FROM vw_ledger g
+            DB::raw("(SELECT IF(SUM(g.debit) IS NULL,0, SUM(g.debit))+a.op_debit FROM vw_journals g
             WHERE g.account_id=a.id AND a.company_id=g.company_id
             AND g.trans_date<='$end_date' AND g.trans_date>='$cutoff'
             ) as total_debit"),
-            DB::raw("(SELECT IF(SUM(h.credit) IS NULL,0, SUM(h.credit))+a.op_credit FROM vw_ledger h
+            DB::raw("(SELECT IF(SUM(h.credit) IS NULL,0, SUM(h.credit))+a.op_credit FROM vw_journals h
             WHERE h.account_id=a.id AND a.company_id=h.company_id
             AND h.trans_date<'$start_date' AND h.trans_date>='$cutoff'
             ) as op_credit"),
-            DB::raw("(SELECT IF(SUM(i.credit) IS NULL,0, SUM(i.credit))+a.op_credit FROM vw_ledger i
+            DB::raw("(SELECT IF(SUM(i.credit) IS NULL,0, SUM(i.credit))+a.op_credit FROM vw_journals i
             WHERE i.account_id=a.id AND a.company_id=i.company_id
             AND i.trans_date<='$end_date' AND i.trans_date>='$cutoff'
             ) as total_credit"),
@@ -207,7 +215,7 @@ class TrialBalanceReportController extends Controller
         $end_date = $request->end_date;
 
         if((empty($start_date)  && empty($end_date))){
-            $max_date = DB::table('vw_ledger')
+            $max_date = DB::table('vw_journals')
             ->where('company_id', $company_id)->max('trans_date');
             if($max_date==null){
                 $max_date = date('Y-m-d');

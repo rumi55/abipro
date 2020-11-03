@@ -149,7 +149,7 @@ class JournalController extends Controller
         }
         $pdf = app('dompdf.wrapper');
         $pdf->getDomPDF()->set_option("enable_php", true);
-        $pdf->loadView('report.pdf', $data);
+        $pdf->loadView('report.single.pdf', $data);
         return $pdf->download('journal.pdf');
     }
     public function voucher(Request $request, $id){

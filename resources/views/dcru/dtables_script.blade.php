@@ -420,7 +420,6 @@ function getData(dtid){
         $('th', this).each(function(idx){
             if(!$(this).hasClass('noexport')){
                 var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
-            
                 row.push({text: $(this).html(), style:"tableHeader",...align})
                 exportable.push(idx)
             }
@@ -433,14 +432,16 @@ function getData(dtid){
         var color = i%2==0?'white':'#f3f3f3'
         $('td', this).each(function(idx){
             var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
-            var f = exportable.find(function(j){return j==idx})
-            if(f){
+            var k = idx;
+            var f = exportable.find(function(j){return j==k})
+            if(f!=null){
                 row.push({text: $(this).text(), fillColor:color, ...align})
             }
         })
         i++;
         data.push(row)
     })
+    console.log(data);
     return data;
 }
 function getHeaderExcel(dtid){
@@ -451,7 +452,7 @@ function getHeaderExcel(dtid){
         $('th', this).each(function(idx){
             if(!$(this).hasClass('noexport')){
                 var align = $(this).hasClass('text-center')?{alignment:'center'}:($(this).hasClass('text-right')?{alignment:'right'}:{})
-            
+
                 row.push($(this).html())
                 exportable.push(idx)
             }

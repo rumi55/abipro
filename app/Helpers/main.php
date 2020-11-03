@@ -83,33 +83,58 @@ if (!function_exists('user')) {
     }
 }
 
-if (!function_exists('inword')) {
-    function inword($value){
+if (!function_exists('inword_b')) {
+    function inword_b($value){
+        $word = array('nol', 'satu', 'dua','tiga', 'empat','lima','enam','tujuh','delapan','sembilan');
+        $v = '';
+        $len = strlen($value);
+        for($i=0;$i<$len;$i++){
+            $a = substr($value,$i,1);
+            $v.= $word[$a].' ';
+        }
+        return $v;
+    }
+}
+
+if (!function_exists('inword_a')) {
+    function inword_a($value){
         $value = abs($value);
         $word = array('', 'satu', 'dua','tiga', 'empat','lima','enam','tujuh','delapan','sembilan','sepuluh','sebelas');
         $result = '';
         if($value<12){
             $result = ' '.$word[$value];
         } else if ($value <20) {
-			$result = inword($value - 10). " belas";
+			$result = inword_a($value - 10). " belas";
 		} else if ($value < 100) {
-			$result = inword($value/10)." puluh". inword($value % 10);
+			$result = inword_a($value/10)." puluh". inword_a($value % 10);
 		} else if ($value < 200) {
-			$result = " seratus" . inword($value - 100);
+			$result = " seratus" . inword_a($value - 100);
 		} else if ($value < 1000) {
-			$result = inword($value/100) . " ratus" . inword($value % 100);
+			$result = inword_a($value/100) . " ratus" . inword_a($value % 100);
 		} else if ($value < 2000) {
-			$result = " seribu" . inword($value - 1000);
+			$result = " seribu" . inword_a($value - 1000);
 		} else if ($value < 1000000) {
-			$result = inword($value/1000) . " ribu" . inword($value % 1000);
+			$result = inword_a($value/1000) . " ribu" . inword_a($value % 1000);
 		} else if ($value < 1000000000) {
-			$result = inword($value/1000000) . " juta" . inword($value % 1000000);
+			$result = inword_a($value/1000000) . " juta" . inword_a($value % 1000000);
 		} else if ($value < 1000000000000) {
-			$result = inword($value/1000000000) . " milyar" . inword(fmod($value,1000000000));
+			$result = inword_a($value/1000000000) . " milyar" . inword_a(fmod($value,1000000000));
 		} else if ($value < 1000000000000000) {
-			$result = inword($value/1000000000000) . " trilyun" . inword(fmod($value,1000000000000));
+			$result = inword_a($value/1000000000000) . " trilyun" . inword_a(fmod($value,1000000000000));
         }
         return $result;
+    }
+}
+if (!function_exists('inword')) {
+    function inword($value){
+        $v = explode('.', $value);
+        $dec = '';
+        if(count($v)==2){
+            if(intval($v[1])>0){
+                $dec = inword_b($v[1]);
+            }
+        }
+        return inword_a($value).($dec==''?'':' koma '.$dec);
     }
 }
 
@@ -390,6 +415,7 @@ if (!function_exists('report_template')) {
             '{company_fax}'=> company('fax'),
             '{company_website}'=> company('website'),
             '{company_email}'=> company('email'),
+            '{pagenum}'=>'<span class="pagenum"></span>',
             '{date}'=>date('d-m-Y'),
             '{datetime}'=>date('d-m-Y H:i'),
         ];

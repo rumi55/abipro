@@ -30,7 +30,7 @@ $breadcrumbs = array(
             @if($mode=='create' || ($mode=='edit' && !$model->isLocked()))
             <div class="input-group">
                 <div class="input-group-prepend">
-                    <select style="width: 200px" id="numbering_id" name="numbering_id" data-numbering-type="contact" data-value="{{old('numbering_id', $model->numbering_id)}}" class="form-control numbering_id @error('numbering_id') is-invalid @enderror">
+                    <select style="width: 200px" id="numbering_id" name="numbering_id" data-numbering-type="contact" data-value="{{($mode=='edit' && !$model->isLocked())?'':old('numbering_id', $model->numbering_id)}}" class="form-control numbering_id @error('numbering_id') is-invalid @enderror">
 
                     </select>
                 </div>

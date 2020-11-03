@@ -106,6 +106,23 @@
   @include('layouts.footer')
 </div>
 @include('layouts.js')
+<script type="text/javascript">
+    $(function(){
+        document.addEventListener('keydown', function (event) {
+  if (event.keyCode === 13 && event.target.nodeName === 'INPUT') {
+    var form = event.target.form;
+    var index = Array.prototype.indexOf.call(form, event.target);
+    form.elements[index + 1].focus();
+    event.preventDefault();
+  }
+});
+    $("input:text").on("focus", function () {
+        var sel = document.selection.createRange();
+        var selLen = document.selection.createRange().text.length;
+        sel.moveStart('character', -input.value.length);
+    });
+    })
+</script>
 @stack('js')
 @include('layouts.sweetalert')
 </body>

@@ -33,8 +33,9 @@ $breadcrumbs = array(
             <select required class="form-control select2" name="report_name" id="report_name">
                 <option {{old('report_name', $model->report_name)=='header'?'selected':''}} value="header">Report Header</option>
                 <option {{old('report_name', $model->report_name)=='footer'?'selected':''}} value="footer">Report Footer</option>
-                <option {{old('report_name', $model->report_name)=='voucher'?'selected':''}} value="voucher">{{__('Voucher')}}</option>
                 <option {{old('report_name', $model->report_name)=='receipt'?'selected':''}} value="receipt">{{__('Receipt')}}</option>
+                <option {{old('report_name', $model->report_name)=='voucher'?'selected':''}} value="voucher">{{__('Voucher')}}</option>
+                <option {{old('report_name', $model->report_name)=='journal'?'selected':''}} value="journal">{{__('General Journal')}}</option>
             </select>
             @error('report_name') <small class="text-danger">{!! $message !!}</small> @enderror
         </div>

@@ -119,6 +119,10 @@ class TagController extends Controller
     }
     public function update(Request $request, $id){
         $user = Auth::user();
+        $tag = Tag::findOrFail($id);
+        if($tag->isLocked() && $tag->group!=$request->group){
+            return redirect()->back()->withInput()->with('error', 'Jenis sortir tidak dapat diganti.');
+        }
         $company_id = $user->activeCompany()->id;
         $rules = [
             'item_name' => "required|max:128|unique:tags,item_name,$id,id,company_id,$company_id",
@@ -134,7 +138,7 @@ class TagController extends Controller
         if ($validator->fails()) {
             return redirect()->back()->withErrors($validator)->withInput();
         }
-        $tag = Tag::findOrFail($id);
+        $tag->group=$request->group;
         $tag->tag=$request->item_name;
         $tag->item_id=$request->item_id;
         $tag->item_name=$request->item_name;

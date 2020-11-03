@@ -202,11 +202,10 @@
             /** Define the footer rules **/
             footer {
                 position: fixed;
-                bottom: -0.5cm;
+                bottom: 0cm;
                 left: 0cm;
                 right: 0cm;
-                height: 0.5cm;
-
+                height: 1cm;
                 /** Extra personal styles **/
                 text-align: center;
                 line-height: 0.5cm;
@@ -214,13 +213,17 @@
             .pagenum:before {
                 content: counter(page);
             }
+            figure.table{
+                margin-top:0;
+                margin-left: 0;
+                margin-right: 0;
+                margin-bottom:0;
+            }
     </style>
 </head>
 <body>
     @include('report._header_pdf')
     @include($view)
-    <footer>
-        <span class="pagenum"></span>
-    </footer>
+    @include('report._footer_pdf')
 </body>
 </html>

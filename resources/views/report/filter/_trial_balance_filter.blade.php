@@ -68,14 +68,7 @@ $(function () {
   select2Load('#select-sortir', "{{route('select2', ['name'=>'sortirs'])}}")
 
   $('.select2').select2({theme: 'bootstrap4'});
-    $('.datepicker').daterangepicker({
-      timePicker: false,
-      singleDatePicker:true,
-      autoApply:true,
-      locale: {
-        format: 'DD-MM-YYYY'
-      }
-    });
+  $('.datepicker').daterangepicker({timePicker: false,singleDatePicker:true,autoApply:true,showDropdowns:true,linkedCalendars:true,minYear: 2017,maxYear: {{date('Y')+2}},locale: {format: 'DD-MM-YYYY'}});
     // $(".select2").select2({theme: 'bootstrap4'});
     $('#start_date').change(function(){
       validate();

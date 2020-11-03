@@ -48,17 +48,30 @@ class ReportController extends Controller
     public function view($name){
         return view('report.view', [
             'report'=>$name,
-            'title'=>ucwords($name)
+            'title'=>ucwords($this->name[$name])
         ]);
     }
     public function print($group,$id, $name){
         $file = asset(route("$group.$name", ['id'=>$id], false));
-
-
         return view('report.print', [
+            'id'=>$id,
+            'group'=>$group,
             'report'=>$name,
             'file'=>$file,
             'title'=>ucwords($name)
         ]);
     }
+
+    protected $name = [
+        'profit'=>'Profit and Loss',
+        'balance'=>'Balance Sheet',
+        'hpp'=>'Harga Pokok Produksi',
+        'cashflow'=>'Cashflow',
+        'vouchers'=>'Voucher',
+        'journals'=>'Journal',
+        'ledgers'=>'General Ledger',
+        'trial_balance'=>'Trial Balance',
+        'sortirs'=>'Sortir'
+
+    ];
 }

@@ -15,7 +15,7 @@ class Select2OutputController extends Controller
         $company_id = \Auth::user()->activeCompany()->id;
         $query = \DB::table('journals')->where('company_id', '=', $company_id)
         ->selectRaw('id, trans_no as text')
-        ->where('is_processed', 0)->orderBy('trans_date', 'desc');
+        ->where('is_processed', 1)->orderBy('trans_date', 'desc');
         if(isset($request->search)){
             $q = $request->search;
             $query = $query->whereRaw("trans_no like '%$q%'");
@@ -55,6 +55,16 @@ class Select2OutputController extends Controller
             $query = $query->whereRaw("trans_no like '%$q%'");
         }
         return $query->orderByRaw('sequence, account_type_id')->get();
+    }
+    public function numberings(Request $request){
+        $company_id = \Auth::user()->activeCompany()->id;
+        $query = \DB::table('numberings')->where('company_id', '=', $company_id);
+        if(!empty($request->transaction_type)){
+            $query = $query->where('transaction_type_id', $request->transaction_type);
+        }
+        $query = $query->selectRaw('id, name as text')
+        ->orderBy('name');
+        return $query->get();
     }
     public function departments(Request $request){
         $company_id = \Auth::user()->activeCompany()->id;

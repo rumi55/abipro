@@ -70,7 +70,7 @@ class SortirReportController extends Controller
         $start_period = $period[1];
         $end_period = $period[2];
 
-        $ledger = DB::table(DB::raw("vw_ledger a"))
+        $ledger = DB::table(DB::raw("vw_journals a"))
         ->leftJoin(DB::raw('tags b'), DB::raw('FIND_IN_SET(b.id, tags)'), '>', DB::raw('0'))
         ->where("a.company_id", $company->id)
         ->whereNotNull('tags')
@@ -144,19 +144,19 @@ class SortirReportController extends Controller
         $balance = DB::table(DB::raw('vw_accounts a'))
         ->select([
             DB::raw('a.id, a.account_no, a.account_name'),
-            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_ledger d
+            DB::raw("(SELECT IF(SUM(d.debit) IS NULL,0,SUM(d.debit)) FROM vw_journals d
             WHERE d.account_id=a.id AND a.company_id=d.company_id
             AND d.trans_date>='$start_date' AND d.trans_date<='$end_date' $find_sortird
             ) as debit"),
-            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_ledger e
+            DB::raw("(SELECT IF(SUM(e.credit) IS NULL, 0, SUM(e.credit)) FROM vw_journals e
             WHERE e.account_id=a.id AND a.company_id=e.company_id
             AND e.trans_date>='$start_date' AND e.trans_date<='$end_date' $find_sortire
             ) as credit"),
-            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+a.balance FROM vw_ledger f
+            DB::raw("(SELECT IF(SUM(f.total) IS NULL, 0, SUM(f.total))+a.balance FROM vw_journals f
             WHERE f.account_id=a.id AND a.company_id=f.company_id
             AND f.trans_date<'$start_date' $find_sortirf
             ) as op_balance"),
-            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+a.balance FROM vw_ledger g
+            DB::raw("(SELECT IF(SUM(g.total) IS NULL, 0, SUM(g.total))+a.balance FROM vw_journals g
             WHERE g.account_id=a.id AND a.company_id=g.company_id
             AND g.trans_date<='$end_date'
             ) as total_balance")
@@ -189,7 +189,7 @@ class SortirReportController extends Controller
 
 
         if(empty($start_date)){
-            $max_date = DB::table('vw_ledger')
+            $max_date = DB::table('vw_journals')
             ->where('company_id', $company_id)->max('trans_date');
             if($max_date==null){
                 $max_date = date('Y-m-d');

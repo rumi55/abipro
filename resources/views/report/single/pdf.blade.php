@@ -189,8 +189,10 @@
             border-bottom: 2px solid #d6d8db;
         }
         figure.table{
-            margin-left: 0;
-            margin-right: 0;
+            margin-top:0;
+                margin-left: 0;
+                margin-right: 0;
+                margin-bottom:0;
         }
         header {
                 position: fixed;
@@ -209,7 +211,7 @@
                 bottom: -0.5cm;
                 left: 0cm;
                 right: 0cm;
-                height: 0.5cm;
+                height: 1cm;
 
                 /** Extra personal styles **/
                 text-align: center;
