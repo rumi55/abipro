@@ -15,7 +15,7 @@
             <td>:</td>
             <td>
                 @foreach ($accounts as $i => $d)
-                {{ $d->account_name . ($i < count($accounts) - 1 ? ', ' : ' ') }}
+                {{ $d['account_name'] . ($i < count($accounts) - 1 ? ', ' : ' ') }}
                 @endforeach
             </td>
         </tr>

@@ -226,8 +226,8 @@ class TrialBalanceReportController extends Controller
         $params = [
             'account_id'=>$accounts??[],
             'department_id'=>$departments??[],
-            'start_date'=>$start_date,
-            'end_date'=>$end_date,
+            'start_date'=>fdate($start_date, 'Y-m-d'),
+            'end_date'=>fdate($end_date, 'Y-m-d'),
             'zero'=>$zero
         ];
         return $params;
